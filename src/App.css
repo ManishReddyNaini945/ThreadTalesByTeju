@@ -1,0 +1,20 @@
+/* ========================================
+   APP GLOBAL STYLES
+   ======================================== */
+
+/* Ensure no centering of app container */
+.App {
+  min-height: 100vh;
+}
+
+/* ========================================
+   IMAGE LOADING
+   ======================================== */
+
+img {
+  image-rendering: auto;
+}
+
+img[loading="lazy"] {
+  opacity: 1;
+}
