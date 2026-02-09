@@ -2,6 +2,7 @@ import React from "react";
 import { customizationSteps } from "../data/mock";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import { MessageCircle, Palette, Hand, Gift, ArrowRight } from "lucide-react";
+import {instaDmURL} from "../data/mock";
 
 const iconMap = {
   MessageCircle: MessageCircle,
@@ -98,7 +99,7 @@ export const CustomizationSection = () => {
         {/* CTA */}
         <div className="mt-20 text-center">
           <a
-            href="https://instagram.com/thread_tales_by_teju"
+            href={instaDmURL}
             target="_blank"
             rel="noopener noreferrer"
             className="group relative inline-flex items-center gap-3 overflow-hidden px-10 py-4 bg-brand-darker text-brand-cream font-body font-medium text-sm tracking-wide rounded transition-all duration-300 hover:shadow-lg hover:shadow-brand-darker/30"

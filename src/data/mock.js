@@ -136,6 +136,7 @@ export const galleryData = {
   title: "Our World",
   subtitle: "Designed for weddings, festivals, and everyday elegance.",
   instagramHandle: "@thread_tales_by_teju",
+  instagramUrl: "https://instagram.com/thread_tales_by_teju",
   images: [
     { id: 1, src: "https://images.unsplash.com/photo-1611598935678-c88dca238fce?w=400&q=80", alt: "Bridal bangles collection" },
     { id: 2, src: "https://images.unsplash.com/photo-1766560362718-7f13c602e153?w=400&q=80", alt: "Teal thread bangles" },
@@ -176,11 +177,13 @@ export const customizationSteps = [
   },
 ];
 
+export const instaDmURL="https://www.instagram.com/direct/t/thread_tales_by_teju/"
+
 export const contactData = {
   instagram: "@thread_tales_by_teju",
   instagramUrl: "https://instagram.com/thread_tales_by_teju",
   tagline: "DM us for customization & orders",
-  whatsapp: "+91 XXXXX XXXXX",
+  whatsapp: "+91 9866052260",
 };
 
 export const footerData = {

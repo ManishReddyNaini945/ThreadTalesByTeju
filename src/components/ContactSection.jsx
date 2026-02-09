@@ -1,5 +1,5 @@
 import React from "react";
-import { contactData } from "../data/mock";
+import { contactData, instaDmURL } from "../data/mock";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import { Instagram, MessageCircle, Phone, ArrowUpRight } from "lucide-react";
 
@@ -56,7 +56,7 @@ export const ContactSection = () => {
 
           <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href={contactData.instagramUrl}
+              href={instaDmURL}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative overflow-hidden w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-gold text-brand-darker font-body font-semibold text-sm tracking-wide rounded transition-all duration-300 hover:shadow-lg hover:shadow-brand-gold/20"
@@ -91,7 +91,7 @@ export const ContactSection = () => {
           </a>
           <span className="text-brand-cream/10">|</span>
           <a
-            href="#"
+            href={instaDmURL}
             className="inline-flex items-center gap-2 text-brand-cream/40 hover:text-brand-gold transition-colors duration-300"
           >
             <MessageCircle size={16} />

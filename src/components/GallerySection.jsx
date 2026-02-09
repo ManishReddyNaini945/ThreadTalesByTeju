@@ -93,9 +93,15 @@ export const GallerySection = () => {
             className="group inline-flex items-center gap-3 px-8 py-4 border border-brand-gold/20 hover:border-brand-gold/40 rounded-full transition-all duration-300 hover:bg-brand-gold/5"
           >
             <Instagram size={18} className="text-brand-gold/70 group-hover:text-brand-gold transition-colors duration-300" />
-            <span className="font-body text-sm text-brand-cream/70 group-hover:text-brand-cream tracking-wide transition-colors duration-300">
-              Follow us {galleryData.instagramHandle}
-            </span>
+           <a
+  href={galleryData.instagramUrl}
+  target="_blank"
+  rel="noopener noreferrer"
+  className="font-body text-sm text-brand-cream/70 group-hover:text-brand-cream tracking-wide transition-colors duration-300"
+>
+  Follow us {galleryData.instagramHandle}
+</a>
+
           </a>
         </div>
       </div>
