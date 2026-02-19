@@ -193,7 +193,9 @@ export const instaDmURL =
 
 export const contactData = {
   instagram: "@thread_tales_by_teju",
-  instagramUrl: "https://instagram.com/thread_tales_by_teju",
+ 
+  instagramUrl: "https://www.instagram.com/thread_tales_by_teju/",
+
   tagline: "DM us for customization & orders",
   whatsapp: "+91 9866052260",
 };
