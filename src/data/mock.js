@@ -1,3 +1,12 @@
+import Thread_Bangle from "../assests/images/thread_bangle.jpeg"
+import Bridal_Bangle from "../assests/images/bridal_set.jpeg"
+import Hair_Accessory from "../assests/images/hair_accessory.png"
+import Royal_Pink_Bangle_Set from "../assests/images/pink_royal_thread_bangle_set.jpeg"
+import Golden_Bridal_Heritage_Set from "../assests/images/golden_bridal_heritage_set.jpeg"
+import Hair_Clips from "../assests/images/hair_clips.jpeg"
+import Lotus_Hair_Accessory from "../assests/images/lotus_hair_accessory.jpeg"
+import Lotus_Pearl_Neck_Set from "../assests/images/chiain-set.png"
+import Ear_Rings from "../assests/images/ear_rings.jpeg" 
 export const navLinks = [
   { label: "About", href: "#about" },
   { label: "Collection", href: "#collection" },
@@ -51,15 +60,15 @@ export const collectionData = {
       id: 1,
       name: "Thread Bangles",
       description: "Vibrant handwoven thread bangles in stunning color combinations, perfect for everyday elegance.",
-      priceRange: "Starts from \u20B9299",
-      image: "https://images.unsplash.com/photo-1766560361397-9d1eeb446d26?w=600&q=80",
+      priceRange: "Starts from \u20B979",
+      image: Thread_Bangle,
     },
     {
       id: 2,
       name: "Bridal Bangle Sets",
       description: "Exquisite bridal sets crafted for the most special day, blending tradition with contemporary design.",
-      priceRange: "Starts from \u20B91,499",
-      image: "https://images.unsplash.com/photo-1769500805415-0f9485e70e5b?w=600&q=80",
+      priceRange: "Starts from \u20B9799",
+      image: Bridal_Bangle,
     },
     {
       id: 3,
@@ -72,8 +81,8 @@ export const collectionData = {
       id: 4,
       name: "Hair Accessories",
       description: "Elegant handcrafted hair pins, clips, and accessories that add a touch of artistry to your look.",
-      priceRange: "Starts from \u20B9199",
-      image: "https://images.unsplash.com/photo-1758995116383-f51775896add?w=600&q=80",
+      priceRange: "Starts from \u20B999",
+      image: Hair_Accessory,
     },
     {
       id: 5,
@@ -91,41 +100,41 @@ export const bestSellersData = {
   products: [
     {
       id: 1,
-      name: "Royal Teal Bangles Set",
-      description: "A regal set of handwoven teal thread bangles with gold accent detailing.",
-      price: "\u20B9799",
+      name: "Royal Pink Bangles Set",
+      description: "A regal set of handwoven pink thread bangles with gold accent detailing.",
+      price: "\u20B9699",
       badge: "Most Loved",
-      image: "https://images.unsplash.com/photo-1766560362718-7f13c602e153?w=500&q=80",
+      image: Royal_Pink_Bangle_Set,
     },
     {
       id: 2,
       name: "Golden Bridal Heritage Set",
       description: "An opulent bridal bangle set featuring intricate gold threadwork and pearl embellishments.",
-      price: "\u20B92,499",
+      price: "\u20B9799",
       badge: "Bridal Favourite",
-      image: "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=500&q=80",
+      image: Golden_Bridal_Heritage_Set,
     },
     {
       id: 3,
-      name: "Purple Velvet Festive Stack",
+      name: "Lotus Pearl Neck Set",
       description: "A stunning stack of purple velvet-wrapped bangles, perfect for festive celebrations.",
-      price: "\u20B9999",
+      price: "\u20B9299",
       badge: "Festive Pick",
-      image: "https://images.unsplash.com/photo-1767716507414-7454190a16cb?w=500&q=80",
+      image: Lotus_Pearl_Neck_Set,
     },
     {
       id: 4,
       name: "Lotus Hair Accessory",
       description: "A delicate lotus-inspired hair accessory handcrafted with silk threads and stones.",
-      price: "\u20B9449",
+      price: "\u20B999",
       badge: "New Arrival",
-      image: "https://images.unsplash.com/photo-1757140447779-9cffcc270104?w=500&q=80",
+      image: Lotus_Hair_Accessory,
     },
     {
       id: 5,
       name: "Customized Name Bangles",
       description: "Personalized bangles with your name or initials, a perfect gift for loved ones.",
-      price: "\u20B9699",
+      price: "\u20B9399",
       badge: "Personalizable",
       image: "https://images.unsplash.com/photo-1766560363512-00704a8fb5a2?w=500&q=80",
     },
@@ -177,7 +186,10 @@ export const customizationSteps = [
   },
 ];
 
-export const instaDmURL="https://www.instagram.com/direct/t/thread_tales_by_teju/"
+
+export const instaDmURL =
+  "https://www.instagram.com/direct/new/?username=thread_tales_by_teju";
+
 
 export const contactData = {
   instagram: "@thread_tales_by_teju",
