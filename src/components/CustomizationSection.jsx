@@ -1,8 +1,7 @@
 import React from "react";
-import { customizationSteps } from "../data/mock";
+import { customizationSteps, whatsappURL } from "../data/mock";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import { MessageCircle, Palette, Hand, Gift, ArrowRight } from "lucide-react";
-import {instaDmURL} from "../data/mock";
 
 const iconMap = {
   MessageCircle: MessageCircle,
@@ -99,13 +98,13 @@ export const CustomizationSection = () => {
         {/* CTA */}
         <div className="mt-20 text-center">
           <a
-            href={instaDmURL}
+            href={`${whatsappURL}?text=${encodeURIComponent("Hi! I'd like to discuss a custom order.")}`}
             target="_blank"
             rel="noopener noreferrer"
             className="group relative inline-flex items-center gap-3 overflow-hidden px-10 py-4 bg-brand-darker text-brand-cream font-body font-medium text-sm tracking-wide rounded transition-all duration-300 hover:shadow-lg hover:shadow-brand-darker/30"
           >
             <MessageCircle size={16} className="text-brand-gold" />
-            <span>Message on Instagram</span>
+            <span>Message on WhatsApp</span>
             <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-brand-gold/10 to-transparent" />
           </a>
         </div>

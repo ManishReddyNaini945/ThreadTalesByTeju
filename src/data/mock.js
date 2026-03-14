@@ -4,9 +4,22 @@ import Hair_Accessory from "../assests/images/hair_accessory.png"
 import Royal_Pink_Bangle_Set from "../assests/images/pink_royal_thread_bangle_set.jpeg"
 import Golden_Bridal_Heritage_Set from "../assests/images/golden_bridal_heritage_set.jpeg"
 import Hair_Clips from "../assests/images/hair_clips.jpeg"
-import Lotus_Hair_Accessory from "../assests/images/lotus_hair_accessory.jpeg"
 import Lotus_Pearl_Neck_Set from "../assests/images/chiain-set.png"
-import Ear_Rings from "../assests/images/ear_rings.jpeg" 
+import Chain_Set from "../assests/images/chiain-set.png"
+import Invisible_Chain_2 from "../assests/images/invisible chain 2.jpeg"
+import Invisible_Chain_12 from "../assests/images/invisible chain 12.jpeg"
+import Chain from "../assests/images/chain_2.jpeg"
+import Invisible_Chain from "../assests/images/invisible chain 12.jpeg"
+import Thread_Bangle_5 from "../assests/images/thread_bangle_5.jpeg"
+import Thread_Bangle_10 from "../assests/images/thread_bangle_10.jpeg"
+import Thread_Bangle_15 from "../assests/images/thread_bangle_15.jpeg"
+import Thread_Bangle_20 from "../assests/images/thread_bangle_20.jpeg"
+import Making_Image from "../assests/images/making_image.png"
+import Bridal_Set_1 from "../assests/images/bridal_set_1.jpeg"
+import Bridal_Set_3 from "../assests/images/bridal_set_3.jpeg"
+import Bridal_Set_5 from "../assests/images/bridal_set_5.jpeg"
+import Bridal_Set_10 from "../assests/images/bridal_set_10.jpeg"
+import Bridal_Set_15 from "../assests/images/bridal_set_15.jpeg"
 export const navLinks = [
   { label: "About", href: "#about" },
   { label: "Collection", href: "#collection" },
@@ -32,7 +45,7 @@ export const aboutData = {
   description: "Each piece is handwoven with patience, tradition, and modern creativity. Thread Tales By Teju was born from a deep love for Indian craftsmanship — where every bangle carries a story, every thread holds a memory.",
   founderNote: "What started as a personal passion during festive seasons has blossomed into a brand that celebrates the beauty of handmade artistry. Every creation is a labour of love.",
   founder: "Teju",
-  image: "https://images.unsplash.com/photo-1609619742069-f5e18afeef17?w=800&q=80",
+  image: Making_Image,
   pillars: [
     {
       title: "Craftsmanship",
@@ -57,39 +70,39 @@ export const collectionData = {
   subtitle: "Explore our curated range of handcrafted treasures",
   categories: [
     {
-      id: 1,
+      id: "thread-bangles",
       name: "Thread Bangles",
       description: "Vibrant handwoven thread bangles in stunning color combinations, perfect for everyday elegance.",
-      priceRange: "Starts from \u20B979",
+      priceRange: "Starts from ₹79",
       image: Thread_Bangle,
     },
     {
-      id: 2,
+      id: "bridal-bangle-sets",
       name: "Bridal Bangle Sets",
       description: "Exquisite bridal sets crafted for the most special day, blending tradition with contemporary design.",
-      priceRange: "Starts from \u20B9799",
+      priceRange: "Starts from ₹599",
       image: Bridal_Bangle,
     },
     {
-      id: 3,
-      name: "Festive Collections",
-      description: "Celebrate Navratri, Diwali, and every festival with our specially designed festive bangles.",
-      priceRange: "Starts from \u20B9499",
-      image: "https://images.unsplash.com/photo-1670820285472-15a9b2c79d00?w=600&q=80",
+      id: "chains",
+      name: "Chains",
+      description: "Beautiful chain collections with elegant designs for every occasion.",
+      priceRange: "Starts from ₹199",
+      image: Chain_Set,
     },
     {
-      id: 4,
+      id: "hair-accessories",
       name: "Hair Accessories",
       description: "Elegant handcrafted hair pins, clips, and accessories that add a touch of artistry to your look.",
-      priceRange: "Starts from \u20B999",
+      priceRange: "Starts from ₹69",
       image: Hair_Accessory,
     },
     {
-      id: 5,
-      name: "Custom Craft Orders",
-      description: "Dream it, and we'll create it. Fully customized pieces tailored to your style and occasion.",
-      priceRange: "Starts from \u20B9599",
-      image: "https://images.unsplash.com/photo-1760786933663-327c858d5434?w=600&q=80",
+      id: "invisible-chains",
+      name: "Invisible Chains",
+      description: "Delicate and elegant invisible chains that add a subtle touch of sophistication to any outfit.",
+      priceRange: "Starts from ₹99",
+      image: Invisible_Chain,
     },
   ],
 };
@@ -110,7 +123,7 @@ export const bestSellersData = {
       id: 2,
       name: "Golden Bridal Heritage Set",
       description: "An opulent bridal bangle set featuring intricate gold threadwork and pearl embellishments.",
-      price: "\u20B9799",
+      price: "\u20B9999",
       badge: "Bridal Favourite",
       image: Golden_Bridal_Heritage_Set,
     },
@@ -124,19 +137,27 @@ export const bestSellersData = {
     },
     {
       id: 4,
-      name: "Lotus Hair Accessory",
-      description: "A delicate lotus-inspired hair accessory handcrafted with silk threads and stones.",
-      price: "\u20B999",
+      name: "Designer Invisible Chain",
+      description: "Elegant chain set with subtle design elements, perfect for any occasion.",
+      price: "₹199",
       badge: "New Arrival",
-      image: Lotus_Hair_Accessory,
+      image: Invisible_Chain_2,
     },
     {
       id: 5,
-      name: "Customized Name Bangles",
-      description: "Personalized bangles with your name or initials, a perfect gift for loved ones.",
-      price: "\u20B9399",
-      badge: "Personalizable",
-      image: "https://images.unsplash.com/photo-1766560363512-00704a8fb5a2?w=500&q=80",
+      name: "Golden Bridal Heritage Set",
+      description: "An opulent bridal bangle set featuring intricate gold threadwork and pearl embellishments.",
+      price: "₹799",
+      badge: "Bridal Favourite",
+      image: Bridal_Set_1,
+    },
+    {
+      id: 6,
+      name: "Royal Bridal Collection",
+      description: "Luxurious bridal bangles with traditional craftsmanship, perfect for your special day.",
+      price: "₹1299",
+      badge: "Top Pick",
+      image: Bridal_Set_3,
     },
   ],
 };
@@ -147,15 +168,15 @@ export const galleryData = {
   instagramHandle: "@thread_tales_by_teju",
   instagramUrl: "https://instagram.com/thread_tales_by_teju",
   images: [
-    { id: 1, src: "https://images.unsplash.com/photo-1611598935678-c88dca238fce?w=400&q=80", alt: "Bridal bangles collection" },
-    { id: 2, src: "https://images.unsplash.com/photo-1766560362718-7f13c602e153?w=400&q=80", alt: "Teal thread bangles" },
-    { id: 3, src: "https://images.unsplash.com/photo-1670820285472-15a9b2c79d00?w=400&q=80", alt: "Colorful bangles display" },
-    { id: 4, src: "https://images.unsplash.com/photo-1609619742069-f5e18afeef17?w=400&q=80", alt: "Artisan crafting" },
-    { id: 5, src: "https://images.unsplash.com/photo-1610047614301-13c63f00c032?w=400&q=80", alt: "Wedding jewelry" },
-    { id: 6, src: "https://images.unsplash.com/photo-1600685890506-593fdf55949b?w=400&q=80", alt: "Festive bangles" },
-    { id: 7, src: "https://images.unsplash.com/photo-1769500805415-0f9485e70e5b?w=400&q=80", alt: "Gold bridal set" },
-    { id: 8, src: "https://images.unsplash.com/photo-1607007790046-4a558c42850a?w=400&q=80", alt: "Wedding jewelry presentation" },
-    { id: 9, src: "https://images.unsplash.com/photo-1639268230526-6ac0a81d232e?w=400&q=80", alt: "Elegant jewelry display" },
+    { id: 1, src: Thread_Bangle_5, alt: "Vibrant thread bangles collection" },
+    { id: 2, src: Bridal_Set_5, alt: "Elegant bridal bangle set" },
+    { id: 3, src: Invisible_Chain_2, alt: "Designer invisible chain" },
+    { id: 4, src: Thread_Bangle_10, alt: "Contemporary thread bangles" },
+    { id: 5, src: Bridal_Set_1, alt: "Majestic bridal bangles" },
+    { id: 6, src: Chain, alt: "Elegant invisible chain" },
+    { id: 7, src: Thread_Bangle_15, alt: "Vibrant thread bangles" },
+    { id: 8, src: Bridal_Set_15, alt: "Magnificent bridal set" },
+    { id: 9, src: Royal_Pink_Bangle_Set, alt: "Royal pink bangles set" },
   ],
 };
 
@@ -187,8 +208,8 @@ export const customizationSteps = [
 ];
 
 
-export const instaDmURL =
-  "https://www.instagram.com/direct/new/?username=thread_tales_by_teju";
+export const whatsappNumber = "919866052260";
+export const whatsappURL = `https://wa.me/${whatsappNumber}`;
 
 
 export const contactData = {

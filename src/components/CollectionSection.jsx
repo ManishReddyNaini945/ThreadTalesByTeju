@@ -1,11 +1,13 @@
 import React from "react";
-import { collectionData } from "../data/mock";
+import { useNavigate } from "react-router-dom";
+import { collectionData, whatsappNumber } from "../data/mock";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, MessageCircle } from "lucide-react";
 
 export const CollectionSection = () => {
   const [titleRef, titleVisible] = useScrollAnimation();
   const [gridRef, gridVisible] = useScrollAnimation({ rootMargin: "0px 0px -40px 0px" });
+  const navigate = useNavigate();
 
   return (
     <section id="collection" className="relative py-28 md:py-36 bg-brand-darker overflow-hidden">
@@ -42,14 +44,9 @@ export const CollectionSection = () => {
           }`}
         >
           {collectionData.categories.map((category, index) => (
-            <a
+            <div
               key={category.id}
-              href="#contact"
-              onClick={(e) => {
-                e.preventDefault();
-                document.querySelector("#contact")?.scrollIntoView({ behavior: "smooth" });
-              }}
-              className={`group relative overflow-hidden rounded-sm cursor-pointer ${
+              className={`group relative overflow-hidden rounded-sm ${
                 index === 0 ? "md:col-span-2 lg:col-span-2" : ""
               }`}
               style={{ transitionDelay: `${index * 80}ms` }}
@@ -65,6 +62,20 @@ export const CollectionSection = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-darker via-brand-darker/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity duration-500" />
                 {/* Gold border on hover */}
                 <div className="absolute inset-0 border border-transparent group-hover:border-brand-gold/30 transition-all duration-500 rounded-sm" />
+                
+                {/* Order Button - appears on hover */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300">
+                  <button
+                    onClick={() => {
+                      const message = `Hi! I'm interested in:\n\n*${category.name}*\n${category.description}\n${category.priceRange}\n\n📷 Collection Image: ${window.location.origin}${category.image}\n\nPlease share more details.`;
+                      window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
+                    }}
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-brand-gold text-brand-darker font-body font-semibold text-sm tracking-wide rounded hover:bg-brand-gold/90 transition-all duration-300 shadow-lg"
+                  >
+                    <MessageCircle size={16} />
+                    Order on WhatsApp
+                  </button>
+                </div>
               </div>
 
               {/* Content */}
@@ -81,12 +92,15 @@ export const CollectionSection = () => {
                       {category.priceRange}
                     </span>
                   </div>
-                  <div className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold/20 group-hover:border-brand-gold/50 group-hover:bg-brand-gold/10 transition-all duration-300">
+                  <button
+                    onClick={() => navigate(`/collection/${category.id}`)}
+                    className="w-10 h-10 flex items-center justify-center rounded-full border border-brand-gold/20 group-hover:border-brand-gold/50 group-hover:bg-brand-gold/10 transition-all duration-300"
+                  >
                     <ArrowRight size={16} className="text-brand-gold/60 group-hover:text-brand-gold transition-colors duration-300" />
-                  </div>
+                  </button>
                 </div>
               </div>
-            </a>
+            </div>
           ))}
         </div>
       </div>

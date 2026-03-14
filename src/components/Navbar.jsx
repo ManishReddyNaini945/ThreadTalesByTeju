@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { navLinks } from "../data/mock";
 import { Menu, X } from "lucide-react";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -17,9 +21,21 @@ export const Navbar = () => {
   const handleNavClick = (e, href) => {
     e.preventDefault();
     setMobileOpen(false);
-    const target = document.querySelector(href);
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth" });
+    
+    if (!isHomePage) {
+      // If not on home page, navigate to home first
+      navigate("/");
+      setTimeout(() => {
+        const target = document.querySelector(href);
+        if (target) {
+          target.scrollIntoView({ behavior: "smooth" });
+        }
+      }, 100);
+    } else {
+      const target = document.querySelector(href);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth" });
+      }
     }
   };
 
@@ -34,12 +50,16 @@ export const Navbar = () => {
       <div className="max-w-7xl mx-auto px-6 lg:px-10 flex items-center justify-between">
         {/* Logo */}
         <a
-          href="#"
+          href="/"
           onClick={(e) => {
             e.preventDefault();
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            if (isHomePage) {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            } else {
+              navigate("/");
+            }
           }}
-          className="flex items-center gap-3 group"
+          className="flex items-center gap-3 group cursor-pointer"
         >
           <span className="font-serif text-xl md:text-2xl font-semibold text-brand-cream tracking-wide group-hover:text-brand-gold transition-colors duration-300">
             Thread Tales

@@ -1,5 +1,5 @@
 import React from "react";
-import { contactData, instaDmURL } from "../data/mock";
+import { contactData, whatsappURL, whatsappNumber } from "../data/mock";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
 import { Instagram, MessageCircle, Phone, ArrowUpRight } from "lucide-react";
 
@@ -51,29 +51,27 @@ export const ContactSection = () => {
             Ready to Order?
           </h3>
           <p className="relative font-body text-sm text-brand-cream/50 mb-8 max-w-md mx-auto">
-            Reach out via Instagram or WhatsApp to place your order, request customization, or learn more about our collections.
+            Message us on WhatsApp to place your order, request customization, or learn more about our collections.
           </p>
 
           <div className="relative flex flex-col sm:flex-row items-center justify-center gap-4">
             <a
-              href={instaDmURL}
+              href={`${whatsappURL}?text=${encodeURIComponent("Hi! I'd like to know more about your products.")}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative overflow-hidden w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 bg-brand-gold text-brand-darker font-body font-semibold text-sm tracking-wide rounded transition-all duration-300 hover:shadow-lg hover:shadow-brand-gold/20"
             >
-              <Instagram size={16} />
-              <span className="relative z-10">DM on Instagram</span>
+              <MessageCircle size={16} />
+              <span className="relative z-10">Order on WhatsApp</span>
               <ArrowUpRight size={14} className="relative z-10" />
               <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
             </a>
             <a
-              href={`https://wa.me/${contactData.whatsapp?.replace(/\D/g, "")}`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href={`tel:${contactData.whatsapp}`}
               className="group w-full sm:w-auto inline-flex items-center justify-center gap-3 px-8 py-4 border border-brand-gold/25 text-brand-cream font-body font-medium text-sm tracking-wide rounded hover:border-brand-gold/50 hover:bg-brand-gold/5 transition-all duration-300"
             >
               <Phone size={16} className="text-brand-gold/70" />
-              <span>WhatsApp</span>
+              <span>Call Us</span>
             </a>
           </div>
         </div>
@@ -91,11 +89,13 @@ export const ContactSection = () => {
           </a>
           <span className="text-brand-cream/10">|</span>
           <a
-            href={instaDmURL}
+            href={whatsappURL}
+            target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 text-brand-cream/40 hover:text-brand-gold transition-colors duration-300"
           >
             <MessageCircle size={16} />
-            <span className="font-body text-sm">DM for Queries</span>
+            <span className="font-body text-sm">WhatsApp Us</span>
           </a>
         </div>
       </div>
