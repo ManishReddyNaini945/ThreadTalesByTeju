@@ -240,7 +240,7 @@ export const collectionProducts = {
         id: 123,
         name: "Graceful Thread Bangles(set of 2)",
         description: "Graceful bangles with timeless appeal.",
-        price: "₹129",
+        price: "₹79",
         image: Thread_Bangle_23,
       },
       {
@@ -250,13 +250,7 @@ export const collectionProducts = {
         price: "₹399",
         image: Thread_Bangle_24,
       },
-      // {
-      //   id: 125,
-      //   name: "Radiant Thread Bangles",
-      //   description: "Radiant colors that brighten any outfit.",
-      //   price: "₹449",
-      //   image: Thread_Bangle_25,
-      // },
+    
       {
         id: 126,
         name: "Stunning Thread Bangles(set of 4)",

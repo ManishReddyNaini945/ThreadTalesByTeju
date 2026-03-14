@@ -75,7 +75,7 @@ export const CollectionDetailPage = () => {
                 style={{ transitionDelay: `${index * 80}ms` }}
               >
                 {/* Image Container */}
-                <div className="relative overflow-hidden h-[200px] sm:h-[300px] md:h-[400px] bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="relative overflow-hidden aspect-square bg-gray-50">
                   <img
                     src={product.image}
                     alt={product.name}
