@@ -2,18 +2,13 @@ import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { collectionProducts } from "../data/collectionProducts";
 import { whatsappNumber } from "../data/mock";
-import { useScrollAnimation } from "../hooks/useScrollAnimation";
-import { ArrowLeft, MessageCircle, Heart, ShoppingBag } from "lucide-react";
-import { Badge } from "../components/ui/badge";
+import { ArrowLeft, MessageCircle } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 
 export const CollectionDetailPage = () => {
   const { collectionId } = useParams();
   const navigate = useNavigate();
-  const [titleRef, titleVisible] = useScrollAnimation();
-  const [gridRef, gridVisible] = useScrollAnimation({ rootMargin: "0px 0px -40px 0px" });
-
   const collection = collectionProducts[collectionId];
 
   useEffect(() => {
@@ -55,12 +50,7 @@ export const CollectionDetailPage = () => {
           </button>
 
           {/* Section Header */}
-          <div
-            ref={titleRef}
-            className={`mb-16 text-center transition-all duration-700 ${
-              titleVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
+          <div className="mb-16 text-center">
             <div className="flex items-center justify-center gap-3 mb-4">
               <div className="w-8 h-[1px] bg-brand-gold/60" />
               <span className="text-brand-gold text-xs tracking-[0.3em] uppercase font-body font-medium">
@@ -77,12 +67,7 @@ export const CollectionDetailPage = () => {
           </div>
 
           {/* Products Grid */}
-          <div
-            ref={gridRef}
-            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 transition-all duration-700 delay-200 ${
-              gridVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
             {collection.products.map((product, index) => (
               <div
                 key={product.id}
@@ -90,60 +75,42 @@ export const CollectionDetailPage = () => {
                 style={{ transitionDelay: `${index * 80}ms` }}
               >
                 {/* Image Container */}
-                <div className="relative overflow-hidden h-[350px] md:h-[400px] bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+                <div className="relative overflow-hidden h-[200px] sm:h-[300px] md:h-[400px] bg-gradient-to-br from-gray-50 to-gray-100">
                   <img
                     src={product.image}
                     alt={product.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     loading="lazy"
                   />
+                  {/* Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-                  {/* Order Button - appears on hover over image */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300 z-10">
+                  {/* Order Button */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300">
                     <button
                       onClick={() => {
                         const message = `Hi! I'm interested in ordering:\n\n*${product.name}*\nPrice: ${product.price}\n${product.description}\n\n📷 Product Image: ${window.location.origin}${product.image}\n\nPlease share more details.`;
                         window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
                       }}
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-brand-gold text-brand-darker font-body font-semibold text-sm tracking-wide rounded hover:bg-brand-gold/90 transition-all duration-300 shadow-lg"
+                      className="inline-flex items-center gap-2 px-4 py-2.5 md:px-6 md:py-3 bg-brand-gold text-brand-darker font-body font-semibold text-xs md:text-sm tracking-wide rounded hover:bg-brand-gold/90 transition-all duration-300 shadow-lg whitespace-nowrap"
                     >
-                      <MessageCircle size={16} />
+                      <MessageCircle size={14} />
                       Order on WhatsApp
-                    </button>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                    <button className="w-9 h-9 flex items-center justify-center rounded-full bg-white/90 backdrop-blur-sm hover:bg-brand-gold/10 border border-brand-dark/5 transition-all duration-300">
-                      <Heart size={15} className="text-brand-dark/60" />
                     </button>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
-                  <h3 className="font-serif text-lg font-semibold text-brand-dark mb-2 group-hover:text-brand-gold/90 transition-colors duration-300">
+                <div className="p-3 md:p-6">
+                  <h3 className="font-serif text-sm md:text-lg font-semibold text-brand-dark mb-1 md:mb-2 group-hover:text-brand-gold/90 transition-colors duration-300 line-clamp-1">
                     {product.name}
                   </h3>
-                  <p className="font-body text-sm text-brand-dark/50 leading-relaxed mb-4 line-clamp-2">
+                  <p className="font-body text-xs md:text-sm text-brand-dark/50 leading-relaxed mb-2 line-clamp-2 hidden sm:block">
                     {product.description}
                   </p>
-                  <div className="flex items-center justify-between">
-                    <span className="font-serif text-xl font-semibold text-brand-dark">
-                      {product.price}
-                    </span>
-                    <button
-                      onClick={() => {
-                        const message = `Hi! I'm interested in ordering:\n\n*${product.name}*\nPrice: ${product.price}\n\n📷 Product Image: ${window.location.origin}${product.image}\n\nPlease share more details.`;
-                        window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
-                      }}
-                      className="group/btn inline-flex items-center gap-2 px-4 py-2 bg-brand-darker text-brand-cream font-body text-xs tracking-wide rounded hover:bg-brand-gold hover:text-brand-darker transition-all duration-300"
-                    >
-                      <ShoppingBag size={13} />
-                      Order on WhatsApp
-                    </button>
-                  </div>
+                  <span className="font-serif text-base md:text-xl font-semibold text-brand-dark">
+                    {product.price}
+                  </span>
                 </div>
               </div>
             ))}
