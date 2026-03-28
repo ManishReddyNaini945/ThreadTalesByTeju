@@ -428,7 +428,7 @@ export const collectionProducts = {
         id: 301,
         name: "Classic Chain Set",
         description: "Beautiful chain set with elegant design.",
-        price: "₹299",
+        price: "₹349",
         image: Chain_Set,
       },
       {
