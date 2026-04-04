@@ -83,6 +83,8 @@ import Bridal_Set_19 from "../assests/images/bridal_set_19.jpeg";
 import Bridal_Set_20 from "../assests/images/bridal_set_20.jpeg";
 import Bridal_Set_21 from "../assests/images/bridal_set_21.jpeg";
 
+import Saree_Pin from "../assests/images/saree_pin.jpeg";
+
 export const collectionProducts = {
   "thread-bangles": {
     // Thread Bangles
@@ -641,6 +643,18 @@ export const collectionProducts = {
         image: Invisible_Chain_18,
       },
      
+    ],
+  },
+  "saree-pins": {
+    name: "Saree Pins",
+    products: [
+      {
+        id: 601,
+        name: "Saree Pin",
+        description: "Elegant handcrafted saree pin to keep your drape perfectly in place with a touch of artistry.",
+        price: "1 pc – ₹49 | 2 pcs – ₹89",
+        image: Saree_Pin,
+      },
     ],
   },
 };

@@ -1,8 +1,8 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { collectionData, whatsappNumber } from "../data/mock";
+import { collectionData } from "../data/mock";
 import { useScrollAnimation } from "../hooks/useScrollAnimation";
-import { ArrowRight, MessageCircle } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 export const CollectionSection = () => {
   const [titleRef, titleVisible] = useScrollAnimation();
@@ -63,19 +63,7 @@ export const CollectionSection = () => {
                 {/* Gold border on hover */}
                 <div className="absolute inset-0 border border-transparent group-hover:border-brand-gold/30 transition-all duration-500 rounded-sm" />
                 
-                {/* Order Button - appears on hover */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 scale-90 group-hover:scale-100 transition-all duration-300">
-                  <button
-                    onClick={() => {
-                      const message = `Hi! I'm interested in:\n\n*${category.name}*\n${category.description}\n${category.priceRange}\n\n📷 Collection Image: ${window.location.origin}${category.image}\n\nPlease share more details.`;
-                      window.open(`https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`, '_blank');
-                    }}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-brand-gold text-brand-darker font-body font-semibold text-sm tracking-wide rounded hover:bg-brand-gold/90 transition-all duration-300 shadow-lg"
-                  >
-                    <MessageCircle size={16} />
-                    Order on WhatsApp
-                  </button>
-                </div>
+
               </div>
 
               {/* Content */}

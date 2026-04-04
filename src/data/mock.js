@@ -14,6 +14,7 @@ import Thread_Bangle_5 from "../assests/images/thread_bangle_5.jpeg"
 import Thread_Bangle_10 from "../assests/images/thread_bangle_10.jpeg"
 import Thread_Bangle_15 from "../assests/images/thread_bangle_15.jpeg"
 import Thread_Bangle_20 from "../assests/images/thread_bangle_20.jpeg"
+import Saree_Pin from "../assests/images/saree_pin.jpeg"
 import Making_Image from "../assests/images/making_image.png"
 import Bridal_Set_1 from "../assests/images/bridal_set_1.jpeg"
 import Bridal_Set_3 from "../assests/images/bridal_set_3.jpeg"
@@ -103,6 +104,13 @@ export const collectionData = {
       description: "Delicate and elegant invisible chains that add a subtle touch of sophistication to any outfit.",
       priceRange: "Starts from ₹99",
       image: Invisible_Chain,
+    },
+    {
+      id: "saree-pins",
+      name: "Saree Pins",
+      description: "Elegant handcrafted saree pins to keep your drape perfectly in place with a touch of artistry.",
+      priceRange: "Starts from ₹49",
+      image: Saree_Pin,
     },
   ],
 };
