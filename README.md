@@ -1,70 +1,199 @@
-# Getting Started with Create React App
+# Thread Tales by Teju
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An e-commerce web application for handmade jewelry and accessories.
 
-## Available Scripts
+## Tech Stack
 
-In the project directory, you can run:
+| Layer | Technology |
+|-------|-----------|
+| Frontend | React 19, TypeScript, Tailwind CSS, Shadcn/UI |
+| Backend | Python 3.12, FastAPI, SQLAlchemy, Alembic |
+| Database | PostgreSQL |
+| Auth | JWT + Google OAuth |
+| Payments | Razorpay |
+| Media | Cloudinary |
 
-### `npm start`
+## Project Structure
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+ThreadTalesByTeju/
+├── frontend/          # React TypeScript app
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── tsconfig.json
+├── backend/           # FastAPI Python app
+│   ├── app/
+│   │   ├── models/
+│   │   ├── routers/
+│   │   ├── schemas/
+│   │   ├── auth/
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── main.py
+│   ├── alembic/
+│   ├── alembic.ini
+│   └── requirements.txt
+└── README.md
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+---
 
-### `npm test`
+## Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js 18+
+- Python 3.12+
+- PostgreSQL 15+
+- Yarn
 
-### `npm run build`
+---
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## Frontend Setup
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+cd frontend
+yarn install
+yarn start
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+App runs at: `http://localhost:3000`
 
-### `npm run eject`
+### Frontend Environment Variables
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Create `frontend/.env`:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```env
+REACT_APP_API_URL=http://localhost:8000/api/v1
+REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
+REACT_APP_RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+---
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Backend Setup
 
-## Learn More
+### 1. Create Virtual Environment
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+cd backend
+python -m venv venv
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 2. Activate Virtual Environment
 
-### Code Splitting
+```bash
+# Windows PowerShell
+venv\Scripts\activate
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+# Mac/Linux
+source venv/bin/activate
+```
 
-### Analyzing the Bundle Size
+### 3. Install Dependencies
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+```bash
+pip install -r requirements.txt
+```
 
-### Making a Progressive Web App
+### 4. Environment Variables
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+Create `backend/.env`:
 
-### Advanced Configuration
+```env
+# Database
+DATABASE_URL=postgresql://postgres:yourpassword@localhost:5432/threadtalesbyteju
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+# JWT
+SECRET_KEY=your_secret_key
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=60
+REFRESH_TOKEN_EXPIRE_DAYS=7
 
-### Deployment
+# Google OAuth
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+# Razorpay
+RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxx
+RAZORPAY_KEY_SECRET=your_razorpay_secret
 
-### `npm run build` fails to minify
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+# App
+FRONTEND_URL=http://localhost:3000
+APP_NAME=Thread Tales by Teju
+DEBUG=True
+```
+
+### 5. Database Migrations
+
+Make sure PostgreSQL is running and the database `threadtalesbyteju` is created, then run:
+
+```bash
+alembic revision --autogenerate -m "initial migration"
+alembic upgrade head
+```
+
+### 6. Run Backend
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+API runs at: `http://localhost:8000`
+API docs at: `http://localhost:8000/docs`
+
+---
+
+## Third-Party Services Setup
+
+### Google OAuth
+1. Go to [console.cloud.google.com](https://console.cloud.google.com)
+2. Create a project → APIs & Services → Credentials
+3. Create OAuth 2.0 Client ID (Web application)
+4. Add authorized origins: `http://localhost:3000`
+5. Add redirect URI: `http://localhost:8000/api/v1/auth/google/callback`
+
+### Razorpay
+1. Sign up at [razorpay.com](https://razorpay.com)
+2. Go to Account & Settings → API Keys
+3. Generate test keys and copy Key ID and Key Secret
+
+### Cloudinary
+1. Sign up at [cloudinary.com](https://cloudinary.com)
+2. Copy Cloud Name, API Key, API Secret from dashboard
+3. Go to Settings → Upload → Add upload preset named `threadtales_products`
+
+---
+
+## Running the Full App
+
+Open two terminals:
+
+**Terminal 1 — Backend:**
+```bash
+cd backend
+venv\Scripts\activate
+uvicorn app.main:app --reload --port 8000
+```
+
+**Terminal 2 — Frontend:**
+```bash
+cd frontend
+yarn start
+```
+
+Then open `http://localhost:3000` in your browser.
+
+---
+
+## PowerShell Execution Policy (Windows)
+
+If you get a script execution error when activating venv:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+```
