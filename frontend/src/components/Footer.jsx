@@ -39,7 +39,7 @@ export default function Footer() {
             </p>
             <div className="flex items-center gap-4">
               <a
-                href="https://instagram.com/threadtalesbyteju"
+                href="https://instagram.com/thread_tales_by_teju"
                 target="_blank"
                 rel="noreferrer"
                 className="w-9 h-9 flex items-center justify-center transition-colors duration-200"
@@ -48,7 +48,7 @@ export default function Footer() {
                 <Instagram size={15} />
               </a>
               <a
-                href="https://wa.me/919876543210"
+                href="https://wa.me/919866052260"
                 target="_blank"
                 rel="noreferrer"
                 className="w-9 h-9 flex items-center justify-center transition-colors duration-200 text-xs font-bold"
@@ -96,13 +96,13 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <Mail size={14} className="mt-0.5 flex-shrink-0" style={{ color: "var(--gold)" }} />
                 <span className="text-sm" style={{ color: "var(--cream-dim)" }}>
-                  threadtalesbyteju@gmail.com
+                  tejureddy6060@gmail.com
                 </span>
               </li>
               <li className="flex items-start gap-3">
                 <Phone size={14} className="mt-0.5 flex-shrink-0" style={{ color: "var(--gold)" }} />
                 <span className="text-sm" style={{ color: "var(--cream-dim)" }}>
-                  +91 98765 43210
+                  +91 98660 52260
                 </span>
               </li>
               <li className="flex items-start gap-3">

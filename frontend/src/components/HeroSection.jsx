@@ -150,8 +150,8 @@ export default function HeroSection() {
 
               {/* Bottom floating info card */}
               <motion.div
-                animate={{ y: [0, -6, 0] }}
-                transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 5, repeat: Infinity, ease: [0.45, 0, 0.55, 1], repeatType: "mirror" }}
                 className="absolute -bottom-6 -right-6 px-5 py-4 flex items-center gap-3"
                 style={{ background: "var(--bg-card)", border: "1px solid var(--gold)", minWidth: 160 }}
               >

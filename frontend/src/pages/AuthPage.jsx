@@ -91,8 +91,9 @@ export default function AuthPage() {
   };
 
   const handleGoogleSuccess = async (credentialResponse) => {
+    const credential = credentialResponse.credential;
     try {
-      await googleLogin(credentialResponse.credential);
+      await googleLogin(credential);
       toast.success("Signed in with Google!");
       navigate(from, { replace: true });
     } catch (err) {
@@ -200,7 +201,7 @@ export default function AuthPage() {
 
                   <div className="flex justify-center">
                     <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error("Google sign-in failed")}
-                      theme="filled_black" size="large" width="100%" shape="rectangular" />
+                      theme="filled_black" size="large" width="400" shape="rectangular" />
                   </div>
                 </motion.form>
               ) : (
@@ -255,7 +256,7 @@ export default function AuthPage() {
 
                   <div className="flex justify-center">
                     <GoogleLogin onSuccess={handleGoogleSuccess} onError={() => toast.error("Google sign-in failed")}
-                      theme="filled_black" size="large" width="100%" shape="rectangular" />
+                      theme="filled_black" size="large" width="400" shape="rectangular" />
                   </div>
                 </motion.form>
               )}

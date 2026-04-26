@@ -2,10 +2,10 @@ import { motion } from "framer-motion";
 import { Mail, Phone, Instagram, MessageCircle } from "lucide-react";
 
 const CONTACTS = [
-  { icon: MessageCircle, label: "WhatsApp", value: "+91 98765 43210", href: "https://wa.me/919876543210", color: "#25D366" },
-  { icon: Instagram, label: "Instagram", value: "@threadtalesbyteju", href: "https://instagram.com/threadtalesbyteju", color: "#E1306C" },
-  { icon: Mail, label: "Email", value: "threadtalesbyteju@gmail.com", href: "mailto:threadtalesbyteju@gmail.com", color: "var(--gold)" },
-  { icon: Phone, label: "Phone", value: "+91 98765 43210", href: "tel:+919876543210", color: "var(--gold)" },
+  { icon: MessageCircle, label: "WhatsApp", value: "+91 98660 52260", href: "https://wa.me/919866052260", color: "#25D366" },
+  { icon: Instagram, label: "Instagram", value: "@thread_tales_by_teju", href: "https://instagram.com/thread_tales_by_teju", color: "#E1306C" },
+  { icon: Mail, label: "Email", value: "tejureddy6060@gmail.com", href: "mailto:tejureddy6060@gmail.com", color: "var(--gold)" },
+  { icon: Phone, label: "Phone", value: "+91 98660 52260", href: "tel:+919866052260", color: "var(--gold)" },
 ];
 
 export default function ContactSection() {
@@ -71,12 +71,12 @@ export default function ContactSection() {
               Send a Message
             </p>
             <form className="flex flex-col gap-5"
-              onSubmit={(e) => { e.preventDefault(); window.open(`https://wa.me/919876543210?text=Hello! I have a query.`, "_blank"); }}>
+              onSubmit={(e) => { e.preventDefault(); window.open(`https://wa.me/919866052260?text=Hello! I have a query.`, "_blank"); }}>
 
               {[
                 { label: "Your Name", type: "text", placeholder: "Priya Sharma" },
                 { label: "Email Address", type: "email", placeholder: "priya@example.com" },
-                { label: "Phone Number", type: "tel", placeholder: "+91 98765 43210" },
+                { label: "Phone Number", type: "tel", placeholder: "+91 98660 52260" },
               ].map((field) => (
                 <div key={field.label}>
                   <label className="block text-xs tracking-[0.2em] uppercase mb-2" style={{ color: "var(--cream-dim)" }}>

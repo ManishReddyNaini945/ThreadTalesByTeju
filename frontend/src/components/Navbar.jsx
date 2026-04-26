@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Heart, User, Search, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingCart, Heart, User, Search, Menu, X, ChevronDown } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -32,11 +32,11 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
-  const { cartItems } = useCart();
+  const { cart } = useCart();
   const { wishlistItems } = useWishlist();
   const { user } = useAuth();
 
-  const cartCount = cartItems?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
+  const cartCount = cart?.item_count || 0;
   const wishlistCount = wishlistItems?.length || 0;
 
   useEffect(() => {
@@ -109,25 +109,44 @@ export default function Navbar() {
                         className={`transition-transform duration-200 ${activeDropdown === link.label ? "rotate-180" : ""}`}
                       />
                     </button>
+                    {/* Invisible bridge — fills gap so mouse doesn't leave hover zone */}
+                    <div className="absolute top-full left-0 right-0 h-3" />
                     <AnimatePresence>
                       {activeDropdown === link.label && (
                         <motion.div
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 8 }}
-                          transition={{ duration: 0.18 }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 mt-4 w-52 py-2"
-                          style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
+                          initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                          className="absolute top-full left-1/2 -translate-x-1/2 w-56 overflow-hidden"
+                          style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 20px 40px rgba(0,0,0,0.4)", marginTop: "2px" }}
                         >
-                          {link.children.map((child) => (
-                            <Link
+                          {link.children.map((child, i) => (
+                            <motion.div
                               key={child.label}
-                              to={child.path}
-                              className="block px-5 py-2.5 text-sm transition-colors duration-150 hover:text-gold"
-                              style={{ color: "var(--cream-dim)" }}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.04, duration: 0.2 }}
                             >
-                              {child.label}
-                            </Link>
+                              <Link
+                                to={child.path}
+                                className="flex items-center gap-3 px-5 py-3 text-sm group/item transition-all duration-200"
+                                style={{ color: "var(--cream-dim)", borderBottom: i < link.children.length - 1 ? "1px solid rgba(45,40,36,0.4)" : "none" }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "rgba(200,164,92,0.08)";
+                                  e.currentTarget.style.color = "var(--gold)";
+                                  e.currentTarget.style.paddingLeft = "24px";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "transparent";
+                                  e.currentTarget.style.color = "var(--cream-dim)";
+                                  e.currentTarget.style.paddingLeft = "20px";
+                                }}
+                              >
+                                <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: "var(--gold)", opacity: 0.5 }} />
+                                {child.label}
+                              </Link>
+                            </motion.div>
                           ))}
                         </motion.div>
                       )}
@@ -164,7 +183,7 @@ export default function Navbar() {
               </Link>
 
               <Link to="/cart" className="relative" style={{ color: "var(--cream-dim)" }}>
-                <ShoppingBag size={18} />
+                <ShoppingCart size={18} />
                 {cartCount > 0 && (
                   <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-medium"
                     style={{ background: "var(--gold)", color: "var(--bg)" }}>

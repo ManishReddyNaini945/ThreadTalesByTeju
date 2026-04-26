@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, SlidersHorizontal, Heart, ShoppingBag, Star, X, ChevronDown, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Search, SlidersHorizontal, Heart, ShoppingBag, Star, X, ChevronDown } from "lucide-react";
 import { productService } from "../services/productService";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -129,14 +128,15 @@ export default function ShopPage() {
   const [maxPrice, setMaxPrice] = useState("");
   const [sortBy, setSortBy] = useState("newest");
   const [page, setPage] = useState(1);
-  const navigate = useNavigate();
 
   const debouncedSearch = useDebounce(search, 400);
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
 
-  // Read category directly from URL — always in sync
+  // Read filters directly from URL — always in sync
   const category = searchParams.get("category") || "";
+  const isBestseller = searchParams.get("is_bestseller") === "true";
+  const isFeatured = searchParams.get("is_featured") === "true";
 
   const setCategory = (slug) => {
     const p = new URLSearchParams(searchParams);
@@ -160,6 +160,8 @@ export default function ShopPage() {
       ...(category && { category_slug: category }),
       ...(minPrice && { min_price: Number(minPrice) }),
       ...(maxPrice && { max_price: Number(maxPrice) }),
+      ...(isBestseller && { is_bestseller: true }),
+      ...(isFeatured && { is_featured: true }),
     };
     productService.getProducts(params)
       .then(({ data }) => {
@@ -168,7 +170,7 @@ export default function ShopPage() {
       })
       .catch(() => { setProducts([]); setTotal(0); })
       .finally(() => setLoading(false));
-  }, [debouncedSearch, category, minPrice, maxPrice, sortBy, page]);
+  }, [debouncedSearch, category, minPrice, maxPrice, sortBy, page, isBestseller, isFeatured]);
 
   const clearFilters = () => {
     setSearch(""); setMinPrice(""); setMaxPrice(""); setSortBy("newest"); setPage(1);
@@ -187,26 +189,22 @@ export default function ShopPage() {
       <Navbar />
       <main className="max-w-7xl mx-auto px-6 lg:px-10 pt-32 pb-20">
 
-        {/* Back button */}
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 mb-8 text-sm tracking-wide transition-all duration-200 group"
-          style={{ color: "var(--cream-dim)" }}
-        >
-          <div className="w-8 h-8 flex items-center justify-center transition-all duration-200 group-hover:border-gold"
-            style={{ border: "1px solid var(--border)" }}>
-            <ArrowLeft size={14} style={{ color: "var(--gold)" }} />
-          </div>
-          <span className="group-hover:text-gold transition-colors duration-200">Back</span>
-        </button>
+        {/* Breadcrumb */}
+        <div className="flex items-center gap-2 mb-8 text-xs tracking-widest uppercase">
+          <Link to="/" className="transition-colors duration-200" style={{ color: "var(--cream-dim)" }}>Home</Link>
+          <span style={{ color: "var(--border)" }}>/</span>
+          <span style={{ color: "var(--gold)" }}>Shop</span>
+        </div>
 
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <p className="section-tag mb-3">
-              {category ? categories.find(c => c.slug === category)?.name || category : "All Products"}
+              {isBestseller ? "Bestsellers" : isFeatured ? "Featured" : category ? categories.find(c => c.slug === category)?.name || category : "All Products"}
             </p>
-            <h1 className="section-title">Our Collection</h1>
+            <h1 className="section-title">
+              {isBestseller ? "Our Bestsellers" : isFeatured ? "Featured Products" : "Our Collection"}
+            </h1>
             <p className="text-sm mt-2" style={{ color: "var(--cream-dim)" }}>{total} products</p>
           </div>
 
