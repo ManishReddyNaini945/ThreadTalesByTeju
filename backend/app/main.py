@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .database import Base, engine
-from .routers import auth, products, cart, wishlist, orders, payments, reviews, admin
+from .routers import auth, products, cart, wishlist, orders, payments, reviews, admin, addresses, stock_notify, newsletter
 from . import models  # noqa: F401 – ensures all models are registered before create_all
 
 # Create DB tables
@@ -31,6 +31,9 @@ app.include_router(orders.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
+app.include_router(addresses.router, prefix="/api/v1")
+app.include_router(stock_notify.router, prefix="/api/v1")
+app.include_router(newsletter.router, prefix="/api/v1")
 
 
 @app.get("/")

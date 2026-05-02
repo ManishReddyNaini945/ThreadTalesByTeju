@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useForm } from "react-hook-form";
@@ -6,8 +6,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useCart } from "../context/CartContext";
 import { orderService } from "../services/orderService";
+import { addressService } from "../services/addressService";
 import { toast } from "sonner";
-import { Tag, CreditCard, Truck, CheckCircle } from "lucide-react";
+import { Tag, CreditCard, Truck, CheckCircle, MapPin, Gift } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -42,11 +43,24 @@ export default function CheckoutPage() {
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("razorpay");
+  const [giftWrap, setGiftWrap] = useState(false);
+  const GIFT_WRAP_FEE = 50;
 
-  const { register, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(addressSchema) });
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+
+  const { register, handleSubmit, formState: { errors }, reset } = useForm({ resolver: zodResolver(addressSchema) });
+
+  useEffect(() => {
+    addressService.getAddresses().then(({ data }) => {
+      setSavedAddresses(data);
+      const def = data.find((a) => a.is_default) || data[0];
+      if (def) { setSelectedAddressId(def.id); reset({ full_name: def.full_name, phone: def.phone, address_line1: def.address_line1, address_line2: def.address_line2 || "", city: def.city, state: def.state, pincode: def.pincode }); }
+    }).catch(() => {});
+  }, []);
 
   const shipping = cart.subtotal >= 500 || cart.subtotal === 0 ? 0 : 50;
-  const total = cart.subtotal - couponDiscount + shipping;
+  const total = cart.subtotal - couponDiscount + shipping + (giftWrap ? GIFT_WRAP_FEE : 0);
 
   const validateCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -77,6 +91,7 @@ export default function CheckoutPage() {
         shipping_address: addressData,
         payment_method: paymentMethod,
         coupon_code: couponDiscount > 0 ? couponCode : undefined,
+        notes: giftWrap ? "Gift wrapping requested" : undefined,
       });
 
       if (paymentMethod === "razorpay") {
@@ -106,7 +121,7 @@ export default function CheckoutPage() {
               toast.error("Payment verification failed. Contact support.");
             }
           },
-          prefill: { name: addressData.full_name, contact: addressData.phone },
+          prefill: { name: addressData.full_name, contact: addressData.phone.replace(/\D/g, "").slice(-10) },
           theme: { color: "#c8a45c" },
           modal: {
             ondismiss: () => {
@@ -129,22 +144,52 @@ export default function CheckoutPage() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
-      <main className="max-w-6xl mx-auto px-4 py-10">
-        <h1 className="text-3xl font-serif text-brand-dark mb-8 flex items-center gap-3">
-          <CreditCard size={28} className="text-brand-gold" /> Checkout
-        </h1>
+      <main className="max-w-6xl mx-auto px-6 lg:px-10 pt-32 pb-20">
+        <div className="flex items-center gap-3 mb-10">
+          <CreditCard size={24} style={{ color: "var(--gold)" }} />
+          <h1 className="text-3xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+            Checkout
+          </h1>
+        </div>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left – Address + Payment */}
             <div className="lg:col-span-2 space-y-6">
               {/* Shipping Address */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm">
-                <h2 className="font-semibold text-brand-dark mb-5 flex items-center gap-2">
-                  <Truck size={18} className="text-brand-gold" /> Shipping Address
+              <div className="p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                <h2 className="font-normal text-base mb-5 flex items-center gap-2"
+                  style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+                  <Truck size={18} style={{ color: "var(--gold)" }} /> Shipping Address
                 </h2>
+
+                {savedAddresses.length > 0 && (
+                  <div className="mb-5 space-y-2">
+                    <p className="text-xs tracking-widest uppercase mb-2" style={{ color: "var(--cream-dim)" }}>Saved Addresses</p>
+                    {savedAddresses.map((addr) => (
+                      <label key={addr.id} className="flex items-start gap-3 p-3 cursor-pointer transition-all"
+                        style={{ border: `1px solid ${selectedAddressId === addr.id ? "var(--gold)" : "var(--border)"}`, background: selectedAddressId === addr.id ? "rgba(200,164,92,0.07)" : "transparent" }}>
+                        <input type="radio" name="saved_address" checked={selectedAddressId === addr.id}
+                          onChange={() => { setSelectedAddressId(addr.id); reset({ full_name: addr.full_name, phone: addr.phone, address_line1: addr.address_line1, address_line2: addr.address_line2 || "", city: addr.city, state: addr.state, pincode: addr.pincode }); }}
+                          className="accent-[#c8a45c] mt-0.5" />
+                        <div className="text-xs" style={{ color: "var(--cream-dim)" }}>
+                          <p className="font-medium" style={{ color: "var(--cream)" }}>{addr.full_name} · {addr.phone}</p>
+                          <p>{addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ""}, {addr.city}, {addr.state} – {addr.pincode}</p>
+                        </div>
+                      </label>
+                    ))}
+                    <label className="flex items-center gap-3 p-3 cursor-pointer transition-all"
+                      style={{ border: `1px solid ${selectedAddressId === null ? "var(--gold)" : "var(--border)"}`, background: selectedAddressId === null ? "rgba(200,164,92,0.07)" : "transparent" }}>
+                      <input type="radio" name="saved_address" checked={selectedAddressId === null}
+                        onChange={() => { setSelectedAddressId(null); reset({ full_name: "", phone: "", address_line1: "", address_line2: "", city: "", state: "", pincode: "" }); }}
+                        className="accent-[#c8a45c]" />
+                      <span className="text-xs" style={{ color: "var(--cream-dim)" }}>+ Use a different address</span>
+                    </label>
+                  </div>
+                )}
+
                 <div className="grid sm:grid-cols-2 gap-4">
                   {[
                     { name: "full_name", label: "Full Name", placeholder: "Your full name", col: 1 },
@@ -156,97 +201,144 @@ export default function CheckoutPage() {
                     { name: "pincode", label: "Pincode", placeholder: "560001", col: 1 },
                   ].map(({ name, label, placeholder, col }) => (
                     <div key={name} className={col === 2 ? "sm:col-span-2" : ""}>
-                      <label className="block text-xs font-medium text-brand-dark/70 mb-1.5">{label}</label>
+                      <label className="block text-xs font-medium mb-1.5" style={{ color: "var(--cream-dim)" }}>{label}</label>
                       <input {...register(name)} placeholder={placeholder}
-                        className="w-full px-4 py-3 rounded-xl border border-brand-dark/10 bg-brand-cream focus:outline-none focus:ring-2 focus:ring-brand-gold/40 text-brand-dark text-sm" />
-                      {errors[name] && <p className="text-red-500 text-xs mt-1">{errors[name]?.message}</p>}
+                        className="w-full px-4 py-3 text-sm focus:outline-none"
+                        style={{
+                          background: "var(--bg)",
+                          border: "1px solid var(--border)",
+                          color: "var(--cream)",
+                        }}
+                        onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                        onBlur={e => e.target.style.borderColor = "var(--border)"}
+                      />
+                      {errors[name] && <p className="text-red-400 text-xs mt-1">{errors[name]?.message}</p>}
                     </div>
                   ))}
                 </div>
               </div>
 
               {/* Payment Method */}
-              <div className="bg-white rounded-3xl p-6 shadow-sm">
-                <h2 className="font-semibold text-brand-dark mb-5 flex items-center gap-2">
-                  <CreditCard size={18} className="text-brand-gold" /> Payment Method
+              <div className="p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                <h2 className="font-normal text-base mb-5 flex items-center gap-2"
+                  style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+                  <CreditCard size={18} style={{ color: "var(--gold)" }} /> Payment Method
                 </h2>
                 <div className="space-y-3">
                   {[
                     { id: "razorpay", label: "Pay Online (UPI, Cards, Netbanking)", sub: "Powered by Razorpay — secure & instant" },
                     { id: "cod", label: "Cash on Delivery", sub: "Pay when you receive your order" },
                   ].map(({ id, label, sub }) => (
-                    <label key={id} className={`flex items-center gap-4 p-4 rounded-2xl border-2 cursor-pointer transition-all ${paymentMethod === id ? "border-brand-gold bg-brand-gold/5" : "border-brand-dark/10 hover:border-brand-gold/40"}`}>
+                    <label key={id} className="flex items-center gap-4 p-4 cursor-pointer transition-all"
+                      style={{
+                        border: `1px solid ${paymentMethod === id ? "var(--gold)" : "var(--border)"}`,
+                        background: paymentMethod === id ? "rgba(200,164,92,0.07)" : "transparent",
+                      }}>
                       <input type="radio" name="payment" value={id} checked={paymentMethod === id}
-                        onChange={() => setPaymentMethod(id)} className="accent-brand-gold" />
+                        onChange={() => setPaymentMethod(id)} className="accent-[#c8a45c]" />
                       <div>
-                        <p className="font-medium text-brand-dark text-sm">{label}</p>
-                        <p className="text-xs text-brand-dark/50">{sub}</p>
+                        <p className="font-medium text-sm" style={{ color: "var(--cream)" }}>{label}</p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>{sub}</p>
                       </div>
                     </label>
                   ))}
+
+                  {/* Gift Wrap */}
+                  <label className="flex items-center gap-4 p-4 cursor-pointer transition-all"
+                    style={{
+                      border: `1px solid ${giftWrap ? "var(--gold)" : "var(--border)"}`,
+                      background: giftWrap ? "rgba(200,164,92,0.07)" : "transparent",
+                    }}>
+                    <input type="checkbox" checked={giftWrap} onChange={(e) => setGiftWrap(e.target.checked)} className="accent-[#c8a45c]" />
+                    <div className="flex items-center gap-2">
+                      <Gift size={16} style={{ color: "var(--gold)" }} />
+                      <div>
+                        <p className="font-medium text-sm" style={{ color: "var(--cream)" }}>Gift Wrapping (+₹{GIFT_WRAP_FEE})</p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>Beautifully wrapped with a handwritten note</p>
+                      </div>
+                    </div>
+                  </label>
                 </div>
               </div>
             </div>
 
             {/* Right – Summary */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-3xl p-6 shadow-sm sticky top-24 space-y-4">
-                <h2 className="font-semibold text-brand-dark">Order Summary</h2>
+              <div className="p-6 sticky top-28 space-y-4" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                <h2 className="font-normal text-lg pb-4" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)", borderBottom: "1px solid var(--border)" }}>
+                  Order Summary
+                </h2>
 
                 {/* Items */}
                 <div className="space-y-3 max-h-48 overflow-y-auto">
                   {cart.items.map((item) => (
                     <div key={item.id} className="flex items-center gap-3">
-                      <img src={item.product?.images?.[0]} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                      <img src={item.product?.images?.[0]} alt="" className="w-10 h-10 object-cover flex-shrink-0" style={{ border: "1px solid var(--border)" }} />
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-brand-dark font-medium line-clamp-1">{item.product?.name}</p>
-                        <p className="text-xs text-brand-dark/50">×{item.quantity}</p>
+                        <p className="text-xs font-medium line-clamp-1" style={{ color: "var(--cream)" }}>{item.product?.name}</p>
+                        <p className="text-xs" style={{ color: "var(--cream-dim)" }}>×{item.quantity}</p>
                       </div>
-                      <p className="text-xs font-semibold text-brand-dark">₹{(item.price_at_add * item.quantity).toLocaleString()}</p>
+                      <p className="text-xs font-semibold" style={{ color: "var(--cream)" }}>₹{(item.price_at_add * item.quantity).toLocaleString()}</p>
                     </div>
                   ))}
                 </div>
 
                 {/* Coupon */}
                 <div>
-                  <label className="block text-xs font-medium text-brand-dark/70 mb-1.5 flex items-center gap-1">
+                  <label className="flex items-center gap-1 text-xs font-medium mb-1.5" style={{ color: "var(--cream-dim)" }}>
                     <Tag size={12} /> Coupon Code
                   </label>
                   <div className="flex gap-2">
                     <input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                       placeholder="SAVE20" maxLength={20}
-                      className="flex-1 px-3 py-2 rounded-xl border border-brand-dark/10 text-sm focus:outline-none focus:ring-2 focus:ring-brand-gold/40 text-brand-dark" />
+                      className="flex-1 px-3 py-2 text-sm focus:outline-none"
+                      style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--cream)" }}
+                      onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                      onBlur={e => e.target.style.borderColor = "var(--border)"}
+                    />
                     <button type="button" onClick={validateCoupon} disabled={validatingCoupon}
-                      className="px-3 py-2 bg-brand-gold/20 text-brand-dark rounded-xl text-xs font-medium hover:bg-brand-gold/40 transition-colors">
+                      className="px-3 py-2 text-xs font-medium tracking-widest uppercase transition-all"
+                      style={{ border: "1px solid var(--gold)", color: "var(--gold)" }}
+                      onMouseEnter={e => { e.target.style.background = "var(--gold)"; e.target.style.color = "var(--bg)"; }}
+                      onMouseLeave={e => { e.target.style.background = "transparent"; e.target.style.color = "var(--gold)"; }}>
                       Apply
                     </button>
                   </div>
                   {couponMsg && (
-                    <p className={`text-xs mt-1 ${couponDiscount > 0 ? "text-green-600" : "text-red-500"}`}>{couponMsg}</p>
+                    <p className={`text-xs mt-1 ${couponDiscount > 0 ? "text-green-400" : "text-red-400"}`}>{couponMsg}</p>
                   )}
                 </div>
 
                 {/* Totals */}
-                <div className="space-y-2 text-sm border-t border-brand-dark/10 pt-4">
-                  <div className="flex justify-between text-brand-dark/70">
-                    <span>Subtotal</span><span>₹{cart.subtotal.toLocaleString()}</span>
+                <div className="space-y-2 text-sm pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+                  <div className="flex justify-between">
+                    <span style={{ color: "var(--cream-dim)" }}>Subtotal</span>
+                    <span style={{ color: "var(--cream)" }}>₹{cart.subtotal.toLocaleString()}</span>
                   </div>
                   {couponDiscount > 0 && (
-                    <div className="flex justify-between text-green-600">
+                    <div className="flex justify-between text-green-400">
                       <span>Coupon Discount</span><span>-₹{couponDiscount.toLocaleString()}</span>
                     </div>
                   )}
-                  <div className="flex justify-between text-brand-dark/70">
-                    <span>Shipping</span>
-                    <span>{shipping === 0 ? <span className="text-green-600">FREE</span> : `₹${shipping}`}</span>
+                  <div className="flex justify-between">
+                    <span style={{ color: "var(--cream-dim)" }}>Shipping</span>
+                    <span style={{ color: shipping === 0 ? "#4ade80" : "var(--cream)" }}>
+                      {shipping === 0 ? "FREE" : `₹${shipping}`}
+                    </span>
                   </div>
-                  <div className="flex justify-between font-bold text-brand-dark text-base border-t border-brand-dark/10 pt-2">
+                  {giftWrap && (
+                    <div className="flex justify-between">
+                      <span style={{ color: "var(--cream-dim)" }}>Gift Wrapping</span>
+                      <span style={{ color: "var(--cream)" }}>₹{GIFT_WRAP_FEE}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between font-medium text-base pt-3" style={{ borderTop: "1px solid var(--border)", color: "var(--cream)" }}>
                     <span>Total</span><span>₹{total.toLocaleString()}</span>
                   </div>
                 </div>
 
                 <motion.button type="submit" whileTap={{ scale: 0.97 }} disabled={placingOrder}
-                  className="w-full py-4 bg-brand-dark text-brand-cream rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-brand-gold transition-colors disabled:opacity-60">
+                  className="btn-gold w-full py-4 flex items-center justify-center gap-2 disabled:opacity-60">
                   <CheckCircle size={18} />
                   {placingOrder ? "Processing..." : `Place Order · ₹${total.toLocaleString()}`}
                 </motion.button>

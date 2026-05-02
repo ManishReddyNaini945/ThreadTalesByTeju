@@ -7,3 +7,5 @@ from .wishlist import WishlistItem
 from .order import Order, OrderItem
 from .review import Review
 from .coupon import Coupon
+from .stock_notification import StockNotification
+from .newsletter import NewsletterSubscriber

@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { User, Lock, MapPin, LogOut, Save, ChevronRight } from "lucide-react";
+import { User, Lock, MapPin, LogOut, Save, ChevronRight, Package, Plus, Trash2, Star } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { authService } from "../services/authService";
+import { addressService } from "../services/addressService";
 import { toast } from "sonner";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -36,6 +37,149 @@ const TABS = [
   { id: "password", label: "Password", icon: Lock },
   { id: "addresses", label: "Addresses", icon: MapPin },
 ];
+
+const emptyAddr = { full_name: "", phone: "", address_line1: "", address_line2: "", city: "", state: "", pincode: "", country: "India", is_default: false };
+
+function AddressesTab({ inputStyle, focusStyle, blurStyle }) {
+  const [addresses, setAddresses] = useState([]);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [form, setForm] = useState(emptyAddr);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    addressService.getAddresses().then(({ data }) => setAddresses(data)).catch(() => {});
+  }, []);
+
+  const openAdd = () => { setEditing(null); setForm(emptyAddr); setShowForm(true); };
+  const openEdit = (addr) => { setEditing(addr.id); setForm({ ...addr }); setShowForm(true); };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editing) {
+        const { data } = await addressService.updateAddress(editing, form);
+        setAddresses((prev) => prev.map((a) => a.id === editing ? data : (form.is_default ? { ...a, is_default: false } : a)));
+      } else {
+        const { data } = await addressService.createAddress(form);
+        setAddresses((prev) => form.is_default ? [data, ...prev.map((a) => ({ ...a, is_default: false }))] : [data, ...prev]);
+      }
+      toast.success(editing ? "Address updated!" : "Address added!");
+      setShowForm(false);
+    } catch { toast.error("Failed to save address"); }
+    finally { setSaving(false); }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await addressService.deleteAddress(id);
+      setAddresses((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Address removed");
+    } catch { toast.error("Failed to delete"); }
+  };
+
+  const handleSetDefault = async (id) => {
+    try {
+      const { data } = await addressService.setDefault(id);
+      setAddresses((prev) => prev.map((a) => ({ ...a, is_default: a.id === id })));
+      toast.success("Default address updated");
+    } catch { toast.error("Failed to update"); }
+  };
+
+  const fields = [
+    { key: "full_name", label: "Full Name", placeholder: "Your full name", span: 1 },
+    { key: "phone", label: "Phone", placeholder: "+91 98765 43210", span: 1 },
+    { key: "address_line1", label: "Address Line 1", placeholder: "House / Street", span: 2 },
+    { key: "address_line2", label: "Address Line 2 (optional)", placeholder: "Landmark, Colony", span: 2 },
+    { key: "city", label: "City", placeholder: "City", span: 1 },
+    { key: "state", label: "State", placeholder: "State", span: 1 },
+    { key: "pincode", label: "Pincode", placeholder: "560001", span: 1 },
+  ];
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-8 pb-6" style={{ borderBottom: "1px solid var(--border)" }}>
+        <div>
+          <p className="section-tag mb-1">Shipping</p>
+          <h2 className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+            Saved Addresses
+          </h2>
+        </div>
+        {!showForm && (
+          <button onClick={openAdd} className="btn-gold flex items-center gap-2 px-4 py-2 text-xs">
+            <Plus size={14} /> Add New
+          </button>
+        )}
+      </div>
+
+      {showForm && (
+        <form onSubmit={handleSave} className="mb-8 p-5 space-y-4" style={{ border: "1px solid var(--border)", background: "var(--bg)" }}>
+          <p className="text-sm font-medium" style={{ color: "var(--gold)" }}>{editing ? "Edit Address" : "New Address"}</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {fields.map(({ key, label, placeholder, span }) => (
+              <div key={key} className={span === 2 ? "sm:col-span-2" : ""}>
+                <label className="block text-xs tracking-[0.2em] uppercase mb-1.5" style={{ color: "var(--cream-dim)" }}>{label}</label>
+                <input value={form[key] || ""} onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                  placeholder={placeholder} style={inputStyle} onFocus={focusStyle} onBlur={blurStyle} />
+              </div>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input type="checkbox" checked={form.is_default} onChange={(e) => setForm({ ...form, is_default: e.target.checked })} className="accent-[#c8a45c]" />
+            <span className="text-sm" style={{ color: "var(--cream-dim)" }}>Set as default address</span>
+          </label>
+          <div className="flex gap-3">
+            <button type="submit" disabled={saving} className="btn-gold flex items-center gap-2 px-5 py-2.5 text-xs">
+              <Save size={13} /> {saving ? "Saving..." : "Save Address"}
+            </button>
+            <button type="button" onClick={() => setShowForm(false)} className="btn-outline px-5 py-2.5 text-xs">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      {addresses.length === 0 && !showForm ? (
+        <div className="py-10 text-center">
+          <MapPin size={32} className="mx-auto mb-3" style={{ color: "var(--border)" }} />
+          <p style={{ color: "var(--cream-dim)" }}>No saved addresses yet. Add one above.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {addresses.map((addr) => (
+            <div key={addr.id} className="p-4 flex items-start justify-between gap-4"
+              style={{ border: `1px solid ${addr.is_default ? "var(--gold)" : "var(--border)"}`, background: addr.is_default ? "rgba(200,164,92,0.05)" : "transparent" }}>
+              <div className="flex-1 text-sm space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <p className="font-medium" style={{ color: "var(--cream)" }}>{addr.full_name}</p>
+                  {addr.is_default && (
+                    <span className="text-[10px] tracking-widest uppercase px-2 py-0.5" style={{ background: "rgba(200,164,92,0.15)", color: "var(--gold)", border: "1px solid var(--gold)" }}>
+                      Default
+                    </span>
+                  )}
+                </div>
+                <p style={{ color: "var(--cream-dim)" }}>{addr.address_line1}{addr.address_line2 ? `, ${addr.address_line2}` : ""}</p>
+                <p style={{ color: "var(--cream-dim)" }}>{addr.city}, {addr.state} – {addr.pincode}</p>
+                <p style={{ color: "var(--cream-dim)" }}>{addr.phone}</p>
+              </div>
+              <div className="flex flex-col gap-2 flex-shrink-0">
+                {!addr.is_default && (
+                  <button onClick={() => handleSetDefault(addr.id)} className="text-xs flex items-center gap-1 transition-colors"
+                    style={{ color: "var(--gold)" }}>
+                    <Star size={11} /> Set default
+                  </button>
+                )}
+                <button onClick={() => openEdit(addr)} className="text-xs transition-colors" style={{ color: "var(--cream-dim)" }}>Edit</button>
+                <button onClick={() => handleDelete(addr.id)} className="text-xs transition-colors" style={{ color: "#f87171" }}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
 
 export default function ProfilePage() {
   const { user, logout, updateUser } = useAuth();
@@ -136,6 +280,15 @@ export default function ProfilePage() {
                   {label}
                 </button>
               ))}
+
+              <Link to="/orders"
+                className="flex items-center gap-3 px-5 py-4 text-sm transition-all duration-200"
+                style={{ color: "var(--cream-dim)", borderTop: "1px solid var(--border)", background: "var(--bg-card)", borderLeft: "2px solid transparent" }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = "var(--gold)"; e.currentTarget.style.borderLeftColor = "var(--gold)"; e.currentTarget.style.background = "rgba(200,164,92,0.1)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = "var(--cream-dim)"; e.currentTarget.style.borderLeftColor = "transparent"; e.currentTarget.style.background = "var(--bg-card)"; }}>
+                <Package size={15} />
+                My Orders
+              </Link>
 
               <button onClick={logout}
                 className="flex items-center gap-3 px-5 py-4 text-sm transition-all duration-200"
@@ -240,21 +393,7 @@ export default function ProfilePage() {
               )}
 
               {/* Addresses Tab */}
-              {tab === "addresses" && (
-                <>
-                  <p className="section-tag mb-2">Shipping</p>
-                  <h2 className="text-2xl font-normal mb-8 pb-6"
-                    style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)", borderBottom: "1px solid var(--border)" }}>
-                    Saved Addresses
-                  </h2>
-                  <div className="py-8 text-center">
-                    <MapPin size={32} className="mx-auto mb-4" style={{ color: "var(--border)" }} />
-                    <p style={{ color: "var(--cream-dim)" }}>
-                      Your saved addresses will appear here after checkout.
-                    </p>
-                  </div>
-                </>
-              )}
+              {tab === "addresses" && <AddressesTab inputStyle={inputStyle} focusStyle={focusStyle} blurStyle={blurStyle} />}
             </motion.div>
           </div>
         </div>

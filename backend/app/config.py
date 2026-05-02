@@ -26,6 +26,12 @@ class Settings(BaseSettings):
     APP_NAME: str = "Thread Tales by Teju"
     DEBUG: bool = True
 
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    EMAIL_FROM: str = "Thread Tales by Teju <noreply@threadtalesbyteju.com>"
+
     class Config:
         env_file = ".env"
         extra = "ignore"

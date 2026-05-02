@@ -1,3 +1,4 @@
+import threading
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from typing import List
@@ -8,8 +9,10 @@ from ..dependencies import get_current_user
 from ..models.user import User
 from ..models.order import Order, OrderItem, OrderStatus, PaymentMethod
 from ..models.cart import Cart, CartItem
+from ..models.product import Product
 from ..models.coupon import Coupon, DiscountType
 from ..schemas.order import OrderCreate, OrderOut, CouponValidate, CouponValidateResponse
+from ..services.email_service import send_order_confirmation
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -122,6 +125,8 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
     db.commit()
     db.refresh(order)
 
+    threading.Thread(target=send_order_confirmation, args=(current_user.email, order), daemon=True).start()
+
     return order
 
 
@@ -141,3 +146,30 @@ def get_order(order_id: int, db: Session = Depends(get_db), current_user: User =
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     return order
+
+
+@router.post("/{order_id}/cancel")
+def cancel_order(order_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    order = db.query(Order).options(joinedload(Order.items)).filter(
+        Order.id == order_id, Order.user_id == current_user.id
+    ).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.status not in [OrderStatus.pending, OrderStatus.confirmed]:
+        raise HTTPException(status_code=400, detail="Only pending or confirmed orders can be cancelled")
+
+    order.status = OrderStatus.cancelled
+    for item in order.items:
+        product = db.query(Product).filter(Product.id == item.product_id).first()
+        if product:
+            product.stock_quantity += item.quantity
+    db.commit()
+    db.refresh(order)
+
+    threading.Thread(
+        target=send_status_update,
+        args=(current_user.email, order.order_number, "cancelled"),
+        daemon=True
+    ).start()
+
+    return {"message": "Order cancelled successfully"}

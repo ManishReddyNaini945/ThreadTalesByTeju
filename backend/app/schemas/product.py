@@ -64,6 +64,7 @@ class ProductUpdate(BaseModel):
     is_featured: Optional[bool] = None
     is_bestseller: Optional[bool] = None
     status: Optional[ProductStatus] = None
+    sale_ends_at: Optional[datetime] = None
 
 
 class ProductOut(ProductBase):
@@ -72,6 +73,7 @@ class ProductOut(ProductBase):
     status: ProductStatus
     avg_rating: float
     review_count: int
+    sale_ends_at: Optional[datetime] = None
     created_at: datetime
     category: Optional[CategoryOut] = None
 

@@ -148,6 +148,15 @@ function ProductModal({ product, categories, onSave, onClose }) {
             </div>
           </div>
 
+          {/* Flash Sale */}
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1.5">Flash Sale Ends At (leave blank to disable)</label>
+            <input type="datetime-local"
+              value={form.sale_ends_at ? new Date(form.sale_ends_at).toISOString().slice(0,16) : ""}
+              onChange={(e) => setForm({ ...form, sale_ends_at: e.target.value || null })}
+              className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-brand-gold/40" />
+          </div>
+
           {/* Toggles */}
           <div className="flex gap-4">
             {[
@@ -225,13 +234,33 @@ export default function AdminProducts() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold text-gray-800">Products <span className="text-gray-400 text-lg font-normal">({total})</span></h1>
-        <button onClick={() => { setModalProduct(null); setShowModal(true); }}
-          className="flex items-center gap-2 px-4 py-2.5 bg-brand-dark text-white rounded-xl text-sm font-medium hover:bg-brand-gold transition-colors">
-          <Plus size={16} /> Add Product
-        </button>
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 cursor-pointer hover:bg-gray-50 transition-colors">
+            <Image size={15} /> Import CSV
+            <input type="file" accept=".csv" className="hidden" onChange={async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const fd = new FormData();
+              fd.append("file", file);
+              try {
+                const { data } = await adminService.bulkUpload(fd);
+                toast.success(`Imported ${data.created} products (${data.skipped} skipped)`);
+                fetchProducts();
+              } catch (err) {
+                toast.error(err.response?.data?.detail || "Import failed");
+              }
+              e.target.value = "";
+            }} />
+          </label>
+          <button onClick={() => { setModalProduct(null); setShowModal(true); }}
+            className="flex items-center gap-2 px-4 py-2.5 bg-brand-dark text-white rounded-xl text-sm font-medium hover:bg-brand-gold transition-colors">
+            <Plus size={16} /> Add Product
+          </button>
+        </div>
       </div>
+      <p className="text-xs text-gray-400 -mt-3">CSV columns: name, price, category_id, stock_quantity, compare_price, description, short_description, sku, images (|‑separated URLs), colors, sizes</p>
 
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

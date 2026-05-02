@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MessageCircle, Truck } from "lucide-react";
 
 const statusColors = {
   pending: "bg-yellow-100 text-yellow-700",
@@ -32,12 +32,21 @@ export default function AdminOrders() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  const updateStatus = async (orderId, newStatus) => {
+  const [trackingInputs, setTrackingInputs] = useState({});
+
+  const updateStatus = async (orderId, newStatus, tracking) => {
     try {
-      await adminService.updateOrderStatus(orderId, newStatus);
+      await adminService.updateOrderStatus(orderId, newStatus, tracking);
       toast.success("Order status updated");
       fetchOrders();
     } catch { toast.error("Failed to update status"); }
+  };
+
+  const sendWhatsApp = (order, customMsg) => {
+    const phone = order.shipping_address?.phone?.replace(/\D/g, "").slice(-10);
+    if (!phone) { toast.error("No phone number for this order"); return; }
+    const msg = customMsg || `Hi ${order.shipping_address?.full_name}, your Thread Tales by Teju order *#${order.order_number}* status: *${order.status.toUpperCase()}*. Thank you for shopping with us! 🌸`;
+    window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
   return (
@@ -86,13 +95,17 @@ export default function AdminOrders() {
                     <td className="px-4 py-3 text-gray-400 text-xs">
                       {new Date(order.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 flex items-center gap-2">
                       <select value={order.status}
                         onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => updateStatus(order.id, e.target.value)}
+                        onChange={(e) => updateStatus(order.id, e.target.value, trackingInputs[order.id])}
                         className="text-xs px-2 py-1.5 rounded-lg border border-gray-200 text-gray-700 focus:outline-none focus:ring-1 focus:ring-brand-gold/40">
                         {orderStatuses.map((s) => <option key={s} value={s} className="capitalize">{s}</option>)}
                       </select>
+                      <button onClick={(e) => { e.stopPropagation(); sendWhatsApp(order); }}
+                        className="p-1.5 rounded-lg text-green-600 hover:bg-green-50 transition-colors" title="Send WhatsApp update">
+                        <MessageCircle size={15} />
+                      </button>
                     </td>
                   </tr>
                   {expandedOrder === order.id && (
@@ -120,6 +133,25 @@ export default function AdminOrders() {
                               {order.shipping_address?.address_line2 && <p>{order.shipping_address.address_line2}</p>}
                               <p>{order.shipping_address?.city}, {order.shipping_address?.state} - {order.shipping_address?.pincode}</p>
                             </div>
+                            <div className="mt-3">
+                              <p className="text-xs font-medium text-gray-500 mb-1.5 flex items-center gap-1"><Truck size={11} /> Tracking Number</p>
+                              <div className="flex gap-2">
+                                <input
+                                  defaultValue={order.tracking_number || ""}
+                                  onChange={(e) => setTrackingInputs((p) => ({ ...p, [order.id]: e.target.value }))}
+                                  placeholder="Enter tracking number"
+                                  className="flex-1 text-xs px-2 py-1.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-1 focus:ring-brand-gold/40"
+                                  onClick={(e) => e.stopPropagation()} />
+                                <button onClick={(e) => { e.stopPropagation(); updateStatus(order.id, order.status, trackingInputs[order.id]); }}
+                                  className="text-xs px-2 py-1.5 rounded-lg bg-brand-gold/20 text-gray-700 hover:bg-brand-gold/40 transition-colors">
+                                  Save
+                                </button>
+                              </div>
+                            </div>
+                            <button onClick={(e) => { e.stopPropagation(); sendWhatsApp(order); }}
+                              className="mt-3 flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 transition-colors">
+                              <MessageCircle size={13} /> Send WhatsApp Update to Customer
+                            </button>
                           </div>
                         </div>
                       </td>

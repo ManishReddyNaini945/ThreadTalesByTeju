@@ -7,4 +7,5 @@ export const productService = {
   getReviews: (productId) => api.get(`/reviews/product/${productId}`),
   createReview: (data) => api.post("/reviews", data),
   deleteReview: (id) => api.delete(`/reviews/${id}`),
+  getRelated: (slug) => api.get(`/products/${slug}/related`),
 };

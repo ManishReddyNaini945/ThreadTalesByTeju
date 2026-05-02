@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, ShoppingBag, Star, ChevronLeft, Share2, MessageCircle, Minus, Plus, Check } from "lucide-react";
+import { Heart, ShoppingBag, Star, ChevronLeft, Share2, MessageCircle, Minus, Plus, Check, X, ZoomIn } from "lucide-react";
 import { productService } from "../services/productService";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import api from "../services/api";
+import CountdownTimer from "../components/CountdownTimer";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -15,35 +17,36 @@ function StarRating({ rating, count }) {
     <div className="flex items-center gap-2">
       <div className="flex">
         {[1, 2, 3, 4, 5].map((s) => (
-          <Star key={s} size={14} className={s <= Math.round(rating) ? "fill-brand-gold text-brand-gold" : "text-brand-dark/20"} />
+          <Star key={s} size={14} className={s <= Math.round(rating) ? "fill-[#c8a45c]" : ""} style={{ color: s <= Math.round(rating) ? "var(--gold)" : "var(--border)" }} />
         ))}
       </div>
-      <span className="text-sm text-brand-dark/60">({count} reviews)</span>
+      <span className="text-sm" style={{ color: "var(--cream-dim)" }}>({count} reviews)</span>
     </div>
   );
 }
 
 function ReviewCard({ review }) {
   return (
-    <div className="bg-white rounded-2xl p-5 shadow-sm">
+    <div className="p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-9 h-9 bg-brand-gold/20 rounded-full flex items-center justify-center text-brand-gold font-semibold text-sm">
+        <div className="w-9 h-9 rounded-full flex items-center justify-center font-semibold text-sm flex-shrink-0"
+          style={{ background: "rgba(200,164,92,0.15)", border: "1px solid var(--gold)", color: "var(--gold)" }}>
           {review.user_name?.[0]?.toUpperCase() || "A"}
         </div>
         <div>
-          <p className="font-medium text-brand-dark text-sm">{review.user_name || "Anonymous"}</p>
+          <p className="font-medium text-sm" style={{ color: "var(--cream)" }}>{review.user_name || "Anonymous"}</p>
           {review.is_verified_purchase && (
-            <span className="text-xs text-green-600 flex items-center gap-1"><Check size={10} /> Verified Purchase</span>
+            <span className="text-xs text-green-400 flex items-center gap-1"><Check size={10} /> Verified Purchase</span>
           )}
         </div>
         <div className="ml-auto flex">
           {[1, 2, 3, 4, 5].map((s) => (
-            <Star key={s} size={12} className={s <= review.rating ? "fill-brand-gold text-brand-gold" : "text-brand-dark/20"} />
+            <Star key={s} size={12} className={s <= review.rating ? "fill-[#c8a45c]" : ""} style={{ color: s <= review.rating ? "var(--gold)" : "var(--border)" }} />
           ))}
         </div>
       </div>
-      {review.title && <p className="font-medium text-brand-dark text-sm mb-1">{review.title}</p>}
-      {review.body && <p className="text-brand-dark/70 text-sm leading-relaxed">{review.body}</p>}
+      {review.title && <p className="font-medium text-sm mb-1" style={{ color: "var(--cream)" }}>{review.title}</p>}
+      {review.body && <p className="text-sm leading-relaxed" style={{ color: "var(--cream-dim)" }}>{review.body}</p>}
     </div>
   );
 }
@@ -60,6 +63,11 @@ export default function ProductDetailPage() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, title: "", body: "" });
+  const [notifyEmail, setNotifyEmail] = useState("");
+  const [notifyDone, setNotifyDone] = useState(false);
+  const [notifyLoading, setNotifyLoading] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [zoomOpen, setZoomOpen] = useState(false);
 
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
@@ -75,6 +83,7 @@ export default function ProductDetailPage() {
         ]);
         setProduct(pRes.data);
         setReviews(rRes.data || []);
+        productService.getRelated(slug).then(({ data }) => setRelatedProducts(data)).catch(() => {});
         if (pRes.data.colors?.length) setSelectedColor(pRes.data.colors[0]);
         if (pRes.data.sizes?.length) setSelectedSize(pRes.data.sizes[0]);
       } catch {
@@ -90,6 +99,18 @@ export default function ProductDetailPage() {
     setAddingToCart(true);
     await addToCart(product.id, quantity, selectedColor, selectedSize);
     setAddingToCart(false);
+  };
+
+  const handleNotify = async (e) => {
+    e.preventDefault();
+    if (!notifyEmail) return;
+    setNotifyLoading(true);
+    try {
+      await api.post("/stock-notify", { product_id: product.id, email: notifyEmail });
+      setNotifyDone(true);
+      toast.success("We'll notify you when it's back in stock!");
+    } catch { toast.error("Failed to subscribe. Try again."); }
+    finally { setNotifyLoading(false); }
   };
 
   const handleSubmitReview = async (e) => {
@@ -110,17 +131,18 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-brand-cream flex items-center justify-center">
-        <div className="w-10 h-10 border-2 border-brand-gold border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
+        <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
+          style={{ borderColor: "var(--gold)", borderTopColor: "transparent" }} />
       </div>
     );
   }
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-brand-cream flex flex-col items-center justify-center">
-        <p className="text-brand-dark/60 mb-4">Product not found</p>
-        <Link to="/" className="text-brand-gold underline">Go home</Link>
+      <div className="min-h-screen flex flex-col items-center justify-center" style={{ background: "var(--bg)" }}>
+        <p className="mb-4" style={{ color: "var(--cream-dim)" }}>Product not found</p>
+        <Link to="/" style={{ color: "var(--gold)" }} className="underline">Go home</Link>
       </div>
     );
   }
@@ -131,32 +153,42 @@ export default function ProductDetailPage() {
     : null;
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 lg:py-16">
+      <main className="max-w-7xl mx-auto px-6 lg:px-10 pt-32 pb-20">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-sm text-brand-dark/50 mb-8">
-          <Link to="/" className="hover:text-brand-gold transition-colors">Home</Link>
-          <span>/</span>
-          <Link to="/shop" className="hover:text-brand-gold transition-colors">Shop</Link>
-          <span>/</span>
-          <span className="text-brand-dark">{product.name}</span>
+        <nav className="flex items-center gap-2 text-xs tracking-widest uppercase mb-10">
+          <Link to="/" className="transition-colors" style={{ color: "var(--cream-dim)" }}
+            onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
+            onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}>Home</Link>
+          <span style={{ color: "var(--border)" }}>/</span>
+          <Link to="/shop" className="transition-colors" style={{ color: "var(--cream-dim)" }}
+            onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
+            onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}>Shop</Link>
+          <span style={{ color: "var(--border)" }}>/</span>
+          <span style={{ color: "var(--gold)" }}>{product.name}</span>
         </nav>
 
         <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
           {/* Images */}
           <div className="space-y-4">
             <motion.div layoutId={`product-${product.id}`}
-              className="aspect-square rounded-3xl overflow-hidden bg-white shadow-sm">
-              <img src={images[selectedImage]} alt={product.name}
-                className="w-full h-full object-cover" />
+              className="aspect-square overflow-hidden relative group cursor-zoom-in"
+              style={{ border: "1px solid var(--border)" }}
+              onClick={() => setZoomOpen(true)}>
+              <img src={images[selectedImage]} alt={product.name} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: "rgba(0,0,0,0.3)" }}>
+                <ZoomIn size={32} color="#fff" />
+              </div>
             </motion.div>
             {images.length > 1 && (
               <div className="grid grid-cols-5 gap-2">
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setSelectedImage(i)}
-                    className={`aspect-square rounded-xl overflow-hidden border-2 transition-all ${selectedImage === i ? "border-brand-gold" : "border-transparent"}`}>
+                    className="aspect-square overflow-hidden transition-all"
+                    style={{ border: `2px solid ${selectedImage === i ? "var(--gold)" : "var(--border)"}` }}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
                 ))}
@@ -168,38 +200,51 @@ export default function ProductDetailPage() {
           <div className="space-y-6">
             {product.category && (
               <Link to={`/shop?category=${product.category.slug}`}
-                className="text-brand-gold text-sm font-medium uppercase tracking-widest hover:underline">
+                className="text-sm font-medium uppercase tracking-widest hover:underline" style={{ color: "var(--gold)" }}>
                 {product.category.name}
               </Link>
             )}
 
-            <h1 className="text-3xl lg:text-4xl font-serif text-brand-dark leading-tight">{product.name}</h1>
+            <h1 className="text-3xl lg:text-4xl font-normal leading-tight"
+              style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>{product.name}</h1>
 
             <StarRating rating={product.avg_rating} count={product.review_count} />
 
             {/* Price */}
-            <div className="flex items-center gap-3">
-              <span className="text-3xl font-bold text-brand-dark">₹{product.price.toLocaleString()}</span>
-              {product.compare_price && (
-                <>
-                  <span className="text-lg text-brand-dark/40 line-through">₹{product.compare_price.toLocaleString()}</span>
-                  <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-full text-xs font-medium">{discount}% off</span>
-                </>
-              )}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <span className="text-3xl font-bold" style={{ color: "var(--cream)" }}>₹{product.price.toLocaleString()}</span>
+                {product.compare_price && (
+                  <>
+                    <span className="text-lg line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price.toLocaleString()}</span>
+                    <span className="px-2 py-0.5 text-xs font-medium" style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid #4ade8040" }}>
+                      {discount}% off
+                    </span>
+                  </>
+                )}
+              </div>
+              {product.sale_ends_at && <CountdownTimer endsAt={product.sale_ends_at} />}
             </div>
 
             {product.short_description && (
-              <p className="text-brand-dark/70 leading-relaxed">{product.short_description}</p>
+              <p className="leading-relaxed" style={{ color: "var(--cream-dim)" }}>{product.short_description}</p>
             )}
 
             {/* Colors */}
             {product.colors?.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-brand-dark mb-2">Color: <span className="text-brand-gold">{selectedColor}</span></p>
+                <p className="text-sm font-medium mb-2" style={{ color: "var(--cream)" }}>
+                  Color: <span style={{ color: "var(--gold)" }}>{selectedColor}</span>
+                </p>
                 <div className="flex gap-2 flex-wrap">
                   {product.colors.map((c) => (
                     <button key={c} onClick={() => setSelectedColor(c)}
-                      className={`px-4 py-2 rounded-full text-sm border transition-all ${selectedColor === c ? "border-brand-gold bg-brand-gold/10 text-brand-dark font-medium" : "border-brand-dark/20 text-brand-dark/70 hover:border-brand-gold"}`}>
+                      className="px-4 py-2 text-sm transition-all"
+                      style={{
+                        border: `1px solid ${selectedColor === c ? "var(--gold)" : "var(--border)"}`,
+                        color: selectedColor === c ? "var(--gold)" : "var(--cream-dim)",
+                        background: selectedColor === c ? "rgba(200,164,92,0.1)" : "transparent",
+                      }}>
                       {c}
                     </button>
                   ))}
@@ -210,11 +255,18 @@ export default function ProductDetailPage() {
             {/* Sizes */}
             {product.sizes?.length > 0 && (
               <div>
-                <p className="text-sm font-medium text-brand-dark mb-2">Size: <span className="text-brand-gold">{selectedSize}</span></p>
+                <p className="text-sm font-medium mb-2" style={{ color: "var(--cream)" }}>
+                  Size: <span style={{ color: "var(--gold)" }}>{selectedSize}</span>
+                </p>
                 <div className="flex gap-2 flex-wrap">
                   {product.sizes.map((s) => (
                     <button key={s} onClick={() => setSelectedSize(s)}
-                      className={`px-4 py-2 rounded-full text-sm border transition-all ${selectedSize === s ? "border-brand-gold bg-brand-gold/10 text-brand-dark font-medium" : "border-brand-dark/20 text-brand-dark/70 hover:border-brand-gold"}`}>
+                      className="px-4 py-2 text-sm transition-all"
+                      style={{
+                        border: `1px solid ${selectedSize === s ? "var(--gold)" : "var(--border)"}`,
+                        color: selectedSize === s ? "var(--gold)" : "var(--cream-dim)",
+                        background: selectedSize === s ? "rgba(200,164,92,0.1)" : "transparent",
+                      }}>
                       {s}
                     </button>
                   ))}
@@ -224,58 +276,145 @@ export default function ProductDetailPage() {
 
             {/* Quantity */}
             <div className="flex items-center gap-4">
-              <p className="text-sm font-medium text-brand-dark">Quantity</p>
-              <div className="flex items-center gap-3 bg-white rounded-full px-4 py-2 shadow-sm">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="text-brand-dark/60 hover:text-brand-dark transition-colors">
+              <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>Quantity</p>
+              <div className="flex items-center gap-3 px-4 py-2" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="transition-colors" style={{ color: "var(--cream-dim)" }}>
                   <Minus size={16} />
                 </button>
-                <span className="font-semibold text-brand-dark w-6 text-center">{quantity}</span>
-                <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))} className="text-brand-dark/60 hover:text-brand-dark transition-colors">
+                <span className="font-semibold w-6 text-center" style={{ color: "var(--cream)" }}>{quantity}</span>
+                <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))} className="transition-colors" style={{ color: "var(--cream-dim)" }}>
                   <Plus size={16} />
                 </button>
               </div>
-              <span className="text-sm text-brand-dark/40">{product.stock_quantity} available</span>
+              <span className="text-sm" style={{ color: "var(--cream-dim)" }}>{product.stock_quantity} available</span>
             </div>
 
             {/* CTA buttons */}
-            <div className="flex gap-3">
-              <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={addingToCart || product.stock_quantity === 0}
-                className="flex-1 py-4 bg-brand-dark text-brand-cream rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-brand-gold transition-colors disabled:opacity-50">
-                <ShoppingBag size={18} />
-                {product.stock_quantity === 0 ? "Out of Stock" : addingToCart ? "Adding..." : "Add to Cart"}
-              </motion.button>
+            {product.stock_quantity === 0 ? (
+              <div className="space-y-3">
+                <p className="text-sm font-medium" style={{ color: "#f87171" }}>Currently Out of Stock</p>
+                {notifyDone ? (
+                  <p className="text-sm" style={{ color: "#4ade80" }}>✓ We'll email you when it's back!</p>
+                ) : (
+                  <form onSubmit={handleNotify} className="flex gap-2">
+                    <input value={notifyEmail} onChange={(e) => setNotifyEmail(e.target.value)}
+                      type="email" placeholder="Enter your email" required
+                      className="flex-1 px-4 py-3 text-sm focus:outline-none"
+                      style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--cream)" }}
+                      onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                      onBlur={e => e.target.style.borderColor = "var(--border)"} />
+                    <button type="submit" disabled={notifyLoading} className="btn-gold px-4 py-3 text-xs disabled:opacity-60">
+                      {notifyLoading ? "..." : "Notify Me"}
+                    </button>
+                  </form>
+                )}
+              </div>
+            ) : (
+              <div className="flex gap-3">
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={addingToCart}
+                  className="btn-gold flex-1 py-4 flex items-center justify-center gap-2 disabled:opacity-50">
+                  <ShoppingBag size={18} />
+                  {addingToCart ? "Adding..." : "Add to Cart"}
+                </motion.button>
 
-              <motion.button whileTap={{ scale: 0.97 }} onClick={() => toggleWishlist(product.id)}
-                className={`p-4 rounded-2xl border-2 transition-all ${isWishlisted(product.id) ? "border-red-400 bg-red-50 text-red-500" : "border-brand-dark/20 text-brand-dark/60 hover:border-brand-gold hover:text-brand-gold"}`}>
-                <Heart size={20} className={isWishlisted(product.id) ? "fill-red-400" : ""} />
-              </motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={() => toggleWishlist(product.id)}
+                  className="p-4 transition-all"
+                  style={{
+                    border: `1px solid ${isWishlisted(product.id) ? "#f87171" : "var(--border)"}`,
+                    color: isWishlisted(product.id) ? "#f87171" : "var(--cream-dim)",
+                    background: isWishlisted(product.id) ? "rgba(248,113,113,0.1)" : "transparent",
+                  }}>
+                  <Heart size={20} className={isWishlisted(product.id) ? "fill-[#f87171]" : ""} />
+                </motion.button>
 
-              <motion.button whileTap={{ scale: 0.97 }}
-                onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
-                className="p-4 rounded-2xl border-2 border-green-400 bg-green-50 text-green-600 hover:bg-green-100 transition-colors">
-                <MessageCircle size={20} />
-              </motion.button>
-            </div>
+                <motion.button whileTap={{ scale: 0.97 }}
+                  onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
+                  className="p-4 transition-colors"
+                  style={{ border: "1px solid #4ade80", color: "#4ade80" }}>
+                  <MessageCircle size={20} />
+                </motion.button>
+              </div>
+            )}
 
-            <p className="text-xs text-brand-dark/40 text-center">Free shipping on orders above ₹500</p>
+            <p className="text-xs text-center" style={{ color: "var(--cream-dim)" }}>Free shipping on orders above ₹500</p>
 
             {/* Description */}
             {product.description && (
-              <div className="border-t border-brand-dark/10 pt-6">
-                <h3 className="font-semibold text-brand-dark mb-3">Description</h3>
-                <p className="text-brand-dark/70 leading-relaxed text-sm">{product.description}</p>
+              <div className="pt-6" style={{ borderTop: "1px solid var(--border)" }}>
+                <h3 className="font-normal mb-3" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>Description</h3>
+                <p className="leading-relaxed text-sm" style={{ color: "var(--cream-dim)" }}>{product.description}</p>
               </div>
             )}
           </div>
         </div>
 
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-20">
+            <h2 className="text-2xl font-normal mb-8" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+              You May Also Like
+            </h2>
+            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {relatedProducts.map((p) => (
+                <Link key={p.id} to={`/product/${p.slug}`}
+                  className="group overflow-hidden transition-all"
+                  style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+                  <div className="aspect-square overflow-hidden">
+                    <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="p-3">
+                    <p className="text-sm font-medium line-clamp-2 mb-1 transition-colors group-hover:text-[#c8a45c]"
+                      style={{ color: "var(--cream)" }}>{p.name}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold" style={{ color: "var(--gold)" }}>₹{p.price.toLocaleString()}</span>
+                      {p.compare_price && (
+                        <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{p.compare_price.toLocaleString()}</span>
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Reviews section */}
         <div className="mt-20">
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-serif text-brand-dark">Customer Reviews</h2>
+            <div>
+              <h2 className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+                Customer Reviews
+              </h2>
+              {reviews.length > 0 && (() => {
+                const counts = [5,4,3,2,1].map((s) => ({ star: s, count: reviews.filter(r => r.rating === s).length }));
+                const avg = (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length).toFixed(1);
+                return (
+                  <div className="mt-4 flex gap-6 items-start">
+                    <div className="text-center">
+                      <p className="text-4xl font-bold" style={{ color: "var(--gold)" }}>{avg}</p>
+                      <div className="flex justify-center mt-1">
+                        {[1,2,3,4,5].map(s => <Star key={s} size={12} className={s <= Math.round(avg) ? "fill-[#c8a45c]" : ""} style={{ color: s <= Math.round(avg) ? "var(--gold)" : "var(--border)" }} />)}
+                      </div>
+                      <p className="text-xs mt-1" style={{ color: "var(--cream-dim)" }}>{reviews.length} reviews</p>
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      {counts.map(({ star, count }) => (
+                        <div key={star} className="flex items-center gap-2">
+                          <span className="text-xs w-4" style={{ color: "var(--cream-dim)" }}>{star}★</span>
+                          <div className="flex-1 h-1.5 rounded-full" style={{ background: "var(--border)" }}>
+                            <div className="h-full rounded-full" style={{ width: reviews.length ? `${(count / reviews.length) * 100}%` : "0%", background: "var(--gold)" }} />
+                          </div>
+                          <span className="text-xs w-4 text-right" style={{ color: "var(--cream-dim)" }}>{count}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
             {user && (
               <button onClick={() => setShowReviewForm(!showReviewForm)}
-                className="px-5 py-2.5 border border-brand-gold text-brand-gold rounded-xl text-sm hover:bg-brand-gold hover:text-white transition-all">
+                className="btn-outline px-5 py-2.5 text-sm">
                 {showReviewForm ? "Cancel" : "Write a Review"}
               </button>
             )}
@@ -285,25 +424,28 @@ export default function ProductDetailPage() {
           {showReviewForm && (
             <motion.form initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
               onSubmit={handleSubmitReview}
-              className="bg-white rounded-2xl p-6 shadow-sm mb-6 space-y-4">
+              className="p-6 mb-6 space-y-4" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
               <div>
-                <label className="block text-sm font-medium text-brand-dark mb-2">Rating</label>
+                <label className="block text-sm font-medium mb-2" style={{ color: "var(--cream-dim)" }}>Rating</label>
                 <div className="flex gap-1">
                   {[1, 2, 3, 4, 5].map((s) => (
                     <button key={s} type="button" onClick={() => setReviewData({ ...reviewData, rating: s })}>
-                      <Star size={24} className={s <= reviewData.rating ? "fill-brand-gold text-brand-gold" : "text-brand-dark/20"} />
+                      <Star size={24} className={s <= reviewData.rating ? "fill-[#c8a45c]" : ""} style={{ color: s <= reviewData.rating ? "var(--gold)" : "var(--border)" }} />
                     </button>
                   ))}
                 </div>
               </div>
               <input value={reviewData.title} onChange={(e) => setReviewData({ ...reviewData, title: e.target.value })}
-                placeholder="Review title" className="w-full px-4 py-3 rounded-xl border border-brand-dark/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/40 text-brand-dark" />
+                placeholder="Review title" className="w-full px-4 py-3 text-sm focus:outline-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--cream)" }}
+                onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                onBlur={e => e.target.style.borderColor = "var(--border)"} />
               <textarea value={reviewData.body} onChange={(e) => setReviewData({ ...reviewData, body: e.target.value })}
-                rows={4} placeholder="Share your experience..."
-                className="w-full px-4 py-3 rounded-xl border border-brand-dark/10 focus:outline-none focus:ring-2 focus:ring-brand-gold/40 text-brand-dark resize-none" />
-              <button type="submit" className="px-6 py-3 bg-brand-dark text-brand-cream rounded-xl text-sm font-medium hover:bg-brand-gold transition-colors">
-                Submit Review
-              </button>
+                rows={4} placeholder="Share your experience..." className="w-full px-4 py-3 text-sm focus:outline-none resize-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--cream)" }}
+                onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                onBlur={e => e.target.style.borderColor = "var(--border)"} />
+              <button type="submit" className="btn-gold px-6 py-3 text-sm">Submit Review</button>
             </motion.form>
           )}
 
@@ -312,12 +454,41 @@ export default function ProductDetailPage() {
               {reviews.map((r) => <ReviewCard key={r.id} review={r} />)}
             </div>
           ) : (
-            <p className="text-brand-dark/40 text-center py-12">No reviews yet. Be the first to review this product!</p>
+            <p className="text-center py-12" style={{ color: "var(--cream-dim)" }}>
+              No reviews yet. Be the first to review this product!
+            </p>
           )}
         </div>
       </main>
 
       <Footer />
+
+      {/* Image Zoom Lightbox */}
+      {zoomOpen && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.92)" }}
+          onClick={() => setZoomOpen(false)}>
+          <button className="absolute top-4 right-4 p-2 transition-colors"
+            style={{ color: "#fff" }} onClick={() => setZoomOpen(false)}>
+            <X size={28} />
+          </button>
+          <img src={images[selectedImage]} alt={product.name}
+            className="max-w-full max-h-[90vh] object-contain"
+            onClick={e => e.stopPropagation()} />
+          {images.length > 1 && (
+            <div className="absolute bottom-4 flex gap-2">
+              {images.map((img, i) => (
+                <button key={i} onClick={e => { e.stopPropagation(); setSelectedImage(i); }}
+                  className="w-12 h-12 overflow-hidden transition-all"
+                  style={{ border: `2px solid ${selectedImage === i ? "var(--gold)" : "rgba(255,255,255,0.3)"}` }}>
+                  <img src={img} alt="" className="w-full h-full object-cover" />
+                </button>
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }

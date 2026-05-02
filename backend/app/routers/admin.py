@@ -1,6 +1,8 @@
+import threading
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func, desc
+from sqlalchemy import func, desc, cast, Date
 from typing import List, Optional
 import re
 import cloudinary
@@ -10,11 +12,13 @@ from ..dependencies import get_admin_user
 from ..models.user import User
 from ..models.product import Product, ProductStatus
 from ..models.category import Category
-from ..models.order import Order, OrderStatus
+from ..models.order import Order, OrderItem, OrderStatus
+from ..models.stock_notification import StockNotification
 from ..models.coupon import Coupon
 from ..schemas.product import ProductCreate, ProductUpdate, ProductOut, CategoryCreate, CategoryOut
 from ..schemas.order import OrderOut
 from ..config import settings
+from ..services.email_service import send_status_update, send_stock_notification
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -49,6 +53,34 @@ def dashboard(db: Session = Depends(get_db), admin: User = Depends(get_admin_use
 
     orders_by_status = db.query(Order.status, func.count(Order.id)).group_by(Order.status).all()
 
+    # Revenue by day — last 30 days
+    thirty_days_ago = datetime.utcnow() - timedelta(days=29)
+    daily_revenue = db.query(
+        cast(Order.created_at, Date).label("day"),
+        func.sum(Order.total_amount).label("revenue"),
+        func.count(Order.id).label("orders"),
+    ).filter(
+        Order.created_at >= thirty_days_ago,
+        Order.status != OrderStatus.cancelled,
+    ).group_by(cast(Order.created_at, Date)).order_by("day").all()
+
+    # Build complete 30-day series (fill missing days with 0)
+    revenue_series = {}
+    for row in daily_revenue:
+        revenue_series[str(row.day)] = {"revenue": round(float(row.revenue), 2), "orders": row.orders}
+    full_series = []
+    for i in range(30):
+        day = (thirty_days_ago + timedelta(days=i)).strftime("%Y-%m-%d")
+        full_series.append({"date": day, **revenue_series.get(day, {"revenue": 0, "orders": 0})})
+
+    # Top selling products
+    from ..models.order import OrderItem
+    top_products = db.query(
+        OrderItem.product_name,
+        func.sum(OrderItem.quantity).label("qty"),
+        func.sum(OrderItem.total_price).label("revenue"),
+    ).group_by(OrderItem.product_name).order_by(desc("qty")).limit(5).all()
+
     return {
         "stats": {
             "total_orders": total_orders,
@@ -68,6 +100,8 @@ def dashboard(db: Session = Depends(get_db), admin: User = Depends(get_admin_use
             for o in recent_orders
         ],
         "orders_by_status": {str(s): c for s, c in orders_by_status},
+        "revenue_series": full_series,
+        "top_products": [{"name": r.product_name, "qty": r.qty, "revenue": round(float(r.revenue), 2)} for r in top_products],
     }
 
 
@@ -109,10 +143,30 @@ def update_product(product_id: int, payload: ProductUpdate, db: Session = Depend
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+
+    was_out_of_stock = product.stock_quantity == 0
     for field, value in payload.model_dump(exclude_none=True).items():
         setattr(product, field, value)
     db.commit()
     db.refresh(product)
+
+    # Notify subscribers if stock replenished
+    if was_out_of_stock and product.stock_quantity > 0:
+        subs = db.query(StockNotification).filter(
+            StockNotification.product_id == product_id,
+            StockNotification.is_notified == False,
+        ).all()
+        if subs:
+            product_url = f"{settings.FRONTEND_URL}/product/{product.slug}"
+            for sub in subs:
+                sub.is_notified = True
+                threading.Thread(
+                    target=send_stock_notification,
+                    args=(sub.email, product.name, product_url),
+                    daemon=True
+                ).start()
+            db.commit()
+
     return product
 
 
@@ -124,6 +178,53 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin: User =
     db.delete(product)
     db.commit()
     return {"message": "Product deleted"}
+
+
+@router.post("/products/bulk-upload")
+async def bulk_upload_products(file: UploadFile = File(...), db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    import csv, io
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only CSV files are accepted")
+
+    content = await file.read()
+    reader = csv.DictReader(io.StringIO(content.decode("utf-8-sig")))
+    required = {"name", "price", "category_id", "stock_quantity"}
+    if not required.issubset(set(reader.fieldnames or [])):
+        raise HTTPException(status_code=400, detail=f"CSV must have columns: {', '.join(required)}")
+
+    created, skipped = 0, 0
+    for row in reader:
+        name = row.get("name", "").strip()
+        if not name:
+            skipped += 1
+            continue
+        slug_base = slugify(name)
+        slug = slug_base
+        counter = 1
+        while db.query(Product).filter(Product.slug == slug).first():
+            slug = f"{slug_base}-{counter}"
+            counter += 1
+        try:
+            product = Product(
+                name=name,
+                slug=slug,
+                price=float(row.get("price", 0)),
+                compare_price=float(row["compare_price"]) if row.get("compare_price") else None,
+                category_id=int(row.get("category_id", 0)),
+                stock_quantity=int(row.get("stock_quantity", 0)),
+                description=row.get("description", ""),
+                short_description=row.get("short_description", ""),
+                sku=row.get("sku") or None,
+                images=[u.strip() for u in row.get("images", "").split("|") if u.strip()],
+                colors=[c.strip() for c in row.get("colors", "").split("|") if c.strip()],
+                sizes=[s.strip() for s in row.get("sizes", "").split("|") if s.strip()],
+            )
+            db.add(product)
+            created += 1
+        except Exception:
+            skipped += 1
+    db.commit()
+    return {"created": created, "skipped": skipped}
 
 
 @router.post("/products/upload-image")
@@ -193,6 +294,15 @@ def update_order_status(
     if tracking_number:
         order.tracking_number = tracking_number
     db.commit()
+    db.refresh(order)
+
+    if order.user and order.user.email:
+        threading.Thread(
+            target=send_status_update,
+            args=(order.user.email, order.order_number, status.value, tracking_number),
+            daemon=True
+        ).start()
+
     return {"message": "Order status updated"}
 
 

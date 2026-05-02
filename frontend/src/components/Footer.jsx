@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Instagram, Mail, Phone, MapPin, Heart } from "lucide-react";
+import { toast } from "sonner";
+import api from "../services/api";
 
 const LINKS = {
   Shop: [
@@ -18,6 +21,21 @@ const LINKS = {
 };
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setLoading(true);
+    try {
+      const { data } = await api.post("/newsletter/subscribe", { email });
+      toast.success(data.message);
+      setSubscribed(true);
+    } catch { toast.error("Failed to subscribe. Try again."); }
+    finally { setLoading(false); }
+  };
   return (
     <footer style={{ background: "var(--bg-2)", borderTop: "1px solid var(--border)" }}>
       <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-20">
@@ -118,20 +136,27 @@ export default function Footer() {
               <p className="text-xs tracking-wider mb-3" style={{ color: "var(--cream-dim)" }}>
                 Get updates on new arrivals
               </p>
-              <div className="flex" style={{ border: "1px solid var(--border)" }}>
-                <input
-                  type="email"
-                  placeholder="Your email"
-                  className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none"
-                  style={{ color: "var(--cream)", caretColor: "var(--gold)" }}
-                />
-                <button
-                  className="px-4 text-xs tracking-widest uppercase font-medium transition-colors duration-200"
-                  style={{ background: "var(--gold)", color: "var(--bg)" }}
-                >
-                  Join
-                </button>
-              </div>
+              {subscribed ? (
+                <p className="text-sm" style={{ color: "#4ade80" }}>✓ You're subscribed!</p>
+              ) : (
+                <form onSubmit={handleSubscribe} className="flex" style={{ border: "1px solid var(--border)" }}>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Your email"
+                    required
+                    className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none"
+                    style={{ color: "var(--cream)", caretColor: "var(--gold)" }}
+                  />
+                  <button type="submit" disabled={loading}
+                    className="px-4 text-xs tracking-widest uppercase font-medium transition-colors duration-200 disabled:opacity-60"
+                    style={{ background: "var(--gold)", color: "var(--bg)" }}
+                  >
+                    {loading ? "..." : "Join"}
+                  </button>
+                </form>
+              )}
             </div>
           </div>
         </div>

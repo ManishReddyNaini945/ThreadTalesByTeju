@@ -10,6 +10,9 @@ export const adminService = {
   uploadImage: (formData) => api.post("/admin/products/upload-image", formData, {
     headers: { "Content-Type": "multipart/form-data" }
   }),
+  bulkUpload: (formData) => api.post("/admin/products/bulk-upload", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   // Categories
   getCategories: () => api.get("/admin/categories"),
   createCategory: (data) => api.post("/admin/categories", data),

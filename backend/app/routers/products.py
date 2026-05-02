@@ -101,3 +101,16 @@ def get_product(slug: str, db: Session = Depends(get_db)):
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     return product
+
+
+@router.get("/{slug}/related", response_model=List[ProductOut])
+def get_related_products(slug: str, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.slug == slug).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    related = db.query(Product).options(joinedload(Product.category)).filter(
+        Product.category_id == product.category_id,
+        Product.id != product.id,
+        Product.status == ProductStatus.active,
+    ).limit(4).all()
+    return related

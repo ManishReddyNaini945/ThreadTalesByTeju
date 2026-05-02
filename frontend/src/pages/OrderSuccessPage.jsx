@@ -16,59 +16,65 @@ export default function OrderSuccessPage() {
   }, [orderId]);
 
   return (
-    <div className="min-h-screen bg-brand-cream">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
-      <main className="max-w-2xl mx-auto px-4 py-20 text-center">
+      <main className="max-w-2xl mx-auto px-6 pt-32 pb-20 text-center">
         <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}
-          className="w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-8">
-          <CheckCircle size={48} className="text-green-500" />
+          className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-8"
+          style={{ background: "rgba(74,222,128,0.12)" }}>
+          <CheckCircle size={48} style={{ color: "#4ade80" }} />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <h1 className="text-3xl font-serif text-brand-dark mb-3">Order Placed Successfully!</h1>
-          <p className="text-brand-dark/60 mb-2">Thank you for shopping with Thread Tales by Teju 🌸</p>
+          <h1 className="text-3xl font-normal mb-3" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+            Order Placed Successfully!
+          </h1>
+          <p className="mb-2" style={{ color: "var(--cream-dim)" }}>Thank you for shopping with Thread Tales by Teju 🌸</p>
           {order && (
-            <p className="text-brand-gold font-medium text-lg mb-8">Order #{order.order_number}</p>
+            <p className="font-medium text-lg mb-8" style={{ color: "var(--gold)" }}>Order #{order.order_number}</p>
           )}
 
           {order && (
-            <div className="bg-white rounded-3xl p-6 shadow-sm text-left mb-8 space-y-3">
-              <h3 className="font-semibold text-brand-dark mb-4">Order Details</h3>
+            <div className="p-6 text-left mb-8 space-y-3" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <h3 className="font-normal text-base mb-4" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+                Order Details
+              </h3>
               {order.items?.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
                   {item.product_image && (
-                    <img src={item.product_image} alt="" className="w-12 h-12 rounded-xl object-cover" />
+                    <img src={item.product_image} alt="" className="w-12 h-12 object-cover flex-shrink-0" style={{ border: "1px solid var(--border)" }} />
                   )}
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-brand-dark">{item.product_name}</p>
-                    <p className="text-xs text-brand-dark/50">×{item.quantity} · ₹{item.total_price.toLocaleString()}</p>
+                    <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>{item.product_name}</p>
+                    <p className="text-xs" style={{ color: "var(--cream-dim)" }}>×{item.quantity} · ₹{item.total_price.toLocaleString()}</p>
                   </div>
                 </div>
               ))}
-              <div className="border-t border-brand-dark/10 pt-3 flex justify-between font-bold text-brand-dark">
+              <div className="flex justify-between font-medium pt-3" style={{ borderTop: "1px solid var(--border)", color: "var(--cream)" }}>
                 <span>Total Paid</span>
                 <span>₹{order.total_amount?.toLocaleString()}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
-                <Package size={14} className="text-brand-gold" />
-                <span className="text-brand-dark/60">Status:</span>
-                <span className="capitalize font-medium text-brand-dark">{order.status}</span>
+                <Package size={14} style={{ color: "var(--gold)" }} />
+                <span style={{ color: "var(--cream-dim)" }}>Status:</span>
+                <span className="capitalize font-medium" style={{ color: "var(--cream)" }}>{order.status}</span>
               </div>
             </div>
           )}
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Link to="/orders"
-              className="px-6 py-3.5 bg-brand-dark text-brand-cream rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-brand-gold transition-colors">
+            <Link to="/orders" className="btn-gold px-6 py-3.5 flex items-center justify-center gap-2">
               <Package size={18} /> Track My Orders
             </Link>
             <a href={`https://wa.me/919866052260?text=${encodeURIComponent("Hi! I just placed an order and want to track it.")}`}
               target="_blank" rel="noreferrer"
-              className="px-6 py-3.5 border-2 border-green-400 text-green-600 rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-green-50 transition-colors">
+              className="px-6 py-3.5 flex items-center justify-center gap-2 font-medium text-sm tracking-widest uppercase transition-all"
+              style={{ border: "1px solid #4ade80", color: "#4ade80" }}
+              onMouseEnter={e => { e.currentTarget.style.background = "#4ade80"; e.currentTarget.style.color = "var(--bg)"; }}
+              onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#4ade80"; }}>
               <MessageCircle size={18} /> WhatsApp Support
             </a>
-            <Link to="/"
-              className="px-6 py-3.5 border-2 border-brand-dark/20 text-brand-dark rounded-2xl font-medium flex items-center justify-center gap-2 hover:border-brand-gold hover:text-brand-gold transition-colors">
+            <Link to="/" className="btn-outline px-6 py-3.5 flex items-center justify-center gap-2">
               <Home size={18} /> Continue Shopping
             </Link>
           </div>
