@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 from ..database import Base
+from datetime import datetime
 
 
 class UserRole(str, enum.Enum):
@@ -29,6 +30,8 @@ class User(Base):
     google_id = Column(String(255), nullable=True, unique=True)
     is_active = Column(Boolean, default=True)
     is_verified = Column(Boolean, default=False)
+    reset_token = Column(String(255), nullable=True, unique=True)
+    reset_token_expires = Column(DateTime, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 

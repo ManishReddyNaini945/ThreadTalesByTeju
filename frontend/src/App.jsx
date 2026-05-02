@@ -15,6 +15,7 @@ const CollectionDetailPage = lazy(() => import("./pages/CollectionDetailPage").t
 const ShopPage = lazy(() => import("./pages/ShopPage"));
 const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
+const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
 const CartPage = lazy(() => import("./pages/CartPage"));
 const WishlistPage = lazy(() => import("./pages/WishlistPage"));
 const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/shop" element={<ShopPage />} />
                 <Route path="/product/:slug" element={<ProductDetailPage />} />
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
 
                 {/* Protected – customer */}
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />

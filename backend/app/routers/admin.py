@@ -99,7 +99,7 @@ def dashboard(db: Session = Depends(get_db), admin: User = Depends(get_admin_use
             }
             for o in recent_orders
         ],
-        "orders_by_status": {str(s): c for s, c in orders_by_status},
+        "orders_by_status": {s.value: c for s, c in orders_by_status},
         "revenue_series": full_series,
         "top_products": [{"name": r.product_name, "qty": r.qty, "revenue": round(float(r.revenue), 2)} for r in top_products],
     }

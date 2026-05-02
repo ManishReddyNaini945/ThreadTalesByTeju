@@ -1,7 +1,19 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Tags } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
+
+const gold = "#c8a45c";
+const cream = "#f7f5f2";
+const creamDim = "#a89f94";
+const cardBg = "#1c1916";
+const border = "#2d2824";
+
+const inputStyle = {
+  width: "100%", padding: "10px 14px",
+  background: "#0f0d0c", border: `1px solid ${border}`,
+  color: cream, fontSize: 13, outline: "none",
+};
 
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
@@ -14,11 +26,8 @@ export default function AdminCategories() {
     try {
       const { data } = await adminService.getCategories();
       setCategories(data);
-    } catch {
-      toast.error("Failed to load categories");
-    } finally {
-      setLoading(false);
-    }
+    } catch { toast.error("Failed to load categories"); }
+    finally { setLoading(false); }
   };
 
   useEffect(() => { load(); }, []);
@@ -30,88 +39,85 @@ export default function AdminCategories() {
     try {
       await adminService.createCategory({ name: name.trim(), description: description.trim() });
       toast.success("Category created!");
-      setName("");
-      setDescription("");
+      setName(""); setDescription("");
       load();
-    } catch {
-      toast.error("Failed to create category");
-    } finally {
-      setSaving(false);
-    }
+    } catch { toast.error("Failed to create"); }
+    finally { setSaving(false); }
   };
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this category?")) return;
     try {
       await adminService.deleteCategory(id);
-      toast.success("Category deleted");
-      setCategories((prev) => prev.filter((c) => c.id !== id));
-    } catch {
-      toast.error("Failed to delete category");
-    }
+      toast.success("Deleted");
+      setCategories(prev => prev.filter(c => c.id !== id));
+    } catch { toast.error("Failed to delete"); }
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      <h1 className="text-2xl font-semibold text-gray-800">Categories</h1>
+    <div className="max-w-2xl space-y-6">
+      <div>
+        <h1 className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: cream }}>Categories</h1>
+        <p className="text-xs mt-0.5" style={{ color: creamDim }}>{categories.length} categories</p>
+      </div>
 
       {/* Create form */}
-      <form onSubmit={handleCreate} className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-        <h2 className="text-sm font-medium text-gray-700 uppercase tracking-wider">Add New Category</h2>
+      <form onSubmit={handleCreate} className="p-5 space-y-4" style={{ background: cardBg, border: `1px solid ${border}` }}>
+        <p className="text-xs tracking-widest uppercase flex items-center gap-2" style={{ color: gold }}>
+          <Plus size={12} /> Add New Category
+        </p>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Name *</label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="e.g. Necklaces"
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
-          />
+          <label className="block text-xs tracking-widest uppercase mb-1.5" style={{ color: creamDim }}>Name *</label>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Necklaces"
+            style={inputStyle}
+            onFocus={e => e.target.style.borderColor = gold}
+            onBlur={e => e.target.style.borderColor = border} />
         </div>
         <div>
-          <label className="block text-xs text-gray-500 mb-1">Description</label>
-          <input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional description"
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-brand-gold"
-          />
+          <label className="block text-xs tracking-widest uppercase mb-1.5" style={{ color: creamDim }}>Description</label>
+          <input value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional description"
+            style={inputStyle}
+            onFocus={e => e.target.style.borderColor = gold}
+            onBlur={e => e.target.style.borderColor = border} />
         </div>
-        <button
-          type="submit"
-          disabled={saving || !name.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 bg-brand-gold text-white rounded-xl text-sm font-medium hover:opacity-90 disabled:opacity-50 transition-opacity"
-        >
-          <Plus size={16} />
-          {saving ? "Creating..." : "Create Category"}
+        <button type="submit" disabled={saving || !name.trim()}
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium tracking-widest uppercase transition-all disabled:opacity-50"
+          style={{ background: gold, color: "#0c0a09" }}>
+          <Plus size={14} /> {saving ? "Creating..." : "Create Category"}
         </button>
       </form>
 
-      {/* Categories list */}
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+      {/* List */}
+      <div style={{ background: cardBg, border: `1px solid ${border}` }}>
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-gray-400 text-sm">Loading...</div>
+          <div className="flex items-center justify-center py-16 text-sm" style={{ color: creamDim }}>Loading...</div>
         ) : categories.length === 0 ? (
-          <div className="flex items-center justify-center py-16 text-gray-400 text-sm">No categories yet</div>
+          <div className="flex flex-col items-center justify-center py-16 gap-3">
+            <Tags size={36} style={{ color: border }} />
+            <p className="text-sm" style={{ color: creamDim }}>No categories yet</p>
+          </div>
         ) : (
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
-              <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th className="px-6 py-3" />
+            <thead>
+              <tr style={{ borderBottom: `1px solid ${border}` }}>
+                <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Name</th>
+                <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Description</th>
+                <th className="px-5 py-3" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {categories.map((cat) => (
-                <tr key={cat.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-800">{cat.name}</td>
-                  <td className="px-6 py-4 text-gray-500">{cat.description || "—"}</td>
-                  <td className="px-6 py-4 text-right">
-                    <button
-                      onClick={() => handleDelete(cat.id)}
-                      className="text-red-400 hover:text-red-600 transition-colors p-1.5 rounded-lg hover:bg-red-50"
-                    >
-                      <Trash2 size={15} />
+                <tr key={cat.id} style={{ borderBottom: `1px solid ${border}` }}
+                  onMouseEnter={e => e.currentTarget.style.background = "#231f1b"}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <td className="px-5 py-4 font-medium" style={{ color: cream }}>{cat.name}</td>
+                  <td className="px-5 py-4 text-sm" style={{ color: creamDim }}>{cat.description || "—"}</td>
+                  <td className="px-5 py-4 text-right">
+                    <button onClick={() => handleDelete(cat.id)}
+                      className="p-1.5 transition-colors" style={{ color: "#f87171" }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.1)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                      <Trash2 size={14} />
                     </button>
                   </td>
                 </tr>

@@ -94,6 +94,18 @@ def send_stock_notification(to: str, product_name: str, product_url: str) -> Non
     _send(to, f"{product_name} is back in stock | Thread Tales by Teju", _base(content))
 
 
+def send_password_reset(to: str, reset_link: str) -> None:
+    content = f"""
+      <h2 style="color:#c8a45c;margin-top:0">Reset Your Password</h2>
+      <p style="color:#a89f94">We received a request to reset your password. Click the button below to choose a new one.</p>
+      <a href="{reset_link}" style="display:inline-block;padding:14px 32px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin:20px 0">
+        Reset Password
+      </a>
+      <p style="color:#a89f94;font-size:13px">This link expires in <strong style="color:#f7f5f2">1 hour</strong>.</p>
+      <p style="color:#a89f94;font-size:12px;margin-top:24px">If you didn't request a password reset, you can safely ignore this email. Your password won't change.</p>"""
+    _send(to, "Reset Your Password | Thread Tales by Teju", _base(content))
+
+
 def send_status_update(to: str, order_number: str, status: str, tracking_number: str = None) -> None:
     status_messages = {
         "confirmed": ("Order Confirmed", "Your order has been confirmed and is being prepared.", "#60a5fa"),

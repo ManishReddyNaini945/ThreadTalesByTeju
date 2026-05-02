@@ -3,12 +3,17 @@ from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User, UserRole, AuthProvider
 from ..models.cart import Cart
-from ..schemas.user import UserCreate, UserLogin, UserOut, Token, TokenRefresh, GoogleAuthRequest, UserUpdate, ChangePassword, AddressCreate, AddressOut
+from ..schemas.user import UserCreate, UserLogin, UserOut, Token, TokenRefresh, GoogleAuthRequest, UserUpdate, ChangePassword, AddressCreate, AddressOut, ForgotPasswordRequest, ResetPasswordRequest
 from ..auth.jwt import hash_password, verify_password, create_access_token, create_refresh_token, decode_token
 from ..auth.google import verify_google_token
 from ..dependencies import get_current_user
 from ..models.address import Address
+from ..services.email_service import send_password_reset
+from ..config import settings
 from typing import List
+import secrets
+from datetime import datetime, timedelta
+import threading
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -130,6 +135,32 @@ def change_password(payload: ChangePassword, db: Session = Depends(get_db), curr
     current_user.hashed_password = hash_password(payload.new_password)
     db.commit()
     return {"message": "Password updated successfully"}
+
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == payload.email).first()
+    # Always return success to prevent email enumeration
+    if user and user.hashed_password:
+        token = secrets.token_urlsafe(32)
+        user.reset_token = token
+        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        db.commit()
+        reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token}"
+        threading.Thread(target=send_password_reset, args=(user.email, reset_link), daemon=True).start()
+    return {"message": "If an account with that email exists, a reset link has been sent."}
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.reset_token == payload.token).first()
+    if not user or not user.reset_token_expires or datetime.utcnow() > user.reset_token_expires:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset link. Please request a new one.")
+    user.hashed_password = hash_password(payload.new_password)
+    user.reset_token = None
+    user.reset_token_expires = None
+    db.commit()
+    return {"message": "Password reset successfully. You can now sign in."}
 
 
 @router.get("/addresses", response_model=List[AddressOut])
