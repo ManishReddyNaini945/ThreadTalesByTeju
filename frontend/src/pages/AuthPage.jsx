@@ -175,6 +175,7 @@ export default function AuthPage() {
                     size="large"
                     width="400"
                     shape="rectangular"
+                    text="continue_with"
                   />
                 </div>
                 <div className="flex items-center gap-3 mb-6">
