@@ -27,12 +27,12 @@ export default function HeroSection() {
 
       {/* Background gradient orbs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <motion.div style={{ y }}
+        <motion.div
+          style={{ y, background: "radial-gradient(circle, #c8a45c 0%, transparent 70%)" }}
           className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full blur-[120px]"
           initial={{ opacity: 0.08 }}
           animate={{ opacity: [0.08, 0.13, 0.08] }}
-          transition={{ duration: 6, repeat: Infinity }}
-          style={{ background: "radial-gradient(circle, #c8a45c 0%, transparent 70%)" }} />
+          transition={{ duration: 6, repeat: Infinity }} />
         <div
           className="absolute bottom-0 -left-40 w-[500px] h-[500px] rounded-full blur-[100px] opacity-[0.06]"
           style={{ background: "radial-gradient(circle, #c9908a 0%, transparent 70%)" }} />
