@@ -149,7 +149,6 @@ API docs at: `http://localhost:8000/docs`
 ---
 
 ## Third-Party Services Setup
-
 ### Google OAuth
 1. Go to [console.cloud.google.com](https://console.cloud.google.com)
 2. Create a project → APIs & Services → Credentials
