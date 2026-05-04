@@ -27,92 +27,95 @@ function ProductCard({ product, index }) {
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
     >
-      <Link to={`/products/${product.id}`} className="group block">
-        {/* Image container */}
-        <div className="relative overflow-hidden mb-4" style={{ aspectRatio: "3/4", background: "var(--bg-card)" }}>
-          {image && (
-            <img
-              src={image}
-              alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          )}
-
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {product.is_bestseller && (
-              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
-                style={{ background: "var(--gold)", color: "var(--bg)" }}>
-                Bestseller
-              </span>
+      <div className="group block">
+        {/* Image — clean, no overlay button */}
+        <Link to={`/products/${product.id}`} className="block">
+          <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", background: "var(--bg-card)" }}>
+            {image && (
+              <img
+                src={image}
+                alt={product.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
             )}
-            {product.is_featured && !product.is_bestseller && (
-              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
-                style={{ background: "var(--bg-card)", color: "var(--cream)", border: "1px solid var(--border)" }}>
-                Featured
-              </span>
-            )}
-          </div>
 
-          {/* Wishlist */}
-          <button
-            onClick={(e) => { e.preventDefault(); addToWishlist(product.id); }}
-            className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center transition-all duration-300 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0"
-            style={{ background: "rgba(12,10,9,0.8)", border: "1px solid var(--border)" }}
-          >
-            <Heart
-              size={15}
-              fill={isWishlisted ? "var(--pink)" : "none"}
-              style={{ color: isWishlisted ? "var(--pink)" : "var(--cream-dim)" }}
-            />
-          </button>
+            {/* Badges */}
+            <div className="absolute top-3 left-3 flex flex-col gap-2">
+              {product.is_bestseller && (
+                <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
+                  style={{ background: "var(--gold)", color: "var(--bg)" }}>
+                  Bestseller
+                </span>
+              )}
+              {product.is_featured && !product.is_bestseller && (
+                <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
+                  style={{ background: "var(--bg-card)", color: "var(--cream)", border: "1px solid var(--border)" }}>
+                  Featured
+                </span>
+              )}
+            </div>
 
-          {/* Add to cart */}
-          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+            {/* Wishlist icon — top right */}
             <button
-              onClick={handleAddToCart}
-              className="w-full py-3 flex items-center justify-center gap-2 text-xs tracking-widest uppercase font-medium transition-colors duration-200"
-              style={{ background: adding ? "var(--gold-dim)" : "var(--gold)", color: "var(--bg)" }}
+              onClick={(e) => { e.preventDefault(); addToWishlist(product.id); }}
+              className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center transition-all duration-300"
+              style={{ background: "rgba(12,10,9,0.8)", border: "1px solid var(--border)" }}
             >
-              <ShoppingBag size={13} />
-              {adding ? "Added!" : "Add to Cart"}
+              <Heart
+                size={14}
+                fill={isWishlisted ? "var(--pink)" : "none"}
+                style={{ color: isWishlisted ? "var(--pink)" : "var(--cream-dim)" }}
+              />
             </button>
           </div>
-        </div>
+        </Link>
 
-        {/* Info */}
-        <div>
-          <p className="text-xs tracking-[0.2em] uppercase mb-1.5" style={{ color: "var(--cream-dim)" }}>
-            {product.category?.name}
-          </p>
-          <h3 className="text-base font-normal mb-2 group-hover:text-gold transition-colors duration-200 leading-snug"
-            style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
-            {product.name}
-          </h3>
-          <div className="flex items-center gap-3">
-            <span className="text-lg font-medium" style={{ color: "var(--gold)" }}>
-              ₹{product.price}
-            </span>
-            {product.compare_price && (
-              <span className="text-sm line-through" style={{ color: "var(--cream-dim)" }}>
-                ₹{product.compare_price}
+        {/* Info + Add to Cart below image */}
+        <div className="pt-3 pb-1">
+          <Link to={`/products/${product.id}`} className="block">
+            <p className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "var(--cream-dim)" }}>
+              {product.category?.name}
+            </p>
+            <h3 className="text-sm font-normal mb-2 leading-snug line-clamp-2"
+              style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+              {product.name}
+            </h3>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-base font-medium" style={{ color: "var(--gold)" }}>
+                ₹{product.price}
               </span>
-            )}
-          </div>
+              {product.compare_price && (
+                <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>
+                  ₹{product.compare_price}
+                </span>
+              )}
+            </div>
+          </Link>
+
+          {/* Add to Cart — always visible below price */}
+          <button
+            onClick={handleAddToCart}
+            className="w-full py-2.5 flex items-center justify-center gap-1.5 text-[11px] tracking-widest uppercase font-medium transition-colors duration-200"
+            style={{ background: adding ? "var(--gold-dim)" : "var(--gold)", color: "var(--bg)" }}
+          >
+            <ShoppingBag size={12} />
+            {adding ? "Added!" : "Add to Cart"}
+          </button>
+
           {product.avg_rating > 0 && (
-            <div className="flex items-center gap-1 mt-1.5">
+            <div className="flex items-center gap-1 mt-2">
               {[...Array(5)].map((_, i) => (
-                <Star key={i} size={10}
+                <Star key={i} size={9}
                   fill={i < Math.round(product.avg_rating) ? "var(--gold)" : "none"}
                   style={{ color: "var(--gold)" }} />
               ))}
-              <span className="text-xs ml-1" style={{ color: "var(--cream-dim)" }}>
+              <span className="text-[10px] ml-1" style={{ color: "var(--cream-dim)" }}>
                 ({product.review_count})
               </span>
             </div>
           )}
         </div>
-      </Link>
+      </div>
     </motion.div>
   );
 }
@@ -129,11 +132,11 @@ export default function BestSellers() {
   }, []);
 
   return (
-    <section className="py-24 lg:py-32" style={{ background: "var(--bg-2)" }}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10">
+    <section className="py-16 lg:py-32" style={{ background: "var(--bg-2)" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 lg:mb-16">
           <div>
             <p className="section-tag mb-4">Bestsellers</p>
             <h2 className="section-title">
@@ -151,7 +154,7 @@ export default function BestSellers() {
 
         {/* Grid */}
         {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {[...Array(8)].map((_, i) => (
               <div key={i}>
                 <div className="skeleton mb-4" style={{ aspectRatio: "3/4" }} />
@@ -162,7 +165,7 @@ export default function BestSellers() {
             ))}
           </div>
         ) : products.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5">
             {products.map((product, i) => (
               <ProductCard key={product.id} product={product} index={i} />
             ))}

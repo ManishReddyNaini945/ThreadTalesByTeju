@@ -38,11 +38,11 @@ export default function Footer() {
   };
   return (
     <footer style={{ background: "var(--bg-2)", borderTop: "1px solid var(--border)" }}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-20">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-12 lg:py-20">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12">
 
           {/* Brand */}
-          <div className="lg:col-span-1">
+          <div className="col-span-2 md:col-span-1 lg:col-span-1">
             <div className="mb-6">
               <p className="text-2xl font-normal mb-1"
                 style={{ fontFamily: "Playfair Display, serif", color: "var(--gold)" }}>
@@ -108,7 +108,7 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div>
+          <div className="col-span-2 md:col-span-1">
             <p className="section-tag mb-6">Contact</p>
             <ul className="flex flex-col gap-4">
               <li className="flex items-start gap-3">
@@ -162,7 +162,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom bar */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-16 pt-8"
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-10 lg:mt-16 pt-6 sm:pt-8"
           style={{ borderTop: "1px solid var(--border)" }}>
           <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
             © 2025 Thread Tales by Teju. All rights reserved.

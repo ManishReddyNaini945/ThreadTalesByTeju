@@ -10,10 +10,10 @@ const CONTACTS = [
 
 export default function ContactSection() {
   return (
-    <section id="contact" className="py-24 lg:py-32" style={{ background: "var(--bg-2)" }}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10">
+    <section id="contact" className="py-16 lg:py-32" style={{ background: "var(--bg-2)" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
 
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
           {/* Left */}
           <motion.div
@@ -64,7 +64,7 @@ export default function ContactSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.2 }}
-            className="p-8 lg:p-10"
+            className="p-5 sm:p-8 lg:p-10"
             style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
           >
             <p className="text-xl font-normal mb-8" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>

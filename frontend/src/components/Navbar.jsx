@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Heart, User, Search, Menu, X, ChevronDown } from "lucide-react";
+import { ShoppingCart, Heart, User, Search, Menu, X, ChevronDown, ChevronRight } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -27,6 +27,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +49,18 @@ export default function Navbar() {
   useEffect(() => {
     setMenuOpen(false);
     setActiveDropdown(null);
+    setCollectionsOpen(false);
   }, [location]);
+
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => { document.body.style.overflow = ""; };
+  }, [menuOpen]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -58,6 +70,52 @@ export default function Navbar() {
       setSearchQuery("");
     }
   };
+
+  // Handle all nav link clicks — hash scrolling + Home scroll-to-top
+  const handleHashNav = (e, path) => {
+    // Home: always scroll to top smoothly and clear any hash
+    if (path === "/") {
+      if (location.pathname === "/") {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        navigate("/", { replace: true }); // clears the #about / #contact hash
+      }
+      setMenuOpen(false);
+      return;
+    }
+
+    // Hash links like /#about, /#contact
+    if (!path.startsWith("/#")) return;
+    e.preventDefault();
+    const id = path.slice(2); // "/#about" → "about"
+    const scrollToEl = () => {
+      const el = document.getElementById(id);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    };
+    if (location.pathname === "/") {
+      navigate(path, { replace: true }); // update URL hash for isActive()
+      scrollToEl();
+    } else {
+      navigate(path);
+      setTimeout(scrollToEl, 350);
+    }
+    setMenuOpen(false);
+  };
+
+  // Active check: handles both regular paths and hash paths
+  const isActive = (path) => {
+    if (path.startsWith("/#")) {
+      return location.pathname === "/" && location.hash === `#${path.slice(2)}`;
+    }
+    if (path === "/") {
+      // Home is only active when on "/" with no hash
+      return location.pathname === "/" && !location.hash;
+    }
+    return location.pathname === path;
+  };
+
+  // When transparent (hero area), use bright cream so icons/text are visible over images
+  const iconColor = scrolled ? "var(--cream-dim)" : "var(--cream)";
 
   return (
     <>
@@ -72,18 +130,24 @@ export default function Navbar() {
           boxShadow: scrolled ? "0 1px 0 rgba(45,40,36,0.6)" : "none",
         }}
       >
-        <div className="max-w-7xl mx-auto px-6 lg:px-10">
-          <div className="flex items-center justify-between h-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="flex items-center justify-between h-16 sm:h-20">
 
             {/* Logo */}
-            <Link to="/">
+            <Link to="/" className="flex-shrink-0">
               <div className="flex flex-col leading-none">
-                <span className="text-2xl font-normal tracking-wide"
-                  style={{ fontFamily: "Playfair Display, serif", color: "var(--gold)" }}>
+                <span
+                  className="font-normal tracking-wide whitespace-nowrap"
+                  style={{
+                    fontFamily: "Playfair Display, serif",
+                    color: "var(--gold)",
+                    fontSize: "clamp(1.1rem, 4.5vw, 1.5rem)",
+                  }}
+                >
                   Thread Tales
                 </span>
-                <span className="text-[9px] tracking-[0.4em] uppercase mt-0.5"
-                  style={{ color: "var(--cream-dim)" }}>
+                <span className="text-[8px] tracking-[0.4em] uppercase mt-0.5"
+                  style={{ color: scrolled ? "var(--cream-dim)" : "rgba(247,245,242,0.75)" }}>
                   by Teju
                 </span>
               </div>
@@ -109,7 +173,6 @@ export default function Navbar() {
                         className={`transition-transform duration-200 ${activeDropdown === link.label ? "rotate-180" : ""}`}
                       />
                     </button>
-                    {/* Invisible bridge — fills gap so mouse doesn't leave hover zone */}
                     <div className="absolute top-full left-0 right-0 h-3" />
                     <AnimatePresence>
                       {activeDropdown === link.label && (
@@ -156,8 +219,9 @@ export default function Navbar() {
                   <Link
                     key={link.label}
                     to={link.path}
+                    onClick={(e) => handleHashNav(e, link.path)}
                     className="text-sm tracking-wide transition-colors duration-200"
-                    style={{ color: location.pathname === link.path ? "var(--gold)" : "var(--cream-dim)" }}
+                    style={{ color: isActive(link.path) ? "var(--gold)" : "var(--cream-dim)" }}
                   >
                     {link.label}
                   </Link>
@@ -166,38 +230,61 @@ export default function Navbar() {
             </nav>
 
             {/* Icons */}
-            <div className="flex items-center gap-5">
-              <button onClick={() => setSearchOpen(true)} className="transition-colors duration-200"
-                style={{ color: "var(--cream-dim)" }}>
+            <div className="flex items-center gap-1 sm:gap-3">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center transition-colors duration-200"
+                style={{ color: iconColor }}
+                aria-label="Search"
+              >
                 <Search size={18} />
               </button>
 
-              <Link to="/wishlist" className="relative" style={{ color: "var(--cream-dim)" }}>
+              <Link
+                to="/wishlist"
+                className="relative w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center"
+                style={{ color: iconColor }}
+                aria-label="Wishlist"
+              >
                 <Heart size={18} />
                 {wishlistCount > 0 && (
-                  <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-medium"
+                  <span className="absolute top-1 right-1 w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-medium"
                     style={{ background: "var(--gold)", color: "var(--bg)" }}>
                     {wishlistCount}
                   </span>
                 )}
               </Link>
 
-              <Link to="/cart" className="relative" style={{ color: "var(--cream-dim)" }}>
+              <Link
+                to="/cart"
+                className="relative w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center"
+                style={{ color: iconColor }}
+                aria-label="Cart"
+              >
                 <ShoppingCart size={18} />
                 {cartCount > 0 && (
-                  <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-medium"
+                  <span className="absolute top-1 right-1 w-4 h-4 rounded-full text-[9px] flex items-center justify-center font-medium"
                     style={{ background: "var(--gold)", color: "var(--bg)" }}>
                     {cartCount}
                   </span>
                 )}
               </Link>
 
-              <Link to={user ? "/profile" : "/auth"} style={{ color: "var(--cream-dim)" }}>
+              <Link
+                to={user ? "/profile" : "/auth"}
+                className="hidden sm:flex w-9 h-9 items-center justify-center"
+                style={{ color: iconColor }}
+                aria-label="Account"
+              >
                 <User size={18} />
               </Link>
 
-              <button className="lg:hidden" style={{ color: "var(--cream-dim)" }}
-                onClick={() => setMenuOpen(!menuOpen)}>
+              <button
+                className="lg:hidden w-10 h-10 flex items-center justify-center"
+                style={{ color: iconColor }}
+                onClick={() => setMenuOpen(!menuOpen)}
+                aria-label="Menu"
+              >
                 {menuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
             </div>
@@ -212,7 +299,7 @@ export default function Navbar() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] flex items-start justify-center pt-40 px-6"
+            className="fixed inset-0 z-[60] flex items-start justify-center pt-24 sm:pt-40 px-5 sm:px-6"
             style={{ background: "rgba(12,10,9,0.98)" }}
             onClick={(e) => e.target === e.currentTarget && setSearchOpen(false)}
           >
@@ -223,22 +310,24 @@ export default function Navbar() {
               className="w-full max-w-2xl"
             >
               <button onClick={() => setSearchOpen(false)}
-                className="absolute top-8 right-8" style={{ color: "var(--cream-dim)" }}>
+                className="absolute top-5 right-5 sm:top-8 sm:right-8 w-10 h-10 flex items-center justify-center"
+                style={{ color: "var(--cream-dim)" }}>
                 <X size={24} />
               </button>
-              <p className="section-tag mb-8 text-center">What are you looking for?</p>
+              <p className="section-tag mb-6 sm:mb-8 text-center">What are you looking for?</p>
               <form onSubmit={handleSearch} className="relative">
                 <input
                   autoFocus
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search bangles, chains, hair clips..."
-                  className="w-full bg-transparent text-2xl outline-none pb-4 border-b"
+                  className="w-full bg-transparent text-xl sm:text-2xl outline-none pb-4 border-b"
                   style={{
                     fontFamily: "Playfair Display, serif",
                     color: "var(--cream)",
                     borderColor: "var(--border)",
                     caretColor: "var(--gold)",
+                    fontSize: "clamp(1.1rem, 5vw, 1.5rem)",
                   }}
                 />
                 <button type="submit" className="absolute right-0 bottom-4" style={{ color: "var(--gold)" }}>
@@ -250,46 +339,108 @@ export default function Navbar() {
         )}
       </AnimatePresence>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — full-screen slide-in */}
       <AnimatePresence>
         {menuOpen && (
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "tween", duration: 0.3 }}
-            className="fixed inset-0 z-40 lg:hidden flex flex-col pt-24 px-8 overflow-y-auto"
-            style={{ background: "var(--bg-card)" }}
-          >
-            {NAV_LINKS.map((link) =>
-              link.children ? (
-                <div key={link.label} className="py-4 border-b" style={{ borderColor: "var(--border)" }}>
-                  <p className="text-xs tracking-[0.3em] uppercase mb-3" style={{ color: "var(--gold)" }}>
-                    {link.label}
-                  </p>
-                  <div className="flex flex-col gap-2">
-                    {link.children.map((child) => (
-                      <Link key={child.label} to={child.path} className="text-base py-1"
-                        style={{ color: "var(--cream-dim)" }}>
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ) : (
-                <Link key={link.label} to={link.path}
-                  className="py-5 text-2xl border-b"
-                  style={{
-                    fontFamily: "Playfair Display, serif",
-                    color: "var(--cream)",
-                    borderColor: "var(--border)",
-                  }}
+          <>
+            {/* Backdrop — below navbar */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed top-16 sm:top-20 inset-x-0 bottom-0 z-30 lg:hidden"
+              style={{ background: "rgba(0,0,0,0.55)" }}
+              onClick={() => setMenuOpen(false)}
+            />
+
+            {/* Drawer — starts BELOW the navbar (top-16 mobile / top-20 sm) */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+              className="fixed top-16 sm:top-20 right-0 bottom-0 z-40 lg:hidden w-[min(85vw,360px)] flex flex-col overflow-y-auto"
+              style={{ background: "var(--bg-card)", borderLeft: "1px solid var(--border)", borderTop: "1px solid var(--border)" }}
+            >
+              {/* Nav links */}
+              <div className="px-6 pt-1 pb-2">
+                {NAV_LINKS.map((link) =>
+                  link.children ? (
+                    <div key={link.label}>
+                      <button
+                        onClick={() => setCollectionsOpen(!collectionsOpen)}
+                        className="w-full flex items-center justify-between py-3.5 text-left"
+                        style={{ borderBottom: "1px solid var(--border)" }}
+                      >
+                        <span className="text-base" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+                          {link.label}
+                        </span>
+                        <ChevronRight
+                          size={16}
+                          style={{ color: "var(--gold)", transform: collectionsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+                        />
+                      </button>
+                      <AnimatePresence>
+                        {collectionsOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pb-2 pt-1 pl-4">
+                              {link.children.map((child) => (
+                                <Link
+                                  key={child.label}
+                                  to={child.path}
+                                  className="flex items-center gap-2 py-2.5 text-sm"
+                                  style={{ color: "var(--cream-dim)" }}
+                                >
+                                  <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: "var(--gold)", opacity: 0.6 }} />
+                                  {child.label}
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <Link
+                      key={link.label}
+                      to={link.path}
+                      onClick={(e) => handleHashNav(e, link.path)}
+                      className="flex items-center py-3.5 text-base"
+                      style={{
+                        fontFamily: "Playfair Display, serif",
+                        color: isActive(link.path) ? "var(--gold)" : "var(--cream)",
+                        borderBottom: "1px solid var(--border)",
+                      }}
+                    >
+                      {link.label}
+                    </Link>
+                  )
+                )}
+              </div>
+
+              {/* Bottom: Profile/Login + CTA */}
+              <div className="px-6 pt-4 pb-6" style={{ borderTop: "1px solid var(--border)" }}>
+                <Link
+                  to={user ? "/profile" : "/auth"}
+                  className="flex items-center gap-3 py-3 mb-3 text-sm"
+                  style={{ color: "var(--cream-dim)", borderBottom: "1px solid var(--border)" }}
                 >
-                  {link.label}
+                  <User size={16} style={{ color: "var(--gold)" }} />
+                  {user ? "My Profile" : "Login / Sign up"}
                 </Link>
-              )
-            )}
-          </motion.div>
+
+                <Link to="/shop" className="btn-gold w-full justify-center flex">
+                  Shop Now
+                </Link>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </>

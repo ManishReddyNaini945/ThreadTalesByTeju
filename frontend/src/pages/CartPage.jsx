@@ -12,11 +12,11 @@ function CartItemRow({ item }) {
 
   return (
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: -20 }}
-      className="flex gap-5 p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+      className="flex gap-3 sm:gap-5 p-3 sm:p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
 
       {/* Image */}
       <Link to={`/products/${item.product?.id}`} className="flex-shrink-0">
-        <div className="w-24 h-24 overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+        <div className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden" style={{ border: "1px solid var(--border)" }}>
           {img && <img src={img} alt={item.product?.name} className="w-full h-full object-cover" />}
         </div>
       </Link>
@@ -46,11 +46,11 @@ function CartItemRow({ item }) {
           </div>
         )}
 
-        <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center justify-between mt-3">
           {/* Quantity */}
           <div className="flex items-center" style={{ border: "1px solid var(--border)" }}>
             <button onClick={() => updateQuantity(item.id, item.quantity - 1)}
-              className="w-8 h-8 flex items-center justify-center transition-colors duration-200"
+              className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center transition-colors duration-200"
               style={{ color: "var(--cream-dim)" }}>
               <Minus size={13} />
             </button>
@@ -58,19 +58,19 @@ function CartItemRow({ item }) {
               {item.quantity}
             </span>
             <button onClick={() => updateQuantity(item.id, item.quantity + 1)}
-              className="w-8 h-8 flex items-center justify-center transition-colors duration-200"
+              className="w-9 h-9 sm:w-8 sm:h-8 flex items-center justify-center transition-colors duration-200"
               style={{ color: "var(--cream-dim)" }}>
               <Plus size={13} />
             </button>
           </div>
 
           {/* Price + Delete */}
-          <div className="flex items-center gap-4">
-            <span className="font-medium" style={{ color: "var(--gold)" }}>
+          <div className="flex items-center gap-3">
+            <span className="font-medium text-sm sm:text-base" style={{ color: "var(--gold)" }}>
               ₹{((item.price_at_add || item.product?.price || 0) * item.quantity).toLocaleString()}
             </span>
             <button onClick={() => removeFromCart(item.id)}
-              className="transition-colors duration-200"
+              className="w-9 h-9 sm:w-auto sm:h-auto flex items-center justify-center transition-colors duration-200"
               style={{ color: "var(--border)" }}
               onMouseEnter={(e) => e.currentTarget.style.color = "#e87070"}
               onMouseLeave={(e) => e.currentTarget.style.color = "var(--border)"}>
@@ -103,7 +103,7 @@ export default function CartPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
-      <main className="max-w-6xl mx-auto px-6 lg:px-10 pt-32 pb-20">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 pt-24 sm:pt-32 pb-20">
 
         {/* Header */}
         <div className="flex items-center gap-3 mb-10">

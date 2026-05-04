@@ -12,10 +12,10 @@ const PILLARS = [
 
 export default function AboutSection() {
   return (
-    <section id="about" className="py-24 lg:py-32 overflow-hidden" style={{ background: "var(--bg)" }}>
-      <div className="max-w-7xl mx-auto px-6 lg:px-10">
+    <section id="about" className="py-16 lg:py-32 overflow-hidden" style={{ background: "var(--bg)" }}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
 
-        <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-24 items-center">
 
           {/* Left — Image composition */}
           <motion.div
@@ -34,13 +34,20 @@ export default function AboutSection() {
               />
               <div className="absolute inset-0"
                 style={{ background: "linear-gradient(135deg, rgba(12,10,9,0.3) 0%, transparent 60%)" }} />
+
+              {/* Mobile years badge — inside image, visible on mobile only */}
+              <div className="sm:hidden absolute bottom-4 right-4 p-3"
+                style={{ background: "rgba(12,10,9,0.85)", border: "1px solid var(--border)", backdropFilter: "blur(8px)" }}>
+                <p className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--gold)" }}>5+</p>
+                <p className="text-[10px] tracking-wider" style={{ color: "var(--cream-dim)" }}>Years crafting</p>
+              </div>
             </div>
 
-            {/* Floating card */}
+            {/* Floating card — hidden on mobile to prevent overflow */}
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute -bottom-6 -right-6 p-5 w-48"
+              className="hidden sm:block absolute -bottom-6 -right-6 p-5 w-48"
               style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}
             >
               <p className="text-3xl font-normal mb-1" style={{ fontFamily: "Playfair Display, serif", color: "var(--gold)" }}>
@@ -51,8 +58,8 @@ export default function AboutSection() {
               </p>
             </motion.div>
 
-            {/* Decorative elements */}
-            <div className="absolute -top-4 -left-4 w-20 h-20 border opacity-20"
+            {/* Decorative elements — hidden on mobile */}
+            <div className="hidden sm:block absolute -top-4 -left-4 w-20 h-20 border opacity-20"
               style={{ borderColor: "var(--gold)" }} />
           </motion.div>
 

@@ -43,15 +43,15 @@ function ProductCard({ product }) {
         e.currentTarget.style.transform = "translateY(0)";
       }}
     >
+      {/* Image — clean, full visibility */}
       <Link to={`/products/${product.id}`} className="block">
-        {/* Image */}
         <div className="relative overflow-hidden" style={{ aspectRatio: "1/1", background: "var(--bg)" }}>
           {img && (
             <img src={img} alt={product.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
           )}
 
-          {/* Gradient overlay on hover */}
+          {/* Hover gradient — desktop only */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             style={{ background: "linear-gradient(to top, rgba(12,10,9,0.5) 0%, transparent 60%)" }} />
 
@@ -67,51 +67,52 @@ function ProductCard({ product }) {
             )}
           </div>
 
-          {/* Wishlist */}
+          {/* Wishlist icon — top right */}
           <button onClick={(e) => { e.preventDefault(); toggleWishlist?.(product.id); }}
-            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
+            className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center transition-all duration-300"
             style={{ background: "rgba(12,10,9,0.85)", border: "1px solid var(--border)" }}>
             <Heart size={13} fill={wishlisted ? "var(--pink)" : "none"}
               style={{ color: wishlisted ? "var(--pink)" : "var(--cream-dim)" }} />
           </button>
-
-          {/* Add to cart */}
-          <div className="absolute bottom-0 left-0 right-0 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-            <button onClick={handleCart}
-              className="w-full py-3 flex items-center justify-center gap-2 text-xs tracking-widest uppercase font-medium"
-              style={{ background: adding ? "var(--gold-dim)" : "var(--gold)", color: "var(--bg)" }}>
-              <ShoppingBag size={12} />
-              {adding ? "Added!" : "Add to Cart"}
-            </button>
-          </div>
         </div>
+      </Link>
 
-        {/* Info panel */}
-        <div className="p-4" style={{ borderTop: "1px solid var(--border)" }}>
-          <p className="text-[10px] tracking-[0.2em] uppercase mb-1.5" style={{ color: "var(--gold)" }}>
+      {/* Info panel + Add to Cart below image */}
+      <div className="p-3" style={{ borderTop: "1px solid var(--border)" }}>
+        <Link to={`/products/${product.id}`} className="block">
+          <p className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "var(--gold)" }}>
             {product.category?.name}
           </p>
-          <h3 className="text-sm font-normal mb-2 leading-snug group-hover:text-gold transition-colors line-clamp-2"
+          <h3 className="text-sm font-normal mb-2 leading-snug line-clamp-2"
             style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
             {product.name}
           </h3>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-3">
             <span className="font-medium" style={{ color: "var(--gold)" }}>₹{product.price}</span>
             {product.compare_price && (
               <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price}</span>
             )}
           </div>
-          {product.avg_rating > 0 && (
-            <div className="flex items-center gap-1 mt-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} size={9} fill={i < Math.round(product.avg_rating) ? "var(--gold)" : "none"}
-                  style={{ color: "var(--gold)" }} />
-              ))}
-              <span className="text-[10px] ml-1" style={{ color: "var(--cream-dim)" }}>({product.review_count})</span>
-            </div>
-          )}
-        </div>
-      </Link>
+        </Link>
+
+        {/* Add to Cart — below price, always tappable */}
+        <button onClick={handleCart}
+          className="w-full py-2.5 flex items-center justify-center gap-1.5 text-[11px] tracking-widest uppercase font-medium transition-colors duration-200"
+          style={{ background: adding ? "var(--gold-dim)" : "var(--gold)", color: "var(--bg)" }}>
+          <ShoppingBag size={12} />
+          {adding ? "Added!" : "Add to Cart"}
+        </button>
+
+        {product.avg_rating > 0 && (
+          <div className="flex items-center gap-1 mt-2">
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={9} fill={i < Math.round(product.avg_rating) ? "var(--gold)" : "none"}
+                style={{ color: "var(--gold)" }} />
+            ))}
+            <span className="text-[10px] ml-1" style={{ color: "var(--cream-dim)" }}>({product.review_count})</span>
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
@@ -187,7 +188,7 @@ export default function ShopPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-6 lg:px-10 pt-32 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-24 sm:pt-32 pb-20">
 
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-8 text-xs tracking-widest uppercase">
@@ -208,12 +209,13 @@ export default function ShopPage() {
             <p className="text-sm mt-2" style={{ color: "var(--cream-dim)" }}>{total} products</p>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center gap-3">
-            <div className="relative">
+          {/* Controls — responsive on mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            {/* Search */}
+            <div className="relative flex-1 sm:flex-none">
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--cream-dim)" }} />
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search..."
-                className="pl-9 pr-8 py-2.5 text-sm outline-none w-52"
+              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search products..."
+                className="pl-9 pr-8 py-2.5 text-sm outline-none w-full sm:w-44"
                 style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--cream)", caretColor: "var(--gold)" }} />
               {search && (
                 <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" style={{ color: "var(--cream-dim)" }}>
@@ -222,25 +224,28 @@ export default function ShopPage() {
               )}
             </div>
 
-            <button onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2.5 text-sm transition-colors duration-200"
-              style={{
-                background: showFilters ? "var(--gold)" : "var(--bg-card)",
-                color: showFilters ? "var(--bg)" : "var(--cream-dim)",
-                border: "1px solid var(--border)",
-              }}>
-              <SlidersHorizontal size={14} /> Filters
-            </button>
+            {/* Filter + Sort row */}
+            <div className="flex items-center gap-2">
+              <button onClick={() => setShowFilters(!showFilters)}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 text-sm transition-colors duration-200"
+                style={{
+                  background: showFilters ? "var(--gold)" : "var(--bg-card)",
+                  color: showFilters ? "var(--bg)" : "var(--cream-dim)",
+                  border: "1px solid var(--border)",
+                }}>
+                <SlidersHorizontal size={14} /> Filters
+              </button>
 
-            <div className="relative">
-              <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
-                className="appearance-none pl-4 pr-8 py-2.5 text-sm outline-none cursor-pointer"
-                style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--cream)" }}>
-                <option value="newest">Newest</option>
-                <option value="price_asc">Price: Low to High</option>
-                <option value="price_desc">Price: High to Low</option>
-              </select>
-              <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--cream-dim)" }} />
+              <div className="relative flex-1 sm:flex-none">
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}
+                  className="appearance-none pl-3 sm:pl-4 pr-7 py-2.5 text-sm outline-none cursor-pointer w-full"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)", color: "var(--cream)" }}>
+                  <option value="newest">Newest</option>
+                  <option value="price_asc">Price ↑</option>
+                  <option value="price_desc">Price ↓</option>
+                </select>
+                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: "var(--cream-dim)" }} />
+              </div>
             </div>
           </div>
         </div>
@@ -312,7 +317,7 @@ export default function ShopPage() {
 
         {/* Products grid */}
         {loading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {Array(8).fill(0).map((_, i) => (
               <div key={i}>
                 <div className="skeleton mb-4" style={{ aspectRatio: "3/4" }} />
@@ -334,7 +339,7 @@ export default function ShopPage() {
             <button onClick={clearFilters} className="btn-gold">Clear Filters</button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             {products.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
         )}

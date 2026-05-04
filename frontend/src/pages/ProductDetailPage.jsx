@@ -156,21 +156,21 @@ export default function ProductDetailPage() {
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-6 lg:px-10 pt-32 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-20 sm:pt-32 pb-20">
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs tracking-widest uppercase mb-10">
-          <Link to="/" className="transition-colors" style={{ color: "var(--cream-dim)" }}
+        <nav className="flex items-center gap-2 text-xs tracking-widest uppercase mb-6 sm:mb-10 overflow-hidden">
+          <Link to="/" className="flex-shrink-0 transition-colors" style={{ color: "var(--cream-dim)" }}
             onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
             onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}>Home</Link>
-          <span style={{ color: "var(--border)" }}>/</span>
-          <Link to="/shop" className="transition-colors" style={{ color: "var(--cream-dim)" }}
+          <span className="flex-shrink-0" style={{ color: "var(--border)" }}>/</span>
+          <Link to="/shop" className="flex-shrink-0 transition-colors" style={{ color: "var(--cream-dim)" }}
             onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
             onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}>Shop</Link>
-          <span style={{ color: "var(--border)" }}>/</span>
-          <span style={{ color: "var(--gold)" }}>{product.name}</span>
+          <span className="flex-shrink-0" style={{ color: "var(--border)" }}>/</span>
+          <span className="truncate min-w-0" style={{ color: "var(--gold)" }}>{product.name}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-20">
           {/* Images */}
           <div className="space-y-4">
             <motion.div layoutId={`product-${product.id}`}
@@ -184,10 +184,10 @@ export default function ProductDetailPage() {
               </div>
             </motion.div>
             {images.length > 1 && (
-              <div className="grid grid-cols-5 gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1">
                 {images.map((img, i) => (
                   <button key={i} onClick={() => setSelectedImage(i)}
-                    className="aspect-square overflow-hidden transition-all"
+                    className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 overflow-hidden transition-all"
                     style={{ border: `2px solid ${selectedImage === i ? "var(--gold)" : "var(--border)"}` }}>
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -310,29 +310,31 @@ export default function ProductDetailPage() {
                 )}
               </div>
             ) : (
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={addingToCart}
                   className="btn-gold flex-1 py-4 flex items-center justify-center gap-2 disabled:opacity-50">
                   <ShoppingBag size={18} />
                   {addingToCart ? "Adding..." : "Add to Cart"}
                 </motion.button>
 
-                <motion.button whileTap={{ scale: 0.97 }} onClick={() => toggleWishlist(product.id)}
-                  className="p-4 transition-all"
-                  style={{
-                    border: `1px solid ${isWishlisted(product.id) ? "#f87171" : "var(--border)"}`,
-                    color: isWishlisted(product.id) ? "#f87171" : "var(--cream-dim)",
-                    background: isWishlisted(product.id) ? "rgba(248,113,113,0.1)" : "transparent",
-                  }}>
-                  <Heart size={20} className={isWishlisted(product.id) ? "fill-[#f87171]" : ""} />
-                </motion.button>
+                <div className="flex gap-3">
+                  <motion.button whileTap={{ scale: 0.97 }} onClick={() => toggleWishlist(product.id)}
+                    className="flex-1 sm:flex-none p-4 flex items-center justify-center transition-all"
+                    style={{
+                      border: `1px solid ${isWishlisted(product.id) ? "#f87171" : "var(--border)"}`,
+                      color: isWishlisted(product.id) ? "#f87171" : "var(--cream-dim)",
+                      background: isWishlisted(product.id) ? "rgba(248,113,113,0.1)" : "transparent",
+                    }}>
+                    <Heart size={20} className={isWishlisted(product.id) ? "fill-[#f87171]" : ""} />
+                  </motion.button>
 
-                <motion.button whileTap={{ scale: 0.97 }}
-                  onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
-                  className="p-4 transition-colors"
-                  style={{ border: "1px solid #4ade80", color: "#4ade80" }}>
-                  <MessageCircle size={20} />
-                </motion.button>
+                  <motion.button whileTap={{ scale: 0.97 }}
+                    onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
+                    className="flex-1 sm:flex-none p-4 flex items-center justify-center transition-colors"
+                    style={{ border: "1px solid #4ade80", color: "#4ade80" }}>
+                    <MessageCircle size={20} />
+                  </motion.button>
+                </div>
               </div>
             )}
 
@@ -380,7 +382,7 @@ export default function ProductDetailPage() {
 
         {/* Reviews section */}
         <div className="mt-20">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
               <h2 className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
                 Customer Reviews

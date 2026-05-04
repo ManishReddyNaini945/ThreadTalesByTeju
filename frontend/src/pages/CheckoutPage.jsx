@@ -146,7 +146,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
-      <main className="max-w-6xl mx-auto px-6 lg:px-10 pt-32 pb-20">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 pt-24 sm:pt-32 pb-20">
         <div className="flex items-center gap-3 mb-10">
           <CreditCard size={24} style={{ color: "var(--gold)" }} />
           <h1 className="text-3xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
@@ -159,7 +159,7 @@ export default function CheckoutPage() {
             {/* Left – Address + Payment */}
             <div className="lg:col-span-2 space-y-6">
               {/* Shipping Address */}
-              <div className="p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <div className="p-4 sm:p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
                 <h2 className="font-normal text-base mb-5 flex items-center gap-2"
                   style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
                   <Truck size={18} style={{ color: "var(--gold)" }} /> Shipping Address
@@ -219,7 +219,7 @@ export default function CheckoutPage() {
               </div>
 
               {/* Payment Method */}
-              <div className="p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <div className="p-4 sm:p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
                 <h2 className="font-normal text-base mb-5 flex items-center gap-2"
                   style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
                   <CreditCard size={18} style={{ color: "var(--gold)" }} /> Payment Method
@@ -264,7 +264,7 @@ export default function CheckoutPage() {
 
             {/* Right – Summary */}
             <div className="lg:col-span-1">
-              <div className="p-6 sticky top-28 space-y-4" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <div className="p-4 sm:p-6 lg:sticky lg:top-28 space-y-4" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
                 <h2 className="font-normal text-lg pb-4" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)", borderBottom: "1px solid var(--border)" }}>
                   Order Summary
                 </h2>

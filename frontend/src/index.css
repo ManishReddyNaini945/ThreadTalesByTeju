@@ -105,3 +105,55 @@
   to { transform: rotate(360deg); }
 }
 .spin-slow { animation: spin-slow 20s linear infinite; }
+
+/* ── Mobile global improvements ─────────────────────────────── */
+
+/* Prevent iOS from zooming into inputs (requires font-size >= 16px) */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+
+/* Gold tap highlight instead of default blue/grey */
+a, button, [role="button"] { -webkit-tap-highlight-color: rgba(200, 164, 92, 0.12); }
+
+/* Momentum scrolling on all scrollable areas */
+.overflow-x-auto, .overflow-y-auto, .overflow-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Safe area insets for notch / home-indicator phones */
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Ensure images never cause horizontal scroll */
+img { max-width: 100%; }
+
+/* Remove blue outline on touch in webkit */
+* { -webkit-focus-ring-color: transparent; }
+
+/* Larger tap targets for icon buttons on mobile */
+@media (max-width: 767px) {
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+/* Mobile card always-visible cart/wishlist actions */
+@media (max-width: 767px) {
+  .mobile-always-visible {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Sticky mobile CTA bar at checkout */
+.sticky-mobile-cta {
+  position: sticky;
+  bottom: env(safe-area-inset-bottom, 0px);
+  z-index: 40;
+}

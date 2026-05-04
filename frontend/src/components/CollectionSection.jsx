@@ -17,7 +17,7 @@ const MARQUEE_TEXT = ["Thread Bangles", "Bridal Sets", "Invisible Chains", "Hair
 
 export default function CollectionSection() {
   return (
-    <section className="py-24 lg:py-32" style={{ background: "var(--bg)" }}>
+    <section className="py-16 lg:py-32" style={{ background: "var(--bg)" }}>
 
       {/* Marquee strip */}
       <div className="overflow-hidden border-y py-4 mb-20" style={{ borderColor: "var(--border)" }}>
@@ -32,10 +32,10 @@ export default function CollectionSection() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
 
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 lg:mb-16">
           <div>
             <p className="section-tag mb-4">Our Collections</p>
             <h2 className="section-title">
@@ -52,7 +52,7 @@ export default function CollectionSection() {
         </div>
 
         {/* Collection Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {COLLECTIONS.map((col, i) => (
             <motion.div
               key={col.slug}
