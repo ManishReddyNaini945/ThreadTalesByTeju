@@ -29,7 +29,7 @@ function ProductCard({ product, index }) {
     >
       <div className="group block">
         {/* Image — clean, no overlay button */}
-        <Link to={`/products/${product.id}`} className="block">
+        <Link to={`/product/${product.slug}`} className="block">
           <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", background: "var(--bg-card)" }}>
             {image && (
               <img
@@ -72,7 +72,7 @@ function ProductCard({ product, index }) {
 
         {/* Info + Add to Cart below image */}
         <div className="pt-3 pb-1">
-          <Link to={`/products/${product.id}`} className="block">
+          <Link to={`/product/${product.slug}`} className="block">
             <p className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "var(--cream-dim)" }}>
               {product.category?.name}
             </p>

@@ -15,7 +15,7 @@ function CartItemRow({ item }) {
       className="flex gap-3 sm:gap-5 p-3 sm:p-5" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
 
       {/* Image */}
-      <Link to={`/products/${item.product?.id}`} className="flex-shrink-0">
+      <Link to={`/product/${item.product?.slug}`} className="flex-shrink-0">
         <div className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden" style={{ border: "1px solid var(--border)" }}>
           {img && <img src={img} alt={item.product?.name} className="w-full h-full object-cover" />}
         </div>
@@ -23,7 +23,7 @@ function CartItemRow({ item }) {
 
       {/* Details */}
       <div className="flex-1 min-w-0">
-        <Link to={`/products/${item.product?.id}`}
+        <Link to={`/product/${item.product?.slug}`}
           className="text-sm font-normal leading-snug line-clamp-2 transition-colors duration-200 hover:text-gold"
           style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
           {item.product?.name}

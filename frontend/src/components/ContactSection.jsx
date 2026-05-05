@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, Instagram, MessageCircle } from "lucide-react";
 
@@ -9,6 +10,30 @@ const CONTACTS = [
 ];
 
 export default function ContactSection() {
+  const [form, setForm] = useState({ name: "", email: "", phone: "", message: "" });
+
+  const handleChange = (field) => (e) => setForm((prev) => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const text = [
+      `Hi! I'm contacting from Thread Tales by Teju.`,
+      form.name    ? `*Name:* ${form.name}`       : "",
+      form.email   ? `*Email:* ${form.email}`     : "",
+      form.phone   ? `*Phone:* ${form.phone}`     : "",
+      form.message ? `*Message:* ${form.message}` : "",
+    ].filter(Boolean).join("\n");
+
+    window.open(`https://wa.me/919866052260?text=${encodeURIComponent(text)}`, "_blank");
+    setForm({ name: "", email: "", phone: "", message: "" });
+  };
+
+  const inputStyle = {
+    border: "1px solid var(--border)",
+    color: "var(--cream)",
+    caretColor: "var(--gold)",
+  };
+
   return (
     <section id="contact" className="py-16 lg:py-32" style={{ background: "var(--bg-2)" }}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
@@ -70,33 +95,61 @@ export default function ContactSection() {
             <p className="text-xl font-normal mb-8" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
               Send a Message
             </p>
-            <form className="flex flex-col gap-5"
-              onSubmit={(e) => { e.preventDefault(); window.open(`https://wa.me/919866052260?text=Hello! I have a query.`, "_blank"); }}>
+            <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
 
-              {[
-                { label: "Your Name", type: "text", placeholder: "Priya Sharma" },
-                { label: "Email Address", type: "email", placeholder: "priya@example.com" },
-                { label: "Phone Number", type: "tel", placeholder: "+91 98660 52260" },
-              ].map((field) => (
-                <div key={field.label}>
-                  <label className="block text-xs tracking-[0.2em] uppercase mb-2" style={{ color: "var(--cream-dim)" }}>
-                    {field.label}
-                  </label>
-                  <input
-                    type={field.type}
-                    placeholder={field.placeholder}
-                    className="w-full bg-transparent py-3 px-4 text-sm outline-none transition-colors duration-200"
-                    style={{
-                      border: "1px solid var(--border)",
-                      color: "var(--cream)",
-                      caretColor: "var(--gold)",
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = "var(--gold)"}
-                    onBlur={(e) => e.target.style.borderColor = "var(--border)"}
-                  />
-                </div>
-              ))}
+              {/* Name */}
+              <div>
+                <label className="block text-xs tracking-[0.2em] uppercase mb-2" style={{ color: "var(--cream-dim)" }}>
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  placeholder="Teju Sharma"
+                  value={form.name}
+                  onChange={handleChange("name")}
+                  required
+                  className="w-full bg-transparent py-3 px-4 text-sm outline-none transition-colors duration-200"
+                  style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "var(--gold)"}
+                  onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                />
+              </div>
 
+              {/* Email */}
+              <div>
+                <label className="block text-xs tracking-[0.2em] uppercase mb-2" style={{ color: "var(--cream-dim)" }}>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  placeholder="teju@example.com"
+                  value={form.email}
+                  onChange={handleChange("email")}
+                  className="w-full bg-transparent py-3 px-4 text-sm outline-none transition-colors duration-200"
+                  style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "var(--gold)"}
+                  onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                />
+              </div>
+
+              {/* Phone */}
+              <div>
+                <label className="block text-xs tracking-[0.2em] uppercase mb-2" style={{ color: "var(--cream-dim)" }}>
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  placeholder="+91 9876543210"
+                  value={form.phone}
+                  onChange={handleChange("phone")}
+                  className="w-full bg-transparent py-3 px-4 text-sm outline-none transition-colors duration-200"
+                  style={inputStyle}
+                  onFocus={(e) => e.target.style.borderColor = "var(--gold)"}
+                  onBlur={(e) => e.target.style.borderColor = "var(--border)"}
+                />
+              </div>
+
+              {/* Message */}
               <div>
                 <label className="block text-xs tracking-[0.2em] uppercase mb-2" style={{ color: "var(--cream-dim)" }}>
                   Message
@@ -104,8 +157,11 @@ export default function ContactSection() {
                 <textarea
                   rows={4}
                   placeholder="I'd like to know more about..."
+                  value={form.message}
+                  onChange={handleChange("message")}
+                  required
                   className="w-full bg-transparent py-3 px-4 text-sm outline-none resize-none transition-colors duration-200"
-                  style={{ border: "1px solid var(--border)", color: "var(--cream)", caretColor: "var(--gold)" }}
+                  style={{ ...inputStyle }}
                   onFocus={(e) => e.target.style.borderColor = "var(--gold)"}
                   onBlur={(e) => e.target.style.borderColor = "var(--border)"}
                 />

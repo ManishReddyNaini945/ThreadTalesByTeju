@@ -63,6 +63,7 @@ export default function ProductDetailPage() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, title: "", body: "" });
+  const [customColor, setCustomColor] = useState("");
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyDone, setNotifyDone] = useState(false);
   const [notifyLoading, setNotifyLoading] = useState(false);
@@ -95,9 +96,15 @@ export default function ProductDetailPage() {
     load();
   }, [slug]);
 
+  const effectiveColor = selectedColor || (customColor.trim() ? customColor.trim() : null);
+
   const handleAddToCart = async () => {
+    if (product.colors?.length > 0 && !selectedColor && !customColor.trim()) {
+      toast.error("Please select a color or enter your preferred color");
+      return;
+    }
     setAddingToCart(true);
-    await addToCart(product.id, quantity, selectedColor, selectedSize);
+    await addToCart(product.id, quantity, effectiveColor, selectedSize);
     setAddingToCart(false);
   };
 
@@ -126,7 +133,7 @@ export default function ProductDetailPage() {
   };
 
   const whatsappMsg = product
-    ? `Hi! I'm interested in *${product.name}* (₹${product.price}) from Thread Tales by Teju. Can you help me customize it?`
+    ? `Hi! I'm interested in *${product.name}* (₹${product.price}) from Thread Tales by Teju.${effectiveColor ? ` I'd like it in *${effectiveColor}* color.` : ""}${selectedSize ? ` Size: *${selectedSize}*.` : ""} Can you help me?`
     : "";
 
   if (loading) {
@@ -156,9 +163,18 @@ export default function ProductDetailPage() {
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-20 sm:pt-32 pb-20">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 sm:pt-28 pb-28 lg:pb-20">
+        {/* Back button — mobile only */}
+        <button onClick={() => window.history.back()}
+          className="flex items-center gap-1 mb-4 lg:hidden text-xs tracking-widest uppercase transition-colors"
+          style={{ color: "var(--cream-dim)" }}
+          onTouchStart={e => e.currentTarget.style.color = "var(--gold)"}
+          onTouchEnd={e => e.currentTarget.style.color = "var(--cream-dim)"}>
+          <ChevronLeft size={14} /> Back
+        </button>
+
         {/* Breadcrumb */}
-        <nav className="flex items-center gap-2 text-xs tracking-widest uppercase mb-6 sm:mb-10 overflow-hidden">
+        <nav className="hidden sm:flex items-center gap-2 text-xs tracking-widest uppercase mb-6 sm:mb-10 overflow-hidden">
           <Link to="/" className="flex-shrink-0 transition-colors" style={{ color: "var(--cream-dim)" }}
             onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
             onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}>Home</Link>
@@ -170,7 +186,7 @@ export default function ProductDetailPage() {
           <span className="truncate min-w-0" style={{ color: "var(--gold)" }}>{product.name}</span>
         </nav>
 
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-20">
+        <div className="grid lg:grid-cols-2 gap-6 lg:gap-20">
           {/* Images */}
           <div className="space-y-4">
             <motion.div layoutId={`product-${product.id}`}
@@ -197,7 +213,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Info */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {product.category && (
               <Link to={`/shop?category=${product.category.slug}`}
                 className="text-sm font-medium uppercase tracking-widest hover:underline" style={{ color: "var(--gold)" }}>
@@ -205,7 +221,7 @@ export default function ProductDetailPage() {
               </Link>
             )}
 
-            <h1 className="text-3xl lg:text-4xl font-normal leading-tight"
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-normal leading-tight"
               style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>{product.name}</h1>
 
             <StarRating rating={product.avg_rating} count={product.review_count} />
@@ -213,7 +229,7 @@ export default function ProductDetailPage() {
             {/* Price */}
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <span className="text-3xl font-bold" style={{ color: "var(--cream)" }}>₹{product.price.toLocaleString()}</span>
+                <span className="text-2xl sm:text-3xl font-bold" style={{ color: "var(--cream)" }}>₹{product.price.toLocaleString()}</span>
                 {product.compare_price && (
                   <>
                     <span className="text-lg line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price.toLocaleString()}</span>
@@ -232,14 +248,17 @@ export default function ProductDetailPage() {
 
             {/* Colors */}
             {product.colors?.length > 0 && (
-              <div>
-                <p className="text-sm font-medium mb-2" style={{ color: "var(--cream)" }}>
-                  Color: <span style={{ color: "var(--gold)" }}>{selectedColor}</span>
+              <div className="space-y-3">
+                <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>
+                  Color:{" "}
+                  <span style={{ color: "var(--gold)" }}>
+                    {selectedColor || (customColor.trim() ? customColor.trim() : "")}
+                  </span>
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {product.colors.map((c) => (
-                    <button key={c} onClick={() => setSelectedColor(c)}
-                      className="px-4 py-2 text-sm transition-all"
+                    <button key={c} onClick={() => { setSelectedColor(c); setCustomColor(""); }}
+                      className="px-4 py-2.5 text-sm transition-all min-h-[44px]"
                       style={{
                         border: `1px solid ${selectedColor === c ? "var(--gold)" : "var(--border)"}`,
                         color: selectedColor === c ? "var(--gold)" : "var(--cream-dim)",
@@ -248,6 +267,30 @@ export default function ProductDetailPage() {
                       {c}
                     </button>
                   ))}
+                </div>
+                <div className="pt-1">
+                  <p className="text-xs mb-1.5" style={{ color: "var(--cream-dim)" }}>
+                    Want a different color? Type it below:
+                  </p>
+                  <input
+                    type="text"
+                    value={customColor}
+                    onChange={(e) => { setCustomColor(e.target.value); if (e.target.value.trim()) setSelectedColor(null); }}
+                    placeholder="e.g. Peacock Green, Maroon, Navy Blue..."
+                    className="w-full px-3 py-2 text-sm focus:outline-none"
+                    style={{
+                      background: "var(--bg-card)",
+                      border: `1px solid ${customColor.trim() ? "var(--gold)" : "var(--border)"}`,
+                      color: "var(--cream)",
+                    }}
+                    onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                    onBlur={e => { if (!customColor.trim()) e.target.style.borderColor = "var(--border)"; }}
+                  />
+                  {customColor.trim() && (
+                    <p className="text-xs mt-1" style={{ color: "var(--gold)" }}>
+                      Your custom color request will be noted. We'll confirm via WhatsApp.
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -261,7 +304,7 @@ export default function ProductDetailPage() {
                 <div className="flex gap-2 flex-wrap">
                   {product.sizes.map((s) => (
                     <button key={s} onClick={() => setSelectedSize(s)}
-                      className="px-4 py-2 text-sm transition-all"
+                      className="px-4 py-2.5 text-sm transition-all min-h-[44px] min-w-[56px]"
                       style={{
                         border: `1px solid ${selectedSize === s ? "var(--gold)" : "var(--border)"}`,
                         color: selectedSize === s ? "var(--gold)" : "var(--cream-dim)",
@@ -275,18 +318,20 @@ export default function ProductDetailPage() {
             )}
 
             {/* Quantity */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 flex-wrap">
               <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>Quantity</p>
-              <div className="flex items-center gap-3 px-4 py-2" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))} className="transition-colors" style={{ color: "var(--cream-dim)" }}>
+              <div className="flex items-center gap-3 px-4 py-2.5 min-h-[44px]" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
                   <Minus size={16} />
                 </button>
                 <span className="font-semibold w-6 text-center" style={{ color: "var(--cream)" }}>{quantity}</span>
-                <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))} className="transition-colors" style={{ color: "var(--cream-dim)" }}>
+                <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
+                  className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
                   <Plus size={16} />
                 </button>
               </div>
-              <span className="text-sm" style={{ color: "var(--cream-dim)" }}>{product.stock_quantity} available</span>
+              <span className="text-xs" style={{ color: "var(--cream-dim)" }}>{product.stock_quantity} available</span>
             </div>
 
             {/* CTA buttons */}
@@ -310,31 +355,58 @@ export default function ProductDetailPage() {
                 )}
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="space-y-3 lg:hidden">
+                {/* Mobile: full-width Add to Cart */}
                 <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={addingToCart}
-                  className="btn-gold flex-1 py-4 flex items-center justify-center gap-2 disabled:opacity-50">
+                  className="btn-gold w-full py-4 flex items-center justify-center gap-2 disabled:opacity-50 text-sm">
                   <ShoppingBag size={18} />
                   {addingToCart ? "Adding..." : "Add to Cart"}
                 </motion.button>
-
                 <div className="flex gap-3">
                   <motion.button whileTap={{ scale: 0.97 }} onClick={() => toggleWishlist(product.id)}
-                    className="flex-1 sm:flex-none p-4 flex items-center justify-center transition-all"
+                    className="flex-1 py-3 flex items-center justify-center gap-2 text-sm transition-all"
                     style={{
                       border: `1px solid ${isWishlisted(product.id) ? "#f87171" : "var(--border)"}`,
                       color: isWishlisted(product.id) ? "#f87171" : "var(--cream-dim)",
                       background: isWishlisted(product.id) ? "rgba(248,113,113,0.1)" : "transparent",
                     }}>
-                    <Heart size={20} className={isWishlisted(product.id) ? "fill-[#f87171]" : ""} />
+                    <Heart size={16} className={isWishlisted(product.id) ? "fill-[#f87171]" : ""} />
+                    Wishlist
                   </motion.button>
-
                   <motion.button whileTap={{ scale: 0.97 }}
                     onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
-                    className="flex-1 sm:flex-none p-4 flex items-center justify-center transition-colors"
+                    className="flex-1 py-3 flex items-center justify-center gap-2 text-sm transition-colors"
                     style={{ border: "1px solid #4ade80", color: "#4ade80" }}>
-                    <MessageCircle size={20} />
+                    <MessageCircle size={16} />
+                    WhatsApp
                   </motion.button>
                 </div>
+              </div>
+            )}
+
+            {/* Desktop CTA — hidden on mobile */}
+            {product.stock_quantity > 0 && (
+              <div className="hidden lg:flex gap-3">
+                <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={addingToCart}
+                  className="btn-gold flex-1 py-4 flex items-center justify-center gap-2 disabled:opacity-50">
+                  <ShoppingBag size={18} />
+                  {addingToCart ? "Adding..." : "Add to Cart"}
+                </motion.button>
+                <motion.button whileTap={{ scale: 0.97 }} onClick={() => toggleWishlist(product.id)}
+                  className="p-4 flex items-center justify-center transition-all"
+                  style={{
+                    border: `1px solid ${isWishlisted(product.id) ? "#f87171" : "var(--border)"}`,
+                    color: isWishlisted(product.id) ? "#f87171" : "var(--cream-dim)",
+                    background: isWishlisted(product.id) ? "rgba(248,113,113,0.1)" : "transparent",
+                  }}>
+                  <Heart size={20} className={isWishlisted(product.id) ? "fill-[#f87171]" : ""} />
+                </motion.button>
+                <motion.button whileTap={{ scale: 0.97 }}
+                  onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
+                  className="p-4 flex items-center justify-center transition-colors"
+                  style={{ border: "1px solid #4ade80", color: "#4ade80" }}>
+                  <MessageCircle size={20} />
+                </motion.button>
               </div>
             )}
 
@@ -352,11 +424,11 @@ export default function ProductDetailPage() {
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-20">
-            <h2 className="text-2xl font-normal mb-8" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+          <div className="mt-12 sm:mt-20">
+            <h2 className="text-xl sm:text-2xl font-normal mb-5 sm:mb-8" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
               You May Also Like
             </h2>
-            <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {relatedProducts.map((p) => (
                 <Link key={p.id} to={`/product/${p.slug}`}
                   className="group overflow-hidden transition-all"
@@ -364,11 +436,11 @@ export default function ProductDetailPage() {
                   <div className="aspect-square overflow-hidden">
                     <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
-                  <div className="p-3">
-                    <p className="text-sm font-medium line-clamp-2 mb-1 transition-colors group-hover:text-[#c8a45c]"
+                  <div className="p-2 sm:p-3">
+                    <p className="text-xs sm:text-sm font-medium line-clamp-2 mb-1 transition-colors group-hover:text-[#c8a45c]"
                       style={{ color: "var(--cream)" }}>{p.name}</p>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-bold" style={{ color: "var(--gold)" }}>₹{p.price.toLocaleString()}</span>
+                    <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                      <span className="text-xs sm:text-sm font-bold" style={{ color: "var(--gold)" }}>₹{p.price.toLocaleString()}</span>
                       {p.compare_price && (
                         <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{p.compare_price.toLocaleString()}</span>
                       )}
@@ -381,10 +453,10 @@ export default function ProductDetailPage() {
         )}
 
         {/* Reviews section */}
-        <div className="mt-20">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="mt-12 sm:mt-20">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 sm:mb-8">
             <div>
-              <h2 className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+              <h2 className="text-xl sm:text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
                 Customer Reviews
               </h2>
               {reviews.length > 0 && (() => {
@@ -464,6 +536,22 @@ export default function ProductDetailPage() {
       </main>
 
       <Footer />
+
+      {/* Sticky bottom bar — mobile only */}
+      {product.stock_quantity > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 lg:hidden flex items-center gap-3 px-4 py-3"
+          style={{ background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs truncate" style={{ color: "var(--cream-dim)" }}>{product.name}</p>
+            <p className="text-sm font-bold" style={{ color: "var(--gold)" }}>₹{product.price.toLocaleString()}</p>
+          </div>
+          <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={addingToCart}
+            className="btn-gold px-6 py-3 text-sm flex items-center gap-2 disabled:opacity-50 flex-shrink-0">
+            <ShoppingBag size={16} />
+            {addingToCart ? "Adding..." : "Add to Cart"}
+          </motion.button>
+        </div>
+      )}
 
       {/* Image Zoom Lightbox */}
       {zoomOpen && (
