@@ -37,9 +37,11 @@ def list_products(
     )
 
     if category_slug:
-        cat = db.query(Category).filter(Category.slug == category_slug).first()
+        cat = db.query(Category).options(joinedload(Category.children)).filter(Category.slug == category_slug).first()
         if cat:
-            query = query.filter(Product.category_id == cat.id)
+            child_ids = [c.id for c in cat.children]
+            all_ids = [cat.id] + child_ids
+            query = query.filter(Product.category_id.in_(all_ids))
 
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
@@ -92,7 +94,13 @@ def bestsellers(limit: int = 8, db: Session = Depends(get_db)):
 
 @router.get("/categories", response_model=List[CategoryOut])
 def list_categories(db: Session = Depends(get_db)):
-    return db.query(Category).filter(Category.is_active == True).order_by(Category.sort_order).all()
+    return (
+        db.query(Category)
+        .options(joinedload(Category.children))
+        .filter(Category.is_active == True, Category.parent_id == None)
+        .order_by(Category.sort_order)
+        .all()
+    )
 
 
 @router.get("/{slug}", response_model=ProductOut)

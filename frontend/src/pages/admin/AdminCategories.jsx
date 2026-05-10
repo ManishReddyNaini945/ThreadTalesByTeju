@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Tags } from "lucide-react";
+import { Plus, Trash2, Tags, ChevronRight } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
 
@@ -15,11 +15,18 @@ const inputStyle = {
   color: cream, fontSize: 13, outline: "none",
 };
 
+const selectStyle = {
+  ...inputStyle,
+  appearance: "none",
+  cursor: "pointer",
+};
+
 export default function AdminCategories() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [parentId, setParentId] = useState("");
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -32,14 +39,21 @@ export default function AdminCategories() {
 
   useEffect(() => { load(); }, []);
 
+  // Top-level categories available as parents
+  const topLevel = categories.filter(c => !c.parent_id);
+
   const handleCreate = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
     setSaving(true);
     try {
-      await adminService.createCategory({ name: name.trim(), description: description.trim() });
+      await adminService.createCategory({
+        name: name.trim(),
+        description: description.trim(),
+        parent_id: parentId ? parseInt(parentId) : null,
+      });
       toast.success("Category created!");
-      setName(""); setDescription("");
+      setName(""); setDescription(""); setParentId("");
       load();
     } catch { toast.error("Failed to create"); }
     finally { setSaving(false); }
@@ -54,8 +68,19 @@ export default function AdminCategories() {
     } catch { toast.error("Failed to delete"); }
   };
 
+  // Group for display: parents first, then children indented
+  const grouped = [];
+  topLevel.forEach(parent => {
+    grouped.push({ ...parent, isParent: true });
+    const children = categories.filter(c => c.parent_id === parent.id);
+    children.forEach(child => grouped.push({ ...child, isParent: false }));
+  });
+  // Orphaned children (parent deleted) shown at end
+  categories.filter(c => c.parent_id && !topLevel.find(p => p.id === c.parent_id))
+    .forEach(c => grouped.push({ ...c, isParent: false }));
+
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: cream }}>Categories</h1>
         <p className="text-xs mt-0.5" style={{ color: creamDim }}>{categories.length} categories</p>
@@ -68,10 +93,22 @@ export default function AdminCategories() {
         </p>
         <div>
           <label className="block text-xs tracking-widest uppercase mb-1.5" style={{ color: creamDim }}>Name *</label>
-          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Necklaces"
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Kundans"
             style={inputStyle}
             onFocus={e => e.target.style.borderColor = gold}
             onBlur={e => e.target.style.borderColor = border} />
+        </div>
+        <div>
+          <label className="block text-xs tracking-widest uppercase mb-1.5" style={{ color: creamDim }}>Parent Category</label>
+          <select value={parentId} onChange={e => setParentId(e.target.value)}
+            style={selectStyle}
+            onFocus={e => e.target.style.borderColor = gold}
+            onBlur={e => e.target.style.borderColor = border}>
+            <option value="">— None (top-level) —</option>
+            {topLevel.map(cat => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-xs tracking-widest uppercase mb-1.5" style={{ color: creamDim }}>Description</label>
@@ -91,7 +128,7 @@ export default function AdminCategories() {
       <div style={{ background: cardBg, border: `1px solid ${border}` }}>
         {loading ? (
           <div className="flex items-center justify-center py-16 text-sm" style={{ color: creamDim }}>Loading...</div>
-        ) : categories.length === 0 ? (
+        ) : grouped.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Tags size={36} style={{ color: border }} />
             <p className="text-sm" style={{ color: creamDim }}>No categories yet</p>
@@ -102,17 +139,26 @@ export default function AdminCategories() {
               <tr style={{ borderBottom: `1px solid ${border}` }}>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Name</th>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Description</th>
+                <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Slug</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody>
-              {categories.map((cat) => (
+              {grouped.map((cat) => (
                 <tr key={cat.id} style={{ borderBottom: `1px solid ${border}` }}
                   onMouseEnter={e => e.currentTarget.style.background = "#231f1b"}
                   onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                  <td className="px-5 py-4 font-medium" style={{ color: cream }}>{cat.name}</td>
-                  <td className="px-5 py-4 text-sm" style={{ color: creamDim }}>{cat.description || "—"}</td>
-                  <td className="px-5 py-4 text-right">
+                  <td className="px-5 py-3.5 font-medium" style={{ color: cream }}>
+                    {!cat.isParent && cat.parent_id && (
+                      <ChevronRight size={12} className="inline mr-1" style={{ color: gold, opacity: 0.6 }} />
+                    )}
+                    <span style={{ color: cat.isParent ? gold : cream, fontWeight: cat.isParent ? 500 : 400 }}>
+                      {cat.name}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3.5 text-sm" style={{ color: creamDim }}>{cat.description || "—"}</td>
+                  <td className="px-5 py-3.5 text-xs font-mono" style={{ color: creamDim }}>{cat.slug}</td>
+                  <td className="px-5 py-3.5 text-right">
                     <button onClick={() => handleDelete(cat.id)}
                       className="p-1.5 transition-colors" style={{ color: "#f87171" }}
                       onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.1)"}

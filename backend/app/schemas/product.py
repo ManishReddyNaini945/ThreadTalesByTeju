@@ -10,6 +10,7 @@ class CategoryBase(BaseModel):
     description: Optional[str] = None
     image_url: Optional[str] = None
     sort_order: int = 0
+    parent_id: Optional[int] = None
 
 
 class CategoryCreate(CategoryBase):
@@ -20,9 +21,13 @@ class CategoryOut(CategoryBase):
     id: int
     is_active: bool
     created_at: datetime
+    children: List["CategoryOut"] = []
 
     class Config:
         from_attributes = True
+
+
+CategoryOut.model_rebuild()
 
 
 class ProductBase(BaseModel):

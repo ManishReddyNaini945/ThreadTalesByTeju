@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python seed_raw_materials.py)"
+    ]
+  }
+}

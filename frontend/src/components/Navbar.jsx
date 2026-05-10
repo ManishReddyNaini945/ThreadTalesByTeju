@@ -20,6 +20,33 @@ const NAV_LINKS = [
       { label: "Saree Pins", path: "/shop?category=saree-pins" },
     ],
   },
+  {
+    label: "Raw Materials",
+    isMega: true,
+    path: "/shop?category=raw-materials",
+    children: [
+      { label: "Kundans",                      path: "/shop?category=kundans" },
+      { label: "Bangles",                      path: "/shop?category=raw-bangles" },
+      { label: "Silk Threads",                 path: "/shop?category=silk-threads" },
+      { label: "Glues",                        path: "/shop?category=glues" },
+      { label: "Charms",                       path: "/shop?category=charms" },
+      { label: "Craft Chains",                  path: "/shop?category=raw-chains" },
+      { label: "Lakshmi Coins",               path: "/shop?category=lakshmi-coins" },
+      { label: "Tools",                        path: "/shop?category=tools" },
+      { label: "Beads",                        path: "/shop?category=beads" },
+      { label: "Raw Saree Pins",               path: "/shop?category=raw-saree-pins" },
+      { label: "Hair Accessories",             path: "/shop?category=raw-hair-accessories" },
+      { label: "Transparent Sheets",          path: "/shop?category=transparent-sheets" },
+      { label: "Wax Sheets",                  path: "/shop?category=wax-sheets" },
+      { label: "Loreal Pearls",               path: "/shop?category=loreal-pearls" },
+      { label: "Earring Material",            path: "/shop?category=earring-material" },
+      { label: "Wire",                         path: "/shop?category=wire" },
+      { label: "MDF",                          path: "/shop?category=mdf" },
+      { label: "Bracelet & Necklace Material", path: "/shop?category=bracelet-necklace-material" },
+      { label: "Sequins",                      path: "/shop?category=sequins" },
+      { label: "Clip Stones",                  path: "/shop?category=clip-stones" },
+    ],
+  },
   { label: "About", path: "/#about" },
   { label: "Contact", path: "/#contact" },
 ];
@@ -27,7 +54,7 @@ const NAV_LINKS = [
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [collectionsOpen, setCollectionsOpen] = useState(false);
+  const [openMobileSection, setOpenMobileSection] = useState(null);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -49,7 +76,7 @@ export default function Navbar() {
   useEffect(() => {
     setMenuOpen(false);
     setActiveDropdown(null);
-    setCollectionsOpen(false);
+    setOpenMobileSection(null);
   }, [location]);
 
   // Prevent body scroll when mobile menu is open
@@ -176,42 +203,98 @@ export default function Navbar() {
                     <div className="absolute top-full left-0 right-0 h-3" />
                     <AnimatePresence>
                       {activeDropdown === link.label && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 12, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 8, scale: 0.97 }}
-                          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 w-56 overflow-hidden"
-                          style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 20px 40px rgba(0,0,0,0.4)", marginTop: "2px" }}
-                        >
-                          {link.children.map((child, i) => (
-                            <motion.div
-                              key={child.label}
-                              initial={{ opacity: 0, x: -8 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: i * 0.04, duration: 0.2 }}
-                            >
+                        link.isMega ? (
+                          /* ── Raw Materials mega-menu (2-column grid) ── */
+                          <motion.div
+                            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                            className="absolute top-full right-0 overflow-hidden"
+                            style={{
+                              width: "420px",
+                              background: "var(--bg-card)",
+                              border: "1px solid var(--border)",
+                              boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
+                              marginTop: "2px",
+                            }}
+                          >
+                            <div className="px-4 py-3" style={{ borderBottom: "1px solid var(--border)" }}>
                               <Link
-                                to={child.path}
-                                className="flex items-center gap-3 px-5 py-3 text-sm group/item transition-all duration-200"
-                                style={{ color: "var(--cream-dim)", borderBottom: i < link.children.length - 1 ? "1px solid rgba(45,40,36,0.4)" : "none" }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = "rgba(200,164,92,0.08)";
-                                  e.currentTarget.style.color = "var(--gold)";
-                                  e.currentTarget.style.paddingLeft = "24px";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = "transparent";
-                                  e.currentTarget.style.color = "var(--cream-dim)";
-                                  e.currentTarget.style.paddingLeft = "20px";
-                                }}
+                                to={link.path}
+                                className="text-xs tracking-widest uppercase font-medium"
+                                style={{ color: "var(--gold)" }}
                               >
-                                <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: "var(--gold)", opacity: 0.5 }} />
-                                {child.label}
+                                View All Raw Materials →
                               </Link>
-                            </motion.div>
-                          ))}
-                        </motion.div>
+                            </div>
+                            <div className="grid grid-cols-2 p-2">
+                              {link.children.map((child, i) => (
+                                <motion.div
+                                  key={child.label}
+                                  initial={{ opacity: 0, x: -6 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: i * 0.02, duration: 0.18 }}
+                                >
+                                  <Link
+                                    to={child.path}
+                                    className="flex items-center gap-2 px-3 py-2 text-sm transition-all duration-150 rounded-sm"
+                                    style={{ color: "var(--cream-dim)" }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background = "rgba(200,164,92,0.08)";
+                                      e.currentTarget.style.color = "var(--gold)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = "transparent";
+                                      e.currentTarget.style.color = "var(--cream-dim)";
+                                    }}
+                                  >
+                                    <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: "var(--gold)", opacity: 0.5 }} />
+                                    {child.label}
+                                  </Link>
+                                </motion.div>
+                              ))}
+                            </div>
+                          </motion.div>
+                        ) : (
+                          /* ── Regular dropdown ── */
+                          <motion.div
+                            initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.97 }}
+                            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                            className="absolute top-full left-1/2 -translate-x-1/2 w-56 overflow-hidden"
+                            style={{ background: "var(--bg-card)", border: "1px solid var(--border)", boxShadow: "0 20px 40px rgba(0,0,0,0.4)", marginTop: "2px" }}
+                          >
+                            {link.children.map((child, i) => (
+                              <motion.div
+                                key={child.label}
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.04, duration: 0.2 }}
+                              >
+                                <Link
+                                  to={child.path}
+                                  className="flex items-center gap-3 px-5 py-3 text-sm group/item transition-all duration-200"
+                                  style={{ color: "var(--cream-dim)", borderBottom: i < link.children.length - 1 ? "1px solid rgba(45,40,36,0.4)" : "none" }}
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = "rgba(200,164,92,0.08)";
+                                    e.currentTarget.style.color = "var(--gold)";
+                                    e.currentTarget.style.paddingLeft = "24px";
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = "transparent";
+                                    e.currentTarget.style.color = "var(--cream-dim)";
+                                    e.currentTarget.style.paddingLeft = "20px";
+                                  }}
+                                >
+                                  <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: "var(--gold)", opacity: 0.5 }} />
+                                  {child.label}
+                                </Link>
+                              </motion.div>
+                            ))}
+                          </motion.div>
+                        )
                       )}
                     </AnimatePresence>
                   </div>
@@ -368,7 +451,7 @@ export default function Navbar() {
                   link.children ? (
                     <div key={link.label}>
                       <button
-                        onClick={() => setCollectionsOpen(!collectionsOpen)}
+                        onClick={() => setOpenMobileSection(openMobileSection === link.label ? null : link.label)}
                         className="w-full flex items-center justify-between py-3.5 text-left"
                         style={{ borderBottom: "1px solid var(--border)" }}
                       >
@@ -377,11 +460,11 @@ export default function Navbar() {
                         </span>
                         <ChevronRight
                           size={16}
-                          style={{ color: "var(--gold)", transform: collectionsOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+                          style={{ color: "var(--gold)", transform: openMobileSection === link.label ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
                         />
                       </button>
                       <AnimatePresence>
-                        {collectionsOpen && (
+                        {openMobileSection === link.label && (
                           <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
@@ -389,12 +472,21 @@ export default function Navbar() {
                             transition={{ duration: 0.2 }}
                             className="overflow-hidden"
                           >
+                            {link.isMega && (
+                              <Link
+                                to={link.path}
+                                className="flex items-center gap-2 pt-2 pb-1 pl-4 text-xs tracking-widest uppercase"
+                                style={{ color: "var(--gold)" }}
+                              >
+                                View All →
+                              </Link>
+                            )}
                             <div className="pb-2 pt-1 pl-4">
                               {link.children.map((child) => (
                                 <Link
                                   key={child.label}
                                   to={child.path}
-                                  className="flex items-center gap-2 py-2.5 text-sm"
+                                  className="flex items-center gap-2 py-2 text-sm"
                                   style={{ color: "var(--cream-dim)" }}
                                 >
                                   <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ background: "var(--gold)", opacity: 0.6 }} />
