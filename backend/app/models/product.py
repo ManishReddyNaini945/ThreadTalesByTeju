@@ -29,6 +29,7 @@ class Product(Base):
     sizes = Column(JSON, default=list)   # available sizes
     tags = Column(JSON, default=list)
     weight = Column(Float, nullable=True)  # in grams
+    pricing_unit = Column(String(20), default="piece", nullable=False, server_default="piece")
     is_featured = Column(Boolean, default=False)
     is_bestseller = Column(Boolean, default=False)
     status = Column(Enum(ProductStatus), default=ProductStatus.active)

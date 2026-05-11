@@ -228,8 +228,16 @@ export default function ProductDetailPage() {
 
             {/* Price */}
             <div className="space-y-2">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl sm:text-3xl font-bold" style={{ color: "var(--cream)" }}>₹{product.price.toLocaleString()}</span>
+              <div className="flex items-center gap-3 flex-wrap">
+                <span className="text-2xl sm:text-3xl font-bold" style={{ color: "var(--cream)" }}>
+                  ₹{product.price.toLocaleString()}
+                  {product.pricing_unit === "gram" && (
+                    <span className="text-base font-normal ml-1" style={{ color: "var(--cream-dim)" }}>/gram</span>
+                  )}
+                  {product.pricing_unit === "kg" && (
+                    <span className="text-base font-normal ml-1" style={{ color: "var(--cream-dim)" }}>/kg</span>
+                  )}
+                </span>
                 {product.compare_price && (
                   <>
                     <span className="text-lg line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price.toLocaleString()}</span>
@@ -239,6 +247,16 @@ export default function ProductDetailPage() {
                   </>
                 )}
               </div>
+              {product.pricing_unit === "gram" && (
+                <p className="text-sm" style={{ color: "var(--cream-dim)" }}>
+                  ₹{(product.price * 1000).toLocaleString()} per kg
+                </p>
+              )}
+              {product.pricing_unit === "kg" && (
+                <p className="text-sm" style={{ color: "var(--cream-dim)" }}>
+                  ₹{(product.price / 1000).toFixed(3)} per gram
+                </p>
+              )}
               {product.sale_ends_at && <CountdownTimer endsAt={product.sale_ends_at} />}
             </div>
 
@@ -317,22 +335,50 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            {/* Quantity */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>Quantity</p>
-              <div className="flex items-center gap-3 px-4 py-2.5 min-h-[44px]" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
-                  <Minus size={16} />
-                </button>
-                <span className="font-semibold w-6 text-center" style={{ color: "var(--cream)" }}>{quantity}</span>
-                <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                  className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
-                  <Plus size={16} />
-                </button>
+            {/* Quantity / Weight */}
+            {product.pricing_unit === "gram" || product.pricing_unit === "kg" ? (
+              <div className="space-y-2">
+                <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>
+                  Weight ({product.pricing_unit === "gram" ? "grams" : "kg"})
+                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <input
+                    type="number"
+                    min={product.pricing_unit === "gram" ? 1 : 0.001}
+                    step={product.pricing_unit === "gram" ? 1 : 0.001}
+                    value={quantity}
+                    onChange={e => {
+                      const val = parseFloat(e.target.value) || 1;
+                      setQuantity(Math.min(product.stock_quantity, Math.max(product.pricing_unit === "gram" ? 1 : 0.001, val)));
+                    }}
+                    className="w-28 px-3 py-2.5 text-sm text-center focus:outline-none"
+                    style={{ background: "var(--bg-card)", border: "1px solid var(--gold)", color: "var(--cream)" }}
+                  />
+                  <span className="text-xs" style={{ color: "var(--cream-dim)" }}>
+                    {product.stock_quantity} {product.pricing_unit === "gram" ? "grams" : "kg"} available
+                  </span>
+                </div>
+                <p className="text-sm font-medium" style={{ color: "var(--gold)" }}>
+                  Total: ₹{(product.price * quantity).toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                </p>
               </div>
-              <span className="text-xs" style={{ color: "var(--cream-dim)" }}>{product.stock_quantity} available</span>
-            </div>
+            ) : (
+              <div className="flex items-center gap-3 flex-wrap">
+                <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>Quantity</p>
+                <div className="flex items-center gap-3 px-4 py-2.5 min-h-[44px]" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
+                    <Minus size={16} />
+                  </button>
+                  <span className="font-semibold w-6 text-center" style={{ color: "var(--cream)" }}>{quantity}</span>
+                  <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
+                    className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
+                    <Plus size={16} />
+                  </button>
+                </div>
+                <span className="text-xs" style={{ color: "var(--cream-dim)" }}>{product.stock_quantity} available</span>
+              </div>
+            )}
 
             {/* CTA buttons */}
             {product.stock_quantity === 0 ? (

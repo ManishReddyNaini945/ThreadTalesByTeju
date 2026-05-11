@@ -87,12 +87,27 @@ function ProductCard({ product }) {
             style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
             {product.name}
           </h3>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="font-medium" style={{ color: "var(--gold)" }}>₹{product.price}</span>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="font-medium" style={{ color: "var(--gold)" }}>
+              ₹{product.price}
+              {product.pricing_unit === "gram" && <span className="text-[10px] font-normal">/gram</span>}
+              {product.pricing_unit === "kg"   && <span className="text-[10px] font-normal">/kg</span>}
+            </span>
             {product.compare_price && (
               <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price}</span>
             )}
           </div>
+          {product.pricing_unit === "gram" && (
+            <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
+              ₹{(product.price * 1000).toLocaleString()}/kg
+            </p>
+          )}
+          {product.pricing_unit === "kg" && (
+            <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
+              ₹{(product.price / 1000).toFixed(3)}/gram
+            </p>
+          )}
+          {product.pricing_unit === "piece" && <div className="mb-3" />}
         </Link>
 
         {/* Add to Cart — below price, always tappable */}

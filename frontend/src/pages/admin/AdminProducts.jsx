@@ -24,6 +24,7 @@ const emptyProduct = {
   name: "", description: "", short_description: "", price: "", compare_price: "",
   category_id: "", stock_quantity: 0, sku: "", images: [], colors: [], sizes: [],
   tags: [], is_featured: false, is_bestseller: false, sale_ends_at: "",
+  pricing_unit: "piece",
 };
 
 function Toggle({ value, onChange, label }) {
@@ -128,12 +129,47 @@ function ProductModal({ product, categories, onSave, onClose }) {
               style={{ ...inputStyle }} onFocus={focusGold} onBlur={blurBorder} />
           </div>
 
+          {/* Pricing Unit */}
+          <div>
+            <label style={labelStyle}>Sold By</label>
+            <div className="flex gap-2">
+              {[
+                { value: "piece", label: "Per Piece" },
+                { value: "gram",  label: "Per Gram" },
+                { value: "kg",    label: "Per Kg" },
+              ].map(opt => (
+                <button key={opt.value} type="button"
+                  onClick={() => set("pricing_unit", opt.value)}
+                  className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                  style={{
+                    border: `1px solid ${form.pricing_unit === opt.value ? gold : border}`,
+                    color: form.pricing_unit === opt.value ? gold : creamDim,
+                    background: form.pricing_unit === opt.value ? `${gold}18` : "transparent",
+                  }}>
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Price + Compare */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label style={labelStyle}>Price (₹) *</label>
+              <label style={labelStyle}>
+                Price (₹) * {form.pricing_unit !== "piece" && `— per ${form.pricing_unit}`}
+              </label>
               <input type="number" value={form.price} onChange={e => set("price", e.target.value)}
                 style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
+              {form.pricing_unit === "gram" && form.price && (
+                <p style={{ fontSize: 11, color: creamDim, marginTop: 4 }}>
+                  = ₹{(parseFloat(form.price) * 1000).toLocaleString()} per kg
+                </p>
+              )}
+              {form.pricing_unit === "kg" && form.price && (
+                <p style={{ fontSize: 11, color: creamDim, marginTop: 4 }}>
+                  = ₹{(parseFloat(form.price) / 1000).toFixed(3)} per gram
+                </p>
+              )}
             </div>
             <div>
               <label style={labelStyle}>Compare Price (₹)</label>
@@ -149,7 +185,26 @@ function ProductModal({ product, categories, onSave, onClose }) {
               <select value={form.category_id} onChange={e => set("category_id", e.target.value)}
                 style={{ ...inputStyle, cursor: "pointer" }} onFocus={focusGold} onBlur={blurBorder}>
                 <option value="">Select category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {(() => {
+                  const parents = categories.filter(c => !c.parent_id);
+                  const children = categories.filter(c => c.parent_id);
+                  const orphans = children.filter(c => !parents.find(p => p.id === c.parent_id));
+                  return (
+                    <>
+                      {parents.map(p => {
+                        const subs = children.filter(c => c.parent_id === p.id);
+                        return subs.length > 0 ? (
+                          <optgroup key={p.id} label={p.name}>
+                            {subs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                          </optgroup>
+                        ) : (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        );
+                      })}
+                      {orphans.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </>
+                  );
+                })()}
               </select>
             </div>
             <div>

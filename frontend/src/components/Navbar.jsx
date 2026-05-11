@@ -23,7 +23,7 @@ const NAV_LINKS = [
   {
     label: "Raw Materials",
     isMega: true,
-    path: "/shop?category=raw-materials",
+    path: "/category/raw-materials",
     children: [
       { label: "Kundans",                      path: "/shop?category=kundans" },
       { label: "Bangles",                      path: "/shop?category=raw-bangles" },

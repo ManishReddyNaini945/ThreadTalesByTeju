@@ -13,6 +13,7 @@ import LandingPage from "./pages/LandingPage";
 // Lazy loaded pages
 const CollectionDetailPage = lazy(() => import("./pages/CollectionDetailPage").then(m => ({ default: m.CollectionDetailPage })));
 const ShopPage = lazy(() => import("./pages/ShopPage"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const ProductDetailPage = lazy(() => import("./pages/ProductDetailPage"));
 const AuthPage = lazy(() => import("./pages/AuthPage"));
 const ResetPasswordPage = lazy(() => import("./pages/ResetPasswordPage"));
@@ -49,6 +50,7 @@ function App() {
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/collection/:collectionId" element={<CollectionDetailPage />} />
                 <Route path="/shop" element={<ShopPage />} />
+                <Route path="/category/:slug" element={<CategoryPage />} />
                 <Route path="/product/:slug" element={<ProductDetailPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />

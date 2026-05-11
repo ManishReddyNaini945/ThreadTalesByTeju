@@ -44,6 +44,7 @@ class ProductBase(BaseModel):
     sizes: List[str] = []
     tags: List[str] = []
     weight: Optional[float] = None
+    pricing_unit: str = "piece"
     is_featured: bool = False
     is_bestseller: bool = False
 
@@ -66,6 +67,7 @@ class ProductUpdate(BaseModel):
     sizes: Optional[List[str]] = None
     tags: Optional[List[str]] = None
     weight: Optional[float] = None
+    pricing_unit: Optional[str] = None
     is_featured: Optional[bool] = None
     is_bestseller: Optional[bool] = None
     status: Optional[ProductStatus] = None
