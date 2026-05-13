@@ -11,7 +11,10 @@ function ProductCard({ product, index }) {
   const { addToWishlist, wishlistItems } = useWishlist();
   const [adding, setAdding] = useState(false);
   const isWishlisted = wishlistItems?.some((w) => w.product_id === product.id);
-  const image = product.images?.[0] || "";
+  const firstColorImg = product.color_images
+    ? Object.values(product.color_images).find(arr => arr?.length)?.[0]
+    : null;
+  const image = product.images?.[0] || firstColorImg || "";
 
   const handleAddToCart = async (e) => {
     e.preventDefault();

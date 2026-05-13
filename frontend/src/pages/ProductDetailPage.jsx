@@ -87,6 +87,12 @@ export default function ProductDetailPage() {
         productService.getRelated(slug).then(({ data }) => setRelatedProducts(data)).catch(() => {});
         if (pRes.data.colors?.length) setSelectedColor(pRes.data.colors[0]);
         if (pRes.data.sizes?.length) setSelectedSize(pRes.data.sizes[0]);
+        // For weight-based products, initialize quantity to package size in grams
+        const pkg = pRes.data.sizes?.[0];
+        if (pkg && (pRes.data.pricing_unit === "gram" || pRes.data.pricing_unit === "kg")) {
+          const grams = pkg.endsWith("kg") ? parseFloat(pkg) * 1000 : parseFloat(pkg);
+          if (grams) setQuantity(grams);
+        }
       } catch {
         toast.error("Product not found");
       } finally {
@@ -154,9 +160,16 @@ export default function ProductDetailPage() {
     );
   }
 
-  const images = product.images?.length ? product.images : ["/placeholder.jpg"];
+  const colorImgs = selectedColor && product.color_images?.[selectedColor]?.length
+    ? product.color_images[selectedColor]
+    : null;
+  const images = colorImgs || (product.images?.length ? product.images : ["/placeholder.jpg"]);
+
+  const displayPrice = (selectedColor && product.color_prices?.[selectedColor])
+    ? product.color_prices[selectedColor]
+    : product.price;
   const discount = product.compare_price
-    ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+    ? Math.round(((product.compare_price - displayPrice) / product.compare_price) * 100)
     : null;
 
   return (
@@ -227,18 +240,32 @@ export default function ProductDetailPage() {
             <StarRating rating={product.avg_rating} count={product.review_count} />
 
             {/* Price */}
+            {(() => {
+              const packageSize = product.sizes?.[0]; // e.g. "10g", "1kg"
+              const packageGrams = packageSize
+                ? packageSize.endsWith("kg")
+                  ? parseFloat(packageSize) * 1000
+                  : parseFloat(packageSize)
+                : null;
+              const pricePerKg = packageGrams
+                ? (displayPrice / packageGrams) * 1000
+                : product.pricing_unit === "gram" ? displayPrice * 1000 : null;
+              return (
             <div className="space-y-2">
               <div className="flex items-center gap-3 flex-wrap">
                 <span className="text-2xl sm:text-3xl font-bold" style={{ color: "var(--cream)" }}>
-                  ₹{product.price.toLocaleString()}
-                  {product.pricing_unit === "gram" && (
+                  ₹{displayPrice.toLocaleString()}
+                  {(product.pricing_unit === "gram" || product.pricing_unit === "kg") && packageSize && (
+                    <span className="text-base font-normal ml-1" style={{ color: "var(--cream-dim)" }}>/ {packageSize}</span>
+                  )}
+                  {product.pricing_unit === "gram" && !packageSize && (
                     <span className="text-base font-normal ml-1" style={{ color: "var(--cream-dim)" }}>/gram</span>
                   )}
-                  {product.pricing_unit === "kg" && (
+                  {product.pricing_unit === "kg" && !packageSize && (
                     <span className="text-base font-normal ml-1" style={{ color: "var(--cream-dim)" }}>/kg</span>
                   )}
                 </span>
-                {product.compare_price && (
+                {product.compare_price && discount > 0 && (
                   <>
                     <span className="text-lg line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price.toLocaleString()}</span>
                     <span className="px-2 py-0.5 text-xs font-medium" style={{ background: "rgba(74,222,128,0.15)", color: "#4ade80", border: "1px solid #4ade8040" }}>
@@ -247,18 +274,20 @@ export default function ProductDetailPage() {
                   </>
                 )}
               </div>
-              {product.pricing_unit === "gram" && (
+              {pricePerKg && (
                 <p className="text-sm" style={{ color: "var(--cream-dim)" }}>
-                  ₹{(product.price * 1000).toLocaleString()} per kg
+                  ₹{pricePerKg.toLocaleString()} per kg
                 </p>
               )}
-              {product.pricing_unit === "kg" && (
+              {product.pricing_unit === "kg" && !packageSize && (
                 <p className="text-sm" style={{ color: "var(--cream-dim)" }}>
-                  ₹{(product.price / 1000).toFixed(3)} per gram
+                  ₹{(displayPrice / 1000).toFixed(3)} per gram
                 </p>
               )}
               {product.sale_ends_at && <CountdownTimer endsAt={product.sale_ends_at} />}
             </div>
+              );
+            })()}
 
             {product.short_description && (
               <p className="leading-relaxed" style={{ color: "var(--cream-dim)" }}>{product.short_description}</p>
@@ -275,7 +304,7 @@ export default function ProductDetailPage() {
                 </p>
                 <div className="flex gap-2 flex-wrap">
                   {product.colors.map((c) => (
-                    <button key={c} onClick={() => { setSelectedColor(c); setCustomColor(""); }}
+                    <button key={c} onClick={() => { setSelectedColor(c); setCustomColor(""); setSelectedImage(0); }}
                       className="px-4 py-2.5 text-sm transition-all min-h-[44px]"
                       style={{
                         border: `1px solid ${selectedColor === c ? "var(--gold)" : "var(--border)"}`,
@@ -338,29 +367,41 @@ export default function ProductDetailPage() {
             {/* Quantity / Weight */}
             {product.pricing_unit === "gram" || product.pricing_unit === "kg" ? (
               <div className="space-y-2">
-                <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>
-                  Weight ({product.pricing_unit === "gram" ? "grams" : "kg"})
-                </p>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <input
-                    type="number"
-                    min={product.pricing_unit === "gram" ? 1 : 0.001}
-                    step={product.pricing_unit === "gram" ? 1 : 0.001}
-                    value={quantity}
-                    onChange={e => {
-                      const val = parseFloat(e.target.value) || 1;
-                      setQuantity(Math.min(product.stock_quantity, Math.max(product.pricing_unit === "gram" ? 1 : 0.001, val)));
-                    }}
-                    className="w-28 px-3 py-2.5 text-sm text-center focus:outline-none"
-                    style={{ background: "var(--bg-card)", border: "1px solid var(--gold)", color: "var(--cream)" }}
-                  />
-                  <span className="text-xs" style={{ color: "var(--cream-dim)" }}>
-                    {product.stock_quantity} {product.pricing_unit === "gram" ? "grams" : "kg"} available
-                  </span>
-                </div>
-                <p className="text-sm font-medium" style={{ color: "var(--gold)" }}>
-                  Total: ₹{(product.price * quantity).toLocaleString(undefined, { maximumFractionDigits: 2 })}
-                </p>
+                {(() => {
+                  const pkg = product.sizes?.[0];
+                  const pkgGrams = pkg
+                    ? pkg.endsWith("kg") ? parseFloat(pkg) * 1000 : parseFloat(pkg)
+                    : 1;
+                  const pricePerGram = displayPrice / pkgGrams;
+                  const total = pricePerGram * quantity;
+                  return (
+                    <>
+                      <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>
+                        Weight (grams)
+                      </p>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <input
+                          type="number"
+                          min={pkgGrams}
+                          step={pkgGrams}
+                          value={quantity}
+                          onChange={e => {
+                            const val = parseFloat(e.target.value) || pkgGrams;
+                            setQuantity(Math.min(product.stock_quantity, Math.max(pkgGrams, val)));
+                          }}
+                          className="w-28 px-3 py-2.5 text-sm text-center focus:outline-none"
+                          style={{ background: "var(--bg-card)", border: "1px solid var(--gold)", color: "var(--cream)" }}
+                        />
+                        <span className="text-xs" style={{ color: "var(--cream-dim)" }}>
+                          {product.stock_quantity} grams available
+                        </span>
+                      </div>
+                      <p className="text-sm font-medium" style={{ color: "var(--gold)" }}>
+                        Total: ₹{total.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                      </p>
+                    </>
+                  );
+                })()}
               </div>
             ) : (
               <div className="flex items-center gap-3 flex-wrap">
@@ -480,7 +521,7 @@ export default function ProductDetailPage() {
                   className="group overflow-hidden transition-all"
                   style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
                   <div className="aspect-square overflow-hidden">
-                    <img src={p.images?.[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={p.images?.[0] || Object.values(p.color_images || {}).find(a => a?.length)?.[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                   </div>
                   <div className="p-2 sm:p-3">
                     <p className="text-xs sm:text-sm font-medium line-clamp-2 mb-1 transition-colors group-hover:text-[#c8a45c]"

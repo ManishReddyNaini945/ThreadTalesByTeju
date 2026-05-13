@@ -24,8 +24,10 @@ class Product(Base):
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
     stock_quantity = Column(Integer, default=0)
     sku = Column(String(100), unique=True, nullable=True)
-    images = Column(JSON, default=list)  # list of image URLs
-    colors = Column(JSON, default=list)  # available colors
+    images = Column(JSON, default=list)        # list of image URLs (fallback/general)
+    colors = Column(JSON, default=list)        # available colors
+    color_images = Column(JSON, default=dict)   # {color: [url, ...], ...}
+    color_prices = Column(JSON, default=dict)   # {color: price, ...}
     sizes = Column(JSON, default=list)   # available sizes
     tags = Column(JSON, default=list)
     weight = Column(Float, nullable=True)  # in grams

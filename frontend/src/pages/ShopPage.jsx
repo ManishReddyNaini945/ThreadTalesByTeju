@@ -13,7 +13,10 @@ function ProductCard({ product }) {
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const [adding, setAdding] = useState(false);
-  const img = product.images?.[0] || "";
+  const firstColorImg = product.color_images
+    ? Object.values(product.color_images).find(arr => arr?.length)?.[0]
+    : null;
+  const img = product.images?.[0] || firstColorImg || "";
   const wishlisted = isWishlisted?.(product.id);
 
   const handleCart = async (e) => {
@@ -87,27 +90,43 @@ function ProductCard({ product }) {
             style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
             {product.name}
           </h3>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="font-medium" style={{ color: "var(--gold)" }}>
-              ₹{product.price}
-              {product.pricing_unit === "gram" && <span className="text-[10px] font-normal">/gram</span>}
-              {product.pricing_unit === "kg"   && <span className="text-[10px] font-normal">/kg</span>}
-            </span>
-            {product.compare_price && (
-              <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price}</span>
-            )}
-          </div>
-          {product.pricing_unit === "gram" && (
-            <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
-              ₹{(product.price * 1000).toLocaleString()}/kg
-            </p>
-          )}
-          {product.pricing_unit === "kg" && (
-            <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
-              ₹{(product.price / 1000).toFixed(3)}/gram
-            </p>
-          )}
-          {product.pricing_unit === "piece" && <div className="mb-3" />}
+          {(() => {
+            const pkg = product.sizes?.[0];
+            const pkgGrams = pkg
+              ? pkg.endsWith("kg") ? parseFloat(pkg) * 1000 : parseFloat(pkg)
+              : null;
+            const perKg = pkgGrams
+              ? (product.price / pkgGrams) * 1000
+              : product.pricing_unit === "gram" ? product.price * 1000 : null;
+            return (
+              <>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="font-medium" style={{ color: "var(--gold)" }}>
+                    ₹{product.price}
+                    {(product.pricing_unit === "gram" || product.pricing_unit === "kg") && pkg && (
+                      <span className="text-[10px] font-normal">/{pkg}</span>
+                    )}
+                    {product.pricing_unit === "gram" && !pkg && <span className="text-[10px] font-normal">/gram</span>}
+                    {product.pricing_unit === "kg"   && !pkg && <span className="text-[10px] font-normal">/kg</span>}
+                  </span>
+                  {product.compare_price && (
+                    <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price}</span>
+                  )}
+                </div>
+                {perKg && (
+                  <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
+                    ₹{perKg.toLocaleString()}/kg
+                  </p>
+                )}
+                {product.pricing_unit === "kg" && !pkg && (
+                  <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
+                    ₹{(product.price / 1000).toFixed(3)}/gram
+                  </p>
+                )}
+                {product.pricing_unit === "piece" && <div className="mb-3" />}
+              </>
+            );
+          })()}
         </Link>
 
         {/* Add to Cart — below price, always tappable */}

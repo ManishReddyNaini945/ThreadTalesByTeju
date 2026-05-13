@@ -22,7 +22,7 @@ const blurBorder = (e) => { e.target.style.borderColor = border; };
 
 const emptyProduct = {
   name: "", description: "", short_description: "", price: "", compare_price: "",
-  category_id: "", stock_quantity: 0, sku: "", images: [], colors: [], sizes: [],
+  category_id: "", stock_quantity: 0, sku: "", images: [], colors: [], color_images: {}, color_prices: {}, sizes: [],
   tags: [], is_featured: false, is_bestseller: false, sale_ends_at: "",
   pricing_unit: "piece",
 };
@@ -44,30 +44,55 @@ function Toggle({ value, onChange, label }) {
 function ProductModal({ product, categories, onSave, onClose }) {
   const [form, setForm] = useState(product || emptyProduct);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
+  const [uploading, setUploading] = useState(null); // color name or "general"
   const [colorInput, setColorInput] = useState("");
+  const [activeColor, setActiveColor] = useState(null);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
-  const handleImageUpload = async (e) => {
+  const handleImageUpload = async (e, color) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploading(true);
+    setUploading(color);
     try {
       const fd = new FormData();
       fd.append("file", file);
       const { data } = await adminService.uploadImage(fd);
-      set("images", [...form.images, data.url]);
+      if (color === "general") {
+        set("images", [...(form.images || []), data.url]);
+      } else {
+        const existing = form.color_images?.[color] || [];
+        set("color_images", { ...(form.color_images || {}), [color]: [...existing, data.url] });
+      }
       toast.success("Image uploaded!");
     } catch { toast.error("Upload failed"); }
-    finally { setUploading(false); }
+    finally { setUploading(null); }
+  };
+
+  const removeColorImage = (color, url) => {
+    const updated = (form.color_images?.[color] || []).filter(u => u !== url);
+    set("color_images", { ...(form.color_images || {}), [color]: updated });
   };
 
   const addColor = () => {
-    if (colorInput.trim() && !form.colors.includes(colorInput.trim())) {
-      set("colors", [...form.colors, colorInput.trim()]);
+    const trimmed = colorInput.trim();
+    if (trimmed && !form.colors.includes(trimmed)) {
+      set("colors", [...form.colors, trimmed]);
+      set("color_images", { ...(form.color_images || {}), [trimmed]: [] });
+      setActiveColor(trimmed);
       setColorInput("");
     }
+  };
+
+  const removeColor = (c) => {
+    set("colors", form.colors.filter(x => x !== c));
+    const ci = { ...(form.color_images || {}) };
+    delete ci[c];
+    set("color_images", ci);
+    const cp = { ...(form.color_prices || {}) };
+    delete cp[c];
+    set("color_prices", cp);
+    if (activeColor === c) setActiveColor(form.colors.find(x => x !== c) || null);
   };
 
   const handleSave = async () => {
@@ -129,26 +154,80 @@ function ProductModal({ product, categories, onSave, onClose }) {
               style={{ ...inputStyle }} onFocus={focusGold} onBlur={blurBorder} />
           </div>
 
+          {/* Category */}
+          <div>
+            <label style={labelStyle}>Category *</label>
+            <select value={form.category_id} onChange={e => set("category_id", e.target.value)}
+              style={{ ...inputStyle, cursor: "pointer" }} onFocus={focusGold} onBlur={blurBorder}>
+              <option value="">Select category</option>
+              {(() => {
+                const parents = categories.filter(c => !c.parent_id);
+                const children = categories.filter(c => c.parent_id);
+                const orphans = children.filter(c => !parents.find(p => p.id === c.parent_id));
+                return (
+                  <>
+                    {parents.map(p => {
+                      const subs = children.filter(c => c.parent_id === p.id);
+                      return subs.length > 0 ? (
+                        <optgroup key={p.id} label={p.name}>
+                          {subs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        </optgroup>
+                      ) : (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      );
+                    })}
+                    {orphans.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </>
+                );
+              })()}
+            </select>
+          </div>
+
           {/* Pricing Unit */}
           <div>
             <label style={labelStyle}>Sold By</label>
             <div className="flex gap-2">
-              {[
-                { value: "piece", label: "Per Piece" },
-                { value: "gram",  label: "Per Gram" },
-                { value: "kg",    label: "Per Kg" },
-              ].map(opt => (
-                <button key={opt.value} type="button"
-                  onClick={() => set("pricing_unit", opt.value)}
-                  className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
-                  style={{
-                    border: `1px solid ${form.pricing_unit === opt.value ? gold : border}`,
-                    color: form.pricing_unit === opt.value ? gold : creamDim,
-                    background: form.pricing_unit === opt.value ? `${gold}18` : "transparent",
-                  }}>
-                  {opt.label}
-                </button>
-              ))}
+              {/* Per Piece button */}
+              <button type="button"
+                onClick={() => set("pricing_unit", "piece")}
+                className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                style={{
+                  border: `1px solid ${form.pricing_unit === "piece" ? gold : border}`,
+                  color: form.pricing_unit === "piece" ? gold : creamDim,
+                  background: form.pricing_unit === "piece" ? `${gold}18` : "transparent",
+                }}>
+                Per Piece
+              </button>
+
+              {/* Per Gram dropdown */}
+              <select
+                value={form.pricing_unit === "gram" ? (form.sizes?.[0] || "") : ""}
+                onChange={e => { set("pricing_unit", "gram"); set("sizes", e.target.value ? [e.target.value] : []); }}
+                className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                style={{
+                  border: `1px solid ${form.pricing_unit === "gram" ? gold : border}`,
+                  color: form.pricing_unit === "gram" ? gold : creamDim,
+                  background: form.pricing_unit === "gram" ? `${gold}18` : "transparent",
+                  cursor: "pointer",
+                }}>
+                <option value="">Per Gram</option>
+                {[10, 25, 50, 100, 500].map(g => <option key={g} value={`${g}g`}>{g}g</option>)}
+              </select>
+
+              {/* Per Kg dropdown */}
+              <select
+                value={form.pricing_unit === "kg" ? (form.sizes?.[0] || "") : ""}
+                onChange={e => { set("pricing_unit", "kg"); set("sizes", e.target.value ? [e.target.value] : []); }}
+                className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                style={{
+                  border: `1px solid ${form.pricing_unit === "kg" ? gold : border}`,
+                  color: form.pricing_unit === "kg" ? gold : creamDim,
+                  background: form.pricing_unit === "kg" ? `${gold}18` : "transparent",
+                  cursor: "pointer",
+                }}>
+                <option value="">Per Kg</option>
+                {[1, 2, 5].map(k => <option key={k} value={`${k}kg`}>{k}kg</option>)}
+              </select>
             </div>
           </div>
 
@@ -158,61 +237,56 @@ function ProductModal({ product, categories, onSave, onClose }) {
               <label style={labelStyle}>
                 Price (₹) * {form.pricing_unit !== "piece" && `— per ${form.pricing_unit}`}
               </label>
-              <input type="number" value={form.price} onChange={e => set("price", e.target.value)}
+              <input
+                type="text"
+                inputMode="numeric"
+                value={form.price}
+                onChange={e => { if (/^\d*$/.test(e.target.value)) set("price", e.target.value); }}
                 style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
-              {form.pricing_unit === "gram" && form.price && (
-                <p style={{ fontSize: 11, color: creamDim, marginTop: 4 }}>
-                  = ₹{(parseFloat(form.price) * 1000).toLocaleString()} per kg
-                </p>
-              )}
-              {form.pricing_unit === "kg" && form.price && (
-                <p style={{ fontSize: 11, color: creamDim, marginTop: 4 }}>
-                  = ₹{(parseFloat(form.price) / 1000).toFixed(3)} per gram
-                </p>
-              )}
             </div>
             <div>
               <label style={labelStyle}>Compare Price (₹)</label>
-              <input type="number" value={form.compare_price} onChange={e => set("compare_price", e.target.value)}
+              <input
+                type="text"
+                inputMode="numeric"
+                value={form.compare_price}
+                onChange={e => { if (/^\d*$/.test(e.target.value)) set("compare_price", e.target.value); }}
                 style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
             </div>
           </div>
 
-          {/* Category + Stock */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label style={labelStyle}>Category *</label>
-              <select value={form.category_id} onChange={e => set("category_id", e.target.value)}
-                style={{ ...inputStyle, cursor: "pointer" }} onFocus={focusGold} onBlur={blurBorder}>
-                <option value="">Select category</option>
-                {(() => {
-                  const parents = categories.filter(c => !c.parent_id);
-                  const children = categories.filter(c => c.parent_id);
-                  const orphans = children.filter(c => !parents.find(p => p.id === c.parent_id));
-                  return (
-                    <>
-                      {parents.map(p => {
-                        const subs = children.filter(c => c.parent_id === p.id);
-                        return subs.length > 0 ? (
-                          <optgroup key={p.id} label={p.name}>
-                            {subs.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                          </optgroup>
-                        ) : (
-                          <option key={p.id} value={p.id}>{p.name}</option>
-                        );
-                      })}
-                      {orphans.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </>
-                  );
-                })()}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Stock Quantity</label>
-              <input type="number" value={form.stock_quantity} onChange={e => set("stock_quantity", parseInt(e.target.value) || 0)}
-                style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
-            </div>
-          </div>
+          {/* Stock Quantity */}
+          {(() => {
+            const selectedCat = categories.find(c => String(c.id) === String(form.category_id));
+            const isWeightBased = selectedCat && selectedCat.name.toLowerCase().includes("kundan");
+            const weightOptions = [
+              { label: "10g",  value: 10 },
+              { label: "25g",  value: 25 },
+              { label: "50g",  value: 50 },
+              { label: "100g", value: 100 },
+              { label: "250g", value: 250 },
+              { label: "500g", value: 500 },
+              { label: "1kg",  value: 1000 },
+              { label: "2kg",  value: 2000 },
+              { label: "5kg",  value: 5000 },
+              { label: "10kg", value: 10000 },
+            ];
+            return (
+              <div>
+                <label style={labelStyle}>Stock Quantity</label>
+                {isWeightBased ? (
+                  <select value={form.stock_quantity || ""} onChange={e => set("stock_quantity", parseInt(e.target.value))}
+                    style={{ ...inputStyle, cursor: "pointer" }} onFocus={focusGold} onBlur={blurBorder}>
+                    <option value="">Select quantity</option>
+                    {weightOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                  </select>
+                ) : (
+                  <input type="number" value={form.stock_quantity} onChange={e => set("stock_quantity", parseInt(e.target.value) || 0)}
+                    style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
+                )}
+              </div>
+            );
+          })()}
 
           {/* SKU */}
           <div>
@@ -221,55 +295,120 @@ function ProductModal({ product, categories, onSave, onClose }) {
               placeholder="Optional" style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
           </div>
 
-          {/* Colors */}
-          <div>
-            <label style={labelStyle}>Colors</label>
-            <div className="flex gap-2 flex-wrap mb-2">
-              {form.colors.map(c => (
-                <span key={c} className="flex items-center gap-1 px-3 py-1 text-xs"
-                  style={{ background: `${gold}18`, border: `1px solid ${gold}40`, color: gold }}>
-                  {c}
-                  <button onClick={() => set("colors", form.colors.filter(x => x !== c))} style={{ color: creamDim }}>
-                    <X size={10} />
-                  </button>
-                </span>
-              ))}
-            </div>
+          {/* Colors + Per-color Images */}
+          <div className="space-y-3">
+            <label style={labelStyle}>Colors & Images</label>
+
+            {/* Add color input */}
             <div className="flex gap-2">
               <input value={colorInput} onChange={e => setColorInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addColor())}
-                placeholder="Type a color and press Enter"
+                placeholder="Type a color name and press Enter"
                 style={{ ...inputStyle, width: "auto", flex: 1 }} onFocus={focusGold} onBlur={blurBorder} />
               <button onClick={addColor} className="px-4 py-2 text-xs transition-colors"
                 style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
                 Add
               </button>
             </div>
-          </div>
 
-          {/* Images */}
-          <div>
-            <label style={labelStyle}>Product Images</label>
-            <div className="flex gap-2 flex-wrap">
-              {form.images.map((url, i) => (
-                <div key={i} className="relative">
-                  <img src={url} alt="" className="w-16 h-16 object-cover" style={{ border: `1px solid ${border}` }} />
-                  <button onClick={() => set("images", form.images.filter(x => x !== url))}
-                    className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center"
-                    style={{ background: "#f87171", color: "#fff", borderRadius: "50%" }}>
-                    <X size={9} />
+            {/* Color tabs */}
+            {form.colors.length > 0 && (
+              <div className="flex gap-2 flex-wrap">
+                {form.colors.map(c => (
+                  <button key={c} type="button" onClick={() => setActiveColor(c)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs transition-all"
+                    style={{
+                      border: `1px solid ${activeColor === c ? gold : border}`,
+                      color: activeColor === c ? gold : creamDim,
+                      background: activeColor === c ? `${gold}18` : "transparent",
+                    }}>
+                    {c}
+                    <span onClick={e => { e.stopPropagation(); removeColor(c); }} style={{ color: creamDim, lineHeight: 1 }}>
+                      <X size={10} />
+                    </span>
                   </button>
+                ))}
+              </div>
+            )}
+
+            {/* Images + price for active color */}
+            {activeColor && (
+              <div style={{ border: `1px solid ${border}`, padding: 12 }}>
+                <p className="text-xs mb-3" style={{ color: creamDim }}>
+                  Images for <span style={{ color: gold }}>{activeColor}</span>
+                </p>
+                <div className="mb-3">
+                  <label style={{ ...labelStyle, marginBottom: 4 }}>
+                    Price for {activeColor} (₹) — leave blank to use base price
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder={`Base: ₹${form.price || "—"}`}
+                    value={form.color_prices?.[activeColor] ?? ""}
+                    onChange={e => {
+                      if (/^\d*$/.test(e.target.value)) {
+                        const cp = { ...(form.color_prices || {}) };
+                        if (e.target.value === "") delete cp[activeColor];
+                        else cp[activeColor] = parseFloat(e.target.value);
+                        set("color_prices", cp);
+                      }
+                    }}
+                    style={{ ...inputStyle, width: "50%" }}
+                    onFocus={focusGold} onBlur={blurBorder}
+                  />
                 </div>
-              ))}
-              <label className="w-16 h-16 flex flex-col items-center justify-center cursor-pointer transition-colors gap-1"
-                style={{ border: `1px dashed ${uploading ? gold : border}` }}>
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                {uploading
-                  ? <div className="w-4 h-4 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: gold, borderTopColor: "transparent" }} />
-                  : <><Image size={16} style={{ color: creamDim }} /><span className="text-[9px]" style={{ color: creamDim }}>Upload</span></>
-                }
-              </label>
-            </div>
+                <div className="flex gap-2 flex-wrap">
+                  {(form.color_images?.[activeColor] || []).map((url, i) => (
+                    <div key={i} className="relative">
+                      <img src={url} alt="" className="w-16 h-16 object-cover" style={{ border: `1px solid ${border}` }} />
+                      <button onClick={() => removeColorImage(activeColor, url)}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center"
+                        style={{ background: "#f87171", color: "#fff", borderRadius: "50%" }}>
+                        <X size={9} />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="w-16 h-16 flex flex-col items-center justify-center cursor-pointer gap-1"
+                    style={{ border: `1px dashed ${uploading === activeColor ? gold : border}` }}>
+                    <input type="file" accept="image/*" className="hidden"
+                      onChange={e => handleImageUpload(e, activeColor)} />
+                    {uploading === activeColor
+                      ? <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: gold, borderTopColor: "transparent" }} />
+                      : <><Image size={16} style={{ color: creamDim }} /><span className="text-[9px]" style={{ color: creamDim }}>Upload</span></>
+                    }
+                  </label>
+                </div>
+              </div>
+            )}
+
+            {/* General images (no colors) */}
+            {form.colors.length === 0 && (
+              <div>
+                <p className="text-xs mb-2" style={{ color: creamDim }}>General product images</p>
+                <div className="flex gap-2 flex-wrap">
+                  {(form.images || []).map((url, i) => (
+                    <div key={i} className="relative">
+                      <img src={url} alt="" className="w-16 h-16 object-cover" style={{ border: `1px solid ${border}` }} />
+                      <button onClick={() => set("images", form.images.filter(x => x !== url))}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center"
+                        style={{ background: "#f87171", color: "#fff", borderRadius: "50%" }}>
+                        <X size={9} />
+                      </button>
+                    </div>
+                  ))}
+                  <label className="w-16 h-16 flex flex-col items-center justify-center cursor-pointer gap-1"
+                    style={{ border: `1px dashed ${uploading === "general" ? gold : border}` }}>
+                    <input type="file" accept="image/*" className="hidden"
+                      onChange={e => handleImageUpload(e, "general")} />
+                    {uploading === "general"
+                      ? <div className="w-4 h-4 border-2 rounded-full animate-spin" style={{ borderColor: gold, borderTopColor: "transparent" }} />
+                      : <><Image size={16} style={{ color: creamDim }} /><span className="text-[9px]" style={{ color: creamDim }}>Upload</span></>
+                    }
+                  </label>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Flash Sale */}

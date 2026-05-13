@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 from ..models.product import ProductStatus
 
@@ -41,6 +41,8 @@ class ProductBase(BaseModel):
     sku: Optional[str] = None
     images: List[str] = []
     colors: List[str] = []
+    color_images: Dict[str, List[str]] = {}
+    color_prices: Dict[str, float] = {}
     sizes: List[str] = []
     tags: List[str] = []
     weight: Optional[float] = None
@@ -64,6 +66,8 @@ class ProductUpdate(BaseModel):
     sku: Optional[str] = None
     images: Optional[List[str]] = None
     colors: Optional[List[str]] = None
+    color_images: Optional[Dict[str, List[str]]] = None
+    color_prices: Optional[Dict[str, float]] = None
     sizes: Optional[List[str]] = None
     tags: Optional[List[str]] = None
     weight: Optional[float] = None
