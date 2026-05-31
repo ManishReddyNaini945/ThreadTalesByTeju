@@ -1,4 +1,3 @@
-import razorpay
 import hmac
 import hashlib
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -14,6 +13,7 @@ router = APIRouter(prefix="/payments", tags=["Payments"])
 
 
 def get_razorpay_client():
+    import razorpay
     return razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 
