@@ -15,9 +15,16 @@ app = FastAPI(
     docs_url="/docs" if settings.DEBUG else None,
 )
 
+_frontend_origins = [o.strip() for o in settings.FRONTEND_URL.split(",") if o.strip()]
+_cors_origins = list(set(_frontend_origins + [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:5174",
+]))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL, "http://localhost:3000", "http://localhost:5173", "http://localhost:5174"],
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
