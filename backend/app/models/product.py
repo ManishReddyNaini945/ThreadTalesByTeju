@@ -28,7 +28,10 @@ class Product(Base):
     colors = Column(JSON, default=list)        # available colors
     color_images = Column(JSON, default=dict)   # {color: [url, ...], ...}
     color_prices = Column(JSON, default=dict)   # {color: price, ...}
+    color_names  = Column(JSON, default=dict)   # {color: display_name, ...}
+    image_types  = Column(JSON, default=dict)   # {url: type_label, ...}
     sizes = Column(JSON, default=list)   # available sizes
+    size_prices  = Column(JSON, default=dict)   # {size: price, ...} e.g. {"100ml": 50}
     tags = Column(JSON, default=list)
     weight = Column(Float, nullable=True)  # in grams
     pricing_unit = Column(String(20), default="piece", nullable=False, server_default="piece")

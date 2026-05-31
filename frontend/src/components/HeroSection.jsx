@@ -1,9 +1,10 @@
-import { useRef } from "react";
+import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
 
-const CDN = "https://res.cloudinary.com/dilo6efzb/image/upload/threadtales/products";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8001/api/v1";
+
 
 const stagger = {
   hidden: {},
@@ -21,64 +22,56 @@ const STATS = [
   { num: "100%", label: "Handcrafted" },
 ];
 
+const HERO_IMAGE = "https://res.cloudinary.com/dilo6efzb/image/upload/v1777224155/threadtales/products/thread_bangle_15.jpg";
+
+const FALLBACK = {
+  name: "Traditional Green & Gold Bridal Bangle Stack Set for Women",
+  price: 649,
+  images: [HERO_IMAGE],
+  slug: null,
+};
+
 export default function HeroSection() {
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
+  const [featuredProduct, setFeaturedProduct] = useState(FALLBACK);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/products/?search=Traditional+Green+%26+Gold+Bridal+Bangle+Stack+Set&page_size=1`)
+      .then((r) => r.json())
+      .then((data) => {
+        const product = data?.items?.[0];
+        if (product?.images?.length > 0) setFeaturedProduct(product);
+      })
+      .catch(() => {});
+  }, []);
+
   return (
-    <section ref={ref} className="relative overflow-hidden" style={{ background: "var(--bg)" }}>
+    <section ref={ref} className="relative overflow-hidden mt-14 sm:mt-20 lg:mt-24" style={{ background: "var(--bg)" }}>
 
       {/* ── MOBILE HERO (hidden on lg+) ───────────────────────────── */}
-      <div className="lg:hidden flex flex-col min-h-screen">
+      <div className="lg:hidden flex flex-col">
 
         {/* Full-bleed image with text overlay */}
-        <div className="relative flex-1" style={{ minHeight: "65vh" }}>
-          {/* Background gradient orbs */}
-          <motion.div
-            style={{ background: "radial-gradient(circle, #c8a45c 0%, transparent 70%)" }}
-            className="absolute -top-20 -right-20 w-72 h-72 rounded-full blur-[80px] pointer-events-none"
-            initial={{ opacity: 0.1 }}
-            animate={{ opacity: [0.1, 0.18, 0.1] }}
-            transition={{ duration: 6, repeat: Infinity }}
-          />
+        <div className="relative" style={{ height: "calc(100vh - 3.5rem)" }}>
 
           {/* Hero image */}
           <img
-            src={`${CDN}/thread_bangle_15.jpg`}
-            alt="Vibrant Thread Bangles"
-            className="absolute inset-0 w-full h-full object-cover"
+            src={featuredProduct.images?.[0] || HERO_IMAGE}
+            alt={featuredProduct.name}
+            className="absolute inset-0 w-full h-full object-cover object-top"
           />
 
           {/* Bottom-to-top gradient — darkens lower half for text */}
           <div
             className="absolute inset-0"
             style={{
-              background: "linear-gradient(to top, rgba(12,10,9,1) 0%, rgba(12,10,9,0.7) 45%, rgba(12,10,9,0.15) 75%, transparent 100%)",
+              background: "linear-gradient(to top, rgba(12,10,9,1) 0%, rgba(12,10,9,0.75) 40%, rgba(12,10,9,0.1) 70%, transparent 100%)",
             }}
           />
-
-          {/* Top-to-bottom gradient — darkens navbar area so logo/icons are always readable */}
-          <div
-            className="absolute top-0 left-0 right-0 h-28 pointer-events-none"
-            style={{
-              background: "linear-gradient(to bottom, rgba(12,10,9,0.75) 0%, transparent 100%)",
-            }}
-          />
-
-          {/* Top badge — pushed below the navbar */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="absolute top-[72px] left-5 flex items-center gap-2"
-          >
-            <span className="gold-line" />
-            <span className="section-tag flex items-center gap-1.5">
-              <Sparkles size={10} /> Handcrafted with Love
-            </span>
-          </motion.div>
 
           {/* Bottom text over image */}
           <motion.div
@@ -87,6 +80,14 @@ export default function HeroSection() {
             animate="show"
             className="absolute bottom-0 left-0 right-0 px-5 pb-6"
           >
+            {/* Badge sits just above the heading */}
+            <motion.div variants={fadeUp} className="flex items-center gap-2 mb-4">
+              <span className="gold-line" />
+              <span className="section-tag flex items-center gap-1.5" style={{ color: "var(--gold)" }}>
+                <Sparkles size={10} /> Handcrafted with Love
+              </span>
+            </motion.div>
+
             <motion.h1
               variants={fadeUp}
               className="font-normal leading-[1.05] mb-3"
@@ -169,7 +170,7 @@ export default function HeroSection() {
           }}
         />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-10 w-full pt-24 pb-16">
+        <div className="relative z-10 max-w-7xl mx-auto px-10 w-full pt-12 pb-16">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center min-h-[calc(100vh-6rem)]">
 
             {/* Left — Text */}
@@ -238,8 +239,8 @@ export default function HeroSection() {
                 <div className="relative overflow-hidden"
                   style={{ aspectRatio: "3/4", border: "1px solid var(--border)" }}>
                   <img
-                    src={`${CDN}/thread_bangle_15.jpg`}
-                    alt="Vibrant Thread Bangles"
+                    src={featuredProduct.images?.[0] || HERO_IMAGE}
+                    alt={featuredProduct.name}
                     className="w-full h-full object-cover"
                     style={{ transition: "transform 8s ease", transform: "scale(1.05)" }}
                   />
@@ -254,12 +255,13 @@ export default function HeroSection() {
                     </p>
                     <p className="text-xl font-normal leading-snug"
                       style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
-                      Vibrant Thread Bangles
+                      {featuredProduct.name}
                     </p>
                     <div className="flex items-center gap-3 mt-2">
-                      <span className="text-base" style={{ color: "var(--gold)" }}>₹649</span>
+                      <span className="text-base" style={{ color: "var(--gold)" }}>₹{featuredProduct.price}</span>
                       <span className="w-px h-3 opacity-30" style={{ background: "var(--cream)" }} />
-                      <Link to="/shop?category=thread-bangles"
+                      <Link
+                        to={featuredProduct.slug ? `/product/${featuredProduct.slug}` : "/shop?category=thread-bangles"}
                         className="text-[10px] tracking-widest uppercase flex items-center gap-1"
                         style={{ color: "var(--cream-dim)" }}>
                         Shop Now <ArrowRight size={10} />

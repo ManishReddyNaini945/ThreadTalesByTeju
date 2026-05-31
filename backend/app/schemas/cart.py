@@ -9,6 +9,7 @@ class CartItemCreate(BaseModel):
     quantity: int = 1
     selected_color: Optional[str] = None
     selected_size: Optional[str] = None
+    custom_note: Optional[str] = None
 
 
 class CartItemUpdate(BaseModel):
@@ -19,8 +20,9 @@ class CartItemOut(BaseModel):
     id: int
     product_id: int
     quantity: int
-    selected_color: Optional[str]
-    selected_size: Optional[str]
+    selected_color: Optional[str] = None
+    selected_size: Optional[str] = None
+    custom_note: Optional[str] = None
     price_at_add: float
     product: ProductOut
 

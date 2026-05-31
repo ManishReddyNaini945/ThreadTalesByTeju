@@ -68,6 +68,8 @@ def add_to_cart(payload: CartItemCreate, db: Session = Depends(get_db), current_
 
     if existing:
         existing.quantity += payload.quantity
+        if payload.custom_note:
+            existing.custom_note = payload.custom_note
     else:
         item = CartItem(
             cart_id=cart.id,
@@ -75,6 +77,7 @@ def add_to_cart(payload: CartItemCreate, db: Session = Depends(get_db), current_
             quantity=payload.quantity,
             selected_color=payload.selected_color,
             selected_size=payload.selected_size,
+            custom_note=payload.custom_note,
             price_at_add=product.price,
         )
         db.add(item)

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Optional, List, Dict
 from datetime import datetime
 from ..models.product import ProductStatus
@@ -19,8 +19,8 @@ class CategoryCreate(CategoryBase):
 
 class CategoryOut(CategoryBase):
     id: int
-    is_active: bool
-    created_at: datetime
+    is_active: bool = True
+    created_at: Optional[datetime] = None
     children: List["CategoryOut"] = []
 
     class Config:
@@ -43,8 +43,21 @@ class ProductBase(BaseModel):
     colors: List[str] = []
     color_images: Dict[str, List[str]] = {}
     color_prices: Dict[str, float] = {}
+    color_names:  Dict[str, str] = {}
+    image_types:  Dict[str, str] = {}
     sizes: List[str] = []
+    size_prices:  Dict[str, float] = {}
     tags: List[str] = []
+
+    @field_validator("size_prices", "color_prices", "color_names", "image_types", "color_images", mode="before")
+    @classmethod
+    def coerce_none_dict(cls, v):
+        return v if v is not None else {}
+
+    @field_validator("sizes", "colors", "images", "tags", mode="before")
+    @classmethod
+    def coerce_none_list(cls, v):
+        return v if v is not None else []
     weight: Optional[float] = None
     pricing_unit: str = "piece"
     is_featured: bool = False
@@ -68,7 +81,10 @@ class ProductUpdate(BaseModel):
     colors: Optional[List[str]] = None
     color_images: Optional[Dict[str, List[str]]] = None
     color_prices: Optional[Dict[str, float]] = None
+    color_names:  Optional[Dict[str, str]] = None
+    image_types:  Optional[Dict[str, str]] = None
     sizes: Optional[List[str]] = None
+    size_prices:  Optional[Dict[str, float]] = None
     tags: Optional[List[str]] = None
     weight: Optional[float] = None
     pricing_unit: Optional[str] = None

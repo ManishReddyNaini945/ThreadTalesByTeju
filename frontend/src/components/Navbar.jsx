@@ -30,12 +30,12 @@ const NAV_LINKS = [
       { label: "Silk Threads",                 path: "/shop?category=silk-threads" },
       { label: "Glues",                        path: "/shop?category=glues" },
       { label: "Charms",                       path: "/shop?category=charms" },
-      { label: "Craft Chains",                  path: "/shop?category=raw-chains" },
+      { label: "Stone Chains",                  path: "/shop?category=raw-chains" },
       { label: "Lakshmi Coins",               path: "/shop?category=lakshmi-coins" },
       { label: "Tools",                        path: "/shop?category=tools" },
       { label: "Beads",                        path: "/shop?category=beads" },
-      { label: "Raw Saree Pins",               path: "/shop?category=raw-saree-pins" },
-      { label: "Hair Accessories",             path: "/shop?category=raw-hair-accessories" },
+      { label: "Saree Pins Raw",                  path: "/shop?category=raw-saree-pins" },
+      { label: "Hair Accessories (Raw)",        path: "/shop?category=raw-hair-accessories" },
       { label: "Transparent Sheets",          path: "/shop?category=transparent-sheets" },
       { label: "Wax Sheets",                  path: "/shop?category=wax-sheets" },
       { label: "Loreal Pearls",               path: "/shop?category=loreal-pearls" },
@@ -141,8 +141,7 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
-  // When transparent (hero area), use bright cream so icons/text are visible over images
-  const iconColor = scrolled ? "var(--cream-dim)" : "var(--cream)";
+  const iconColor = "var(--cream-dim)";
 
   return (
     <>
@@ -152,31 +151,23 @@ export default function Navbar() {
         transition={{ duration: 0.6, ease: "easeOut" }}
         className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
         style={{
-          background: scrolled ? "rgba(12,10,9,0.95)" : "transparent",
-          backdropFilter: scrolled ? "blur(20px)" : "none",
+          background: "rgba(12,10,9,0.95)",
+          backdropFilter: "blur(20px)",
           boxShadow: scrolled ? "0 1px 0 rgba(45,40,36,0.6)" : "none",
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+          <div className="flex items-center justify-between h-14 sm:h-20 lg:h-24">
 
             {/* Logo */}
             <Link to="/" className="flex-shrink-0">
-              <div className="flex flex-col leading-none">
-                <span
-                  className="font-normal tracking-wide whitespace-nowrap"
-                  style={{
-                    fontFamily: "Playfair Display, serif",
-                    color: "var(--gold)",
-                    fontSize: "clamp(1.1rem, 4.5vw, 1.5rem)",
-                  }}
-                >
-                  Thread Tales
-                </span>
-                <span className="text-[8px] tracking-[0.4em] uppercase mt-0.5"
-                  style={{ color: scrolled ? "var(--cream-dim)" : "rgba(247,245,242,0.75)" }}>
-                  by Teju
-                </span>
+              <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full bg-white overflow-hidden"
+                style={{ boxShadow: "0 0 16px rgba(200,164,92,0.3)" }}>
+                <img
+                  src="/web-app-manifest-512x512.png"
+                  alt="Thread Tales by Teju"
+                  className="w-full h-full object-contain"
+                />
               </div>
             </Link>
 
@@ -431,7 +422,7 @@ export default function Navbar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed top-16 sm:top-20 inset-x-0 bottom-0 z-30 lg:hidden"
+              className="fixed top-14 sm:top-20 lg:top-24 inset-x-0 bottom-0 z-30 lg:hidden"
               style={{ background: "rgba(0,0,0,0.55)" }}
               onClick={() => setMenuOpen(false)}
             />
@@ -442,8 +433,8 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-              className="fixed top-16 sm:top-20 right-0 bottom-0 z-40 lg:hidden w-[min(85vw,360px)] flex flex-col overflow-y-auto"
-              style={{ background: "var(--bg-card)", borderLeft: "1px solid var(--border)", borderTop: "1px solid var(--border)" }}
+              className="fixed top-14 sm:top-20 lg:top-24 right-0 bottom-0 z-40 lg:hidden w-[min(85vw,360px)] flex flex-col overflow-y-auto"
+              style={{ background: "rgba(12,10,9,0.97)", backdropFilter: "blur(20px)", borderLeft: "1px solid var(--border)", borderTop: "1px solid var(--border)" }}
             >
               {/* Nav links */}
               <div className="px-6 pt-1 pb-2">

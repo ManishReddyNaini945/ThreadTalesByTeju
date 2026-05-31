@@ -22,10 +22,16 @@ const blurBorder = (e) => { e.target.style.borderColor = border; };
 
 const emptyProduct = {
   name: "", description: "", short_description: "", price: "", compare_price: "",
-  category_id: "", stock_quantity: 0, sku: "", images: [], colors: [], color_images: {}, color_prices: {}, sizes: [],
+  category_id: "", stock_quantity: 0, sku: "", images: [], colors: [], color_images: {}, color_prices: {}, color_names: {}, image_types: {}, sizes: [],
+  size_prices: {},
   tags: [], is_featured: false, is_bestseller: false, sale_ends_at: "",
   pricing_unit: "piece",
 };
+
+const ML_OPTIONS = ["50ml", "100ml", "150ml", "200ml", "250ml", "500ml", "1000ml"];
+const METRE_OPTIONS = ["1 Metre", "5 Metre", "10 Metre"];
+const BANGLE_OPTIONS = ["2-2", "2-4", "2-6", "2-8"];
+const PIECE_OPTIONS = ["5", "10", "25", "50", "100"];
 
 function Toggle({ value, onChange, label }) {
   return (
@@ -47,6 +53,8 @@ function ProductModal({ product, categories, onSave, onClose }) {
   const [uploading, setUploading] = useState(null); // color name or "general"
   const [colorInput, setColorInput] = useState("");
   const [activeColor, setActiveColor] = useState(null);
+  const [customMlInput, setCustomMlInput] = useState("");
+  const [customMetreInput, setCustomMetreInput] = useState("");
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -92,6 +100,9 @@ function ProductModal({ product, categories, onSave, onClose }) {
     const cp = { ...(form.color_prices || {}) };
     delete cp[c];
     set("color_prices", cp);
+    const cn = { ...(form.color_names || {}) };
+    delete cn[c];
+    set("color_names", cn);
     if (activeColor === c) setActiveColor(form.colors.find(x => x !== c) || null);
   };
 
@@ -157,7 +168,16 @@ function ProductModal({ product, categories, onSave, onClose }) {
           {/* Category */}
           <div>
             <label style={labelStyle}>Category *</label>
-            <select value={form.category_id} onChange={e => set("category_id", e.target.value)}
+            <select value={form.category_id} onChange={e => {
+              const newCatId = e.target.value;
+              const selectedCat = categories.find(c => String(c.id) === String(newCatId));
+              const isBangles = selectedCat?.name?.toLowerCase().includes("bangle");
+              setForm(f => ({
+                ...f,
+                category_id: newCatId,
+                pricing_unit: isBangles ? "piece" : (["box","bangle"].includes(f.pricing_unit) ? "piece" : f.pricing_unit),
+              }));
+            }}
               style={{ ...inputStyle, cursor: "pointer" }} onFocus={focusGold} onBlur={blurBorder}>
               <option value="">Select category</option>
               {(() => {
@@ -184,58 +204,670 @@ function ProductModal({ product, categories, onSave, onClose }) {
           </div>
 
           {/* Pricing Unit */}
-          <div>
-            <label style={labelStyle}>Sold By</label>
-            <div className="flex gap-2">
-              {/* Per Piece button */}
-              <button type="button"
-                onClick={() => set("pricing_unit", "piece")}
-                className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
-                style={{
-                  border: `1px solid ${form.pricing_unit === "piece" ? gold : border}`,
-                  color: form.pricing_unit === "piece" ? gold : creamDim,
-                  background: form.pricing_unit === "piece" ? `${gold}18` : "transparent",
-                }}>
-                Per Piece
-              </button>
+          {(() => {
+            const selectedCatForUnit = categories.find(c => String(c.id) === String(form.category_id));
+            const isBanglesCategory = selectedCatForUnit?.name?.toLowerCase().includes("bangle");
+            const isGluesCategory = selectedCatForUnit?.name?.toLowerCase().includes("glue");
+            const isChainsCategory = selectedCatForUnit?.name?.toLowerCase().includes("chain");
+            return (
+              <div>
+                <label style={labelStyle}>Sold By</label>
+                <div className="flex gap-2">
+                  {isBanglesCategory ? (
+                    <>
+                      <button type="button"
+                        onClick={() => { set("pricing_unit", "piece"); set("sizes", []); set("size_prices", {}); }}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "piece" ? gold : border}`,
+                          color: form.pricing_unit === "piece" ? gold : creamDim,
+                          background: form.pricing_unit === "piece" ? `${gold}18` : "transparent",
+                        }}>
+                        Fixed Price
+                      </button>
+                      <button type="button"
+                        onClick={() => set("pricing_unit", "bangle")}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "bangle" ? gold : border}`,
+                          color: form.pricing_unit === "bangle" ? gold : creamDim,
+                          background: form.pricing_unit === "bangle" ? `${gold}18` : "transparent",
+                        }}>
+                        Per Size
+                      </button>
+                    </>
+                  ) : isGluesCategory ? (
+                    <>
+                      <button type="button"
+                        onClick={() => { set("pricing_unit", "piece"); set("sizes", []); set("size_prices", {}); }}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "piece" ? gold : border}`,
+                          color: form.pricing_unit === "piece" ? gold : creamDim,
+                          background: form.pricing_unit === "piece" ? `${gold}18` : "transparent",
+                        }}>
+                        Fixed Price
+                      </button>
+                      <button type="button"
+                        onClick={() => set("pricing_unit", "ml")}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "ml" ? gold : border}`,
+                          color: form.pricing_unit === "ml" ? gold : creamDim,
+                          background: form.pricing_unit === "ml" ? `${gold}18` : "transparent",
+                        }}>
+                        Per ML (size-wise)
+                      </button>
+                    </>
+                  ) : isChainsCategory ? (
+                    <>
+                      <button type="button"
+                        onClick={() => { set("pricing_unit", "piece"); set("sizes", []); set("size_prices", {}); }}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "piece" ? gold : border}`,
+                          color: form.pricing_unit === "piece" ? gold : creamDim,
+                          background: form.pricing_unit === "piece" ? `${gold}18` : "transparent",
+                        }}>
+                        Fixed Price
+                      </button>
+                      <button type="button"
+                        onClick={() => set("pricing_unit", "metre")}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "metre" ? gold : border}`,
+                          color: form.pricing_unit === "metre" ? gold : creamDim,
+                          background: form.pricing_unit === "metre" ? `${gold}18` : "transparent",
+                        }}>
+                        Per Metre
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      {/* Per Piece button */}
+                      <button type="button"
+                        onClick={() => { set("pricing_unit", "piece"); set("sizes", []); set("size_prices", {}); }}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "piece" ? gold : border}`,
+                          color: form.pricing_unit === "piece" ? gold : creamDim,
+                          background: form.pricing_unit === "piece" ? `${gold}18` : "transparent",
+                        }}>
+                        Per Piece
+                      </button>
 
-              {/* Per Gram dropdown */}
-              <select
-                value={form.pricing_unit === "gram" ? (form.sizes?.[0] || "") : ""}
-                onChange={e => { set("pricing_unit", "gram"); set("sizes", e.target.value ? [e.target.value] : []); }}
-                className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
-                style={{
-                  border: `1px solid ${form.pricing_unit === "gram" ? gold : border}`,
-                  color: form.pricing_unit === "gram" ? gold : creamDim,
-                  background: form.pricing_unit === "gram" ? `${gold}18` : "transparent",
-                  cursor: "pointer",
-                }}>
-                <option value="">Per Gram</option>
-                {[10, 25, 50, 100, 500].map(g => <option key={g} value={`${g}g`}>{g}g</option>)}
-              </select>
+                      {/* Per Gram dropdown */}
+                      <select
+                        value={form.pricing_unit === "gram" ? (form.sizes?.[0] || "") : ""}
+                        onChange={e => { set("pricing_unit", "gram"); set("sizes", e.target.value ? [e.target.value] : []); }}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "gram" ? gold : border}`,
+                          color: form.pricing_unit === "gram" ? gold : creamDim,
+                          background: form.pricing_unit === "gram" ? `${gold}18` : "transparent",
+                          cursor: "pointer",
+                        }}>
+                        <option value="">Per Gram</option>
+                        {[5, 10, 25, 50, 100, 500].map(g => <option key={g} value={`${g}g`}>{g}g</option>)}
+                      </select>
 
-              {/* Per Kg dropdown */}
-              <select
-                value={form.pricing_unit === "kg" ? (form.sizes?.[0] || "") : ""}
-                onChange={e => { set("pricing_unit", "kg"); set("sizes", e.target.value ? [e.target.value] : []); }}
-                className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
-                style={{
-                  border: `1px solid ${form.pricing_unit === "kg" ? gold : border}`,
-                  color: form.pricing_unit === "kg" ? gold : creamDim,
-                  background: form.pricing_unit === "kg" ? `${gold}18` : "transparent",
-                  cursor: "pointer",
-                }}>
-                <option value="">Per Kg</option>
-                {[1, 2, 5].map(k => <option key={k} value={`${k}kg`}>{k}kg</option>)}
-              </select>
-            </div>
-          </div>
+                      {/* Per Kg dropdown */}
+                      <select
+                        value={form.pricing_unit === "kg" ? (form.sizes?.[0] || "") : ""}
+                        onChange={e => { set("pricing_unit", "kg"); set("sizes", e.target.value ? [e.target.value] : []); }}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "kg" ? gold : border}`,
+                          color: form.pricing_unit === "kg" ? gold : creamDim,
+                          background: form.pricing_unit === "kg" ? `${gold}18` : "transparent",
+                          cursor: "pointer",
+                        }}>
+                        <option value="">Per Kg</option>
+                        {[1, 2, 5].map(k => <option key={k} value={`${k}kg`}>{k}kg</option>)}
+                      </select>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Piece Sizes + per-size prices (general piece products) */}
+          {(() => {
+            const selectedCatForPiece = categories.find(c => String(c.id) === String(form.category_id));
+            const catName = selectedCatForPiece?.name?.toLowerCase() || "";
+            if (form.pricing_unit !== "piece") return null;
+            if (catName.includes("bangle") || catName.includes("glue") || catName.includes("chain")) return null;
+
+            const allPieceOptions = [
+              ...PIECE_OPTIONS,
+              ...((form.sizes || []).filter(s => !PIECE_OPTIONS.includes(s))),
+            ];
+
+            const togglePiece = (size) => {
+              const isSelected = (form.sizes || []).includes(size);
+              const newSizes = isSelected
+                ? (form.sizes || []).filter(s => s !== size)
+                : [...(form.sizes || []), size];
+              set("sizes", newSizes);
+              if (isSelected) {
+                const sp = { ...(form.size_prices || {}) };
+                delete sp[size];
+                set("size_prices", sp);
+              }
+            };
+
+            return (
+              <div className="space-y-3">
+                <label style={labelStyle}>Piece Options & Prices</label>
+                <p className="text-xs" style={{ color: creamDim }}>
+                  Select piece counts and set a price for each. Leave unselected for a single fixed price.
+                </p>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {allPieceOptions.map(size => {
+                    const isSelected = (form.sizes || []).includes(size);
+                    const isCustom = !PIECE_OPTIONS.includes(size);
+                    return (
+                      <div key={size} className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => togglePiece(size)}
+                          className="w-full py-2 text-xs tracking-wider transition-all relative"
+                          style={{
+                            border: `1px solid ${isSelected ? gold : border}`,
+                            color: isSelected ? gold : creamDim,
+                            background: isSelected ? `${gold}18` : "transparent",
+                          }}>
+                          {size}
+                          {isCustom && (
+                            <span
+                              onClick={e => {
+                                e.stopPropagation();
+                                const newSizes = (form.sizes || []).filter(s => s !== size);
+                                const sp = { ...(form.size_prices || {}) };
+                                delete sp[size];
+                                set("sizes", newSizes);
+                                set("size_prices", sp);
+                              }}
+                              className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center"
+                              style={{ background: "#f87171", borderRadius: "50%", color: "#fff" }}>
+                              <X size={8} />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Custom piece input */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customMlInput}
+                    onChange={e => setCustomMlInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const val = customMlInput.trim();
+                        if (val && !(form.sizes || []).includes(val)) set("sizes", [...(form.sizes || []), val]);
+                        setCustomMlInput("");
+                      }
+                    }}
+                    placeholder="Custom (e.g. 3 Pieces, Set of 6, Pair)"
+                    style={{ ...inputStyle, flex: 1 }}
+                    onFocus={focusGold} onBlur={blurBorder}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const val = customMlInput.trim();
+                      if (val && !(form.sizes || []).includes(val)) set("sizes", [...(form.sizes || []), val]);
+                      setCustomMlInput("");
+                    }}
+                    className="px-4 py-2 text-xs transition-colors"
+                    style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
+                    Add
+                  </button>
+                </div>
+
+                {/* Price inputs for selected sizes */}
+                {(form.sizes || []).length > 0 && (
+                  <div className="space-y-2" style={{ borderTop: `1px solid ${border}`, paddingTop: 12 }}>
+                    <p className="text-xs" style={{ color: creamDim }}>Set price for each option:</p>
+                    {(form.sizes || []).map(size => (
+                      <div key={size} className="flex items-center gap-3">
+                        <span className="text-xs font-medium w-24 flex-shrink-0" style={{ color: gold }}>{size}</span>
+                        <span className="text-xs" style={{ color: creamDim }}>₹</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Price"
+                          value={form.size_prices?.[size] ?? ""}
+                          onChange={e => {
+                            if (/^\d*$/.test(e.target.value)) {
+                              const sp = { ...(form.size_prices || {}) };
+                              if (e.target.value === "") delete sp[size];
+                              else sp[size] = parseFloat(e.target.value);
+                              set("size_prices", sp);
+                            }
+                          }}
+                          style={{ ...inputStyle, width: 120 }}
+                          onFocus={focusGold} onBlur={blurBorder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* ML Sizes + per-size prices (glues only) */}
+          {(() => {
+            const selectedCatForMl = categories.find(c => String(c.id) === String(form.category_id));
+            if (!selectedCatForMl?.name?.toLowerCase().includes("glue")) return null;
+
+            const allMlOptions = [
+              ...ML_OPTIONS,
+              ...((form.sizes || []).filter(s => !ML_OPTIONS.includes(s))),
+            ];
+
+            const toggleMl = (ml) => {
+              const isSelected = (form.sizes || []).includes(ml);
+              const newSizes = isSelected
+                ? (form.sizes || []).filter(s => s !== ml)
+                : [...(form.sizes || []), ml];
+              set("sizes", newSizes);
+              if (isSelected) {
+                const sp = { ...(form.size_prices || {}) };
+                delete sp[ml];
+                set("size_prices", sp);
+              }
+            };
+
+            const addCustomMl = () => {
+              const val = customMlInput.trim().toLowerCase().replace(/\s+/g, "");
+              if (!val) return;
+              const normalized = val.endsWith("ml") ? val : `${val}ml`;
+              if (!(form.sizes || []).includes(normalized)) {
+                set("sizes", [...(form.sizes || []), normalized]);
+              }
+              setCustomMlInput("");
+            };
+
+            return (
+              <div className="space-y-3">
+                <label style={labelStyle}>ML Sizes & Prices</label>
+                <p className="text-xs" style={{ color: creamDim }}>
+                  Click a size to select it, then enter its price below.
+                </p>
+
+                {/* Grid of ML option buttons */}
+                <div className="grid grid-cols-4 gap-2">
+                  {allMlOptions.map(ml => {
+                    const isSelected = (form.sizes || []).includes(ml);
+                    const isCustom = !ML_OPTIONS.includes(ml);
+                    return (
+                      <div key={ml} className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleMl(ml)}
+                          className="w-full py-2 text-xs tracking-wider uppercase transition-all relative"
+                          style={{
+                            border: `1px solid ${isSelected ? gold : border}`,
+                            color: isSelected ? gold : creamDim,
+                            background: isSelected ? `${gold}18` : "transparent",
+                          }}>
+                          {ml}
+                          {isCustom && (
+                            <span
+                              onClick={e => {
+                                e.stopPropagation();
+                                const newSizes = (form.sizes || []).filter(s => s !== ml);
+                                const sp = { ...(form.size_prices || {}) };
+                                delete sp[ml];
+                                set("sizes", newSizes);
+                                set("size_prices", sp);
+                              }}
+                              className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center"
+                              style={{ background: "#f87171", borderRadius: "50%", color: "#fff" }}>
+                              <X size={8} />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Custom ML input */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customMlInput}
+                    onChange={e => setCustomMlInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCustomMl())}
+                    placeholder="Custom ml (e.g. 300)"
+                    style={{ ...inputStyle, flex: 1 }}
+                    onFocus={focusGold} onBlur={blurBorder}
+                  />
+                  <button
+                    type="button"
+                    onClick={addCustomMl}
+                    className="px-4 py-2 text-xs transition-colors"
+                    style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
+                    Add
+                  </button>
+                </div>
+
+                {/* Price inputs for selected sizes */}
+                {(form.sizes || []).length > 0 && (
+                  <div className="space-y-2" style={{ borderTop: `1px solid ${border}`, paddingTop: 12 }}>
+                    <p className="text-xs" style={{ color: creamDim }}>Set price for each selected size:</p>
+                    {(form.sizes || []).map(ml => (
+                      <div key={ml} className="flex items-center gap-3">
+                        <span className="text-xs font-medium w-16 uppercase tracking-wider flex-shrink-0" style={{ color: gold }}>{ml}</span>
+                        <span className="text-xs" style={{ color: creamDim }}>₹</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Price"
+                          value={form.size_prices?.[ml] ?? ""}
+                          onChange={e => {
+                            if (/^\d*$/.test(e.target.value)) {
+                              const sp = { ...(form.size_prices || {}) };
+                              if (e.target.value === "") delete sp[ml];
+                              else sp[ml] = parseFloat(e.target.value);
+                              set("size_prices", sp);
+                            }
+                          }}
+                          style={{ ...inputStyle, width: 120 }}
+                          onFocus={focusGold} onBlur={blurBorder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Metre Sizes + per-size prices (chains only) */}
+          {(() => {
+            const selectedCatForMetre = categories.find(c => String(c.id) === String(form.category_id));
+            if (!selectedCatForMetre?.name?.toLowerCase().includes("chain")) return null;
+            if (form.pricing_unit !== "metre") return null;
+
+            const allMetreOptions = [
+              ...METRE_OPTIONS,
+              ...((form.sizes || []).filter(s => !METRE_OPTIONS.includes(s))),
+            ];
+
+            const toggleMetre = (m) => {
+              const isSelected = (form.sizes || []).includes(m);
+              const newSizes = isSelected
+                ? (form.sizes || []).filter(s => s !== m)
+                : [...(form.sizes || []), m];
+              set("sizes", newSizes);
+              if (isSelected) {
+                const sp = { ...(form.size_prices || {}) };
+                delete sp[m];
+                set("size_prices", sp);
+              }
+            };
+
+            const addCustomMetre = () => {
+              const val = customMetreInput.trim();
+              if (!val) return;
+              const alreadyHasMetre = /metre|meter/i.test(val);
+              const normalized = alreadyHasMetre
+                ? val
+                : `${val.replace(/\s*m$/i, "").trim()} Metre`;
+              if (!(form.sizes || []).includes(normalized)) {
+                set("sizes", [...(form.sizes || []), normalized]);
+              }
+              setCustomMetreInput("");
+            };
+
+            return (
+              <div className="space-y-3">
+                <label style={labelStyle}>Metre Sizes & Prices</label>
+                <p className="text-xs" style={{ color: creamDim }}>
+                  Click a size to select it, then set its price below.
+                </p>
+
+                {/* Grid of metre option buttons */}
+                <div className="grid grid-cols-4 gap-2">
+                  {allMetreOptions.map(m => {
+                    const isSelected = (form.sizes || []).includes(m);
+                    const isCustom = !METRE_OPTIONS.includes(m);
+                    return (
+                      <div key={m} className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleMetre(m)}
+                          className="w-full py-2 text-xs tracking-wider uppercase transition-all relative"
+                          style={{
+                            border: `1px solid ${isSelected ? gold : border}`,
+                            color: isSelected ? gold : creamDim,
+                            background: isSelected ? `${gold}18` : "transparent",
+                          }}>
+                          {m}
+                          {isCustom && (
+                            <span
+                              onClick={e => {
+                                e.stopPropagation();
+                                const newSizes = (form.sizes || []).filter(s => s !== m);
+                                const sp = { ...(form.size_prices || {}) };
+                                delete sp[m];
+                                set("sizes", newSizes);
+                                set("size_prices", sp);
+                              }}
+                              className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center"
+                              style={{ background: "#f87171", borderRadius: "50%", color: "#fff" }}>
+                              <X size={8} />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Custom metre input */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customMetreInput}
+                    onChange={e => setCustomMetreInput(e.target.value)}
+                    onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addCustomMetre())}
+                    placeholder="Custom metres (e.g. 2)"
+                    style={{ ...inputStyle, flex: 1 }}
+                    onFocus={focusGold} onBlur={blurBorder}
+                  />
+                  <button
+                    type="button"
+                    onClick={addCustomMetre}
+                    className="px-4 py-2 text-xs transition-colors"
+                    style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
+                    Add
+                  </button>
+                </div>
+
+                {/* Price inputs for selected sizes */}
+                {(form.sizes || []).length > 0 && (
+                  <div className="space-y-2" style={{ borderTop: `1px solid ${border}`, paddingTop: 12 }}>
+                    <p className="text-xs" style={{ color: creamDim }}>Set price for each selected size:</p>
+                    {(form.sizes || []).map(m => (
+                      <div key={m} className="flex items-center gap-3">
+                        <span className="text-xs font-medium w-16 uppercase tracking-wider flex-shrink-0" style={{ color: gold }}>{m}</span>
+                        <span className="text-xs" style={{ color: creamDim }}>₹</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Price"
+                          value={form.size_prices?.[m] ?? ""}
+                          onChange={e => {
+                            if (/^\d*$/.test(e.target.value)) {
+                              const sp = { ...(form.size_prices || {}) };
+                              if (e.target.value === "") delete sp[m];
+                              else sp[m] = parseFloat(e.target.value);
+                              set("size_prices", sp);
+                            }
+                          }}
+                          style={{ ...inputStyle, width: 120 }}
+                          onFocus={focusGold} onBlur={blurBorder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Bangle Sizes + per-size prices (bangles only) */}
+          {(() => {
+            const selectedCatForBangle = categories.find(c => String(c.id) === String(form.category_id));
+            if (!selectedCatForBangle?.name?.toLowerCase().includes("bangle")) return null;
+            if (form.pricing_unit !== "bangle") return null;
+
+            const allBangleOptions = [
+              ...BANGLE_OPTIONS,
+              ...((form.sizes || []).filter(s => !BANGLE_OPTIONS.includes(s))),
+            ];
+
+            const toggleBangle = (size) => {
+              const isSelected = (form.sizes || []).includes(size);
+              const newSizes = isSelected
+                ? (form.sizes || []).filter(s => s !== size)
+                : [...(form.sizes || []), size];
+              set("sizes", newSizes);
+              if (isSelected) {
+                const sp = { ...(form.size_prices || {}) };
+                delete sp[size];
+                set("size_prices", sp);
+              }
+            };
+
+            return (
+              <div className="space-y-3">
+                <label style={labelStyle}>Bangle Sizes & Prices</label>
+                <p className="text-xs" style={{ color: creamDim }}>
+                  Click a size to select it, then enter its price below.
+                </p>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {allBangleOptions.map(size => {
+                    const isSelected = (form.sizes || []).includes(size);
+                    const isCustom = !BANGLE_OPTIONS.includes(size);
+                    return (
+                      <div key={size} className="flex flex-col gap-1">
+                        <button
+                          type="button"
+                          onClick={() => toggleBangle(size)}
+                          className="w-full py-2 text-xs tracking-wider uppercase transition-all relative"
+                          style={{
+                            border: `1px solid ${isSelected ? gold : border}`,
+                            color: isSelected ? gold : creamDim,
+                            background: isSelected ? `${gold}18` : "transparent",
+                          }}>
+                          {size}
+                          {isCustom && (
+                            <span
+                              onClick={e => {
+                                e.stopPropagation();
+                                const newSizes = (form.sizes || []).filter(s => s !== size);
+                                const sp = { ...(form.size_prices || {}) };
+                                delete sp[size];
+                                set("sizes", newSizes);
+                                set("size_prices", sp);
+                              }}
+                              className="absolute -top-1.5 -right-1.5 w-4 h-4 flex items-center justify-center"
+                              style={{ background: "#f87171", borderRadius: "50%", color: "#fff" }}>
+                              <X size={8} />
+                            </span>
+                          )}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Custom size input */}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customMlInput}
+                    onChange={e => setCustomMlInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const val = customMlInput.trim();
+                        if (val && !(form.sizes || []).includes(val)) {
+                          set("sizes", [...(form.sizes || []), val]);
+                        }
+                        setCustomMlInput("");
+                      }
+                    }}
+                    placeholder="Custom size (e.g. 2-10)"
+                    style={{ ...inputStyle, flex: 1 }}
+                    onFocus={focusGold} onBlur={blurBorder}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const val = customMlInput.trim();
+                      if (val && !(form.sizes || []).includes(val)) {
+                        set("sizes", [...(form.sizes || []), val]);
+                      }
+                      setCustomMlInput("");
+                    }}
+                    className="px-4 py-2 text-xs transition-colors"
+                    style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
+                    Add
+                  </button>
+                </div>
+
+                {/* Price inputs for selected sizes */}
+                {(form.sizes || []).length > 0 && (
+                  <div className="space-y-2" style={{ borderTop: `1px solid ${border}`, paddingTop: 12 }}>
+                    <p className="text-xs" style={{ color: creamDim }}>Set price for each selected size:</p>
+                    {(form.sizes || []).map(size => (
+                      <div key={size} className="flex items-center gap-3">
+                        <span className="text-xs font-medium w-16 uppercase tracking-wider flex-shrink-0" style={{ color: gold }}>{size}</span>
+                        <span className="text-xs" style={{ color: creamDim }}>₹</span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          placeholder="Price"
+                          value={form.size_prices?.[size] ?? ""}
+                          onChange={e => {
+                            if (/^\d*$/.test(e.target.value)) {
+                              const sp = { ...(form.size_prices || {}) };
+                              if (e.target.value === "") delete sp[size];
+                              else sp[size] = parseFloat(e.target.value);
+                              set("size_prices", sp);
+                            }
+                          }}
+                          style={{ ...inputStyle, width: 120 }}
+                          onFocus={focusGold} onBlur={blurBorder}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Price + Compare */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label style={labelStyle}>
-                Price (₹) * {form.pricing_unit !== "piece" && `— per ${form.pricing_unit}`}
+                Price (₹) *{["ml","metre","bangle"].includes(form.pricing_unit) ? " — base / fallback price" : form.pricing_unit !== "piece" ? ` — per ${form.pricing_unit}` : ""}
               </label>
               <input
                 type="text"
@@ -258,8 +890,10 @@ function ProductModal({ product, categories, onSave, onClose }) {
           {/* Stock Quantity */}
           {(() => {
             const selectedCat = categories.find(c => String(c.id) === String(form.category_id));
-            const isWeightBased = selectedCat && selectedCat.name.toLowerCase().includes("kundan");
-            const weightOptions = [
+            const isKundan = selectedCat && selectedCat.name.toLowerCase().includes("kundan");
+            const isGramBased = form.pricing_unit === "gram" || form.pricing_unit === "kg" || isKundan;
+            const gramOptions = [
+              { label: "5g",   value: 5 },
               { label: "10g",  value: 10 },
               { label: "25g",  value: 25 },
               { label: "50g",  value: 50 },
@@ -273,15 +907,17 @@ function ProductModal({ product, categories, onSave, onClose }) {
             ];
             return (
               <div>
-                <label style={labelStyle}>Stock Quantity</label>
-                {isWeightBased ? (
+                <label style={labelStyle}>
+                  Stock Quantity{isGramBased ? " (in grams)" : ""}
+                </label>
+                {isGramBased ? (
                   <select value={form.stock_quantity || ""} onChange={e => set("stock_quantity", parseInt(e.target.value))}
                     style={{ ...inputStyle, cursor: "pointer" }} onFocus={focusGold} onBlur={blurBorder}>
                     <option value="">Select quantity</option>
-                    {weightOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                    {gramOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                   </select>
                 ) : (
-                  <input type="number" value={form.stock_quantity} onChange={e => set("stock_quantity", parseInt(e.target.value) || 0)}
+                  <input type="number" min={0} value={form.stock_quantity} onChange={e => set("stock_quantity", Math.max(0, parseInt(e.target.value) || 0))}
                     style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
                 )}
               </div>
@@ -339,6 +975,24 @@ function ProductModal({ product, categories, onSave, onClose }) {
                 </p>
                 <div className="mb-3">
                   <label style={{ ...labelStyle, marginBottom: 4 }}>
+                    Display Name for {activeColor} — leave blank to use product name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={`e.g. Moon White Kundans`}
+                    value={form.color_names?.[activeColor] ?? ""}
+                    onChange={e => {
+                      const cn = { ...(form.color_names || {}) };
+                      if (e.target.value === "") delete cn[activeColor];
+                      else cn[activeColor] = e.target.value;
+                      set("color_names", cn);
+                    }}
+                    style={inputStyle}
+                    onFocus={focusGold} onBlur={blurBorder}
+                  />
+                </div>
+                <div className="mb-3">
+                  <label style={{ ...labelStyle, marginBottom: 4 }}>
                     Price for {activeColor} (₹) — leave blank to use base price
                   </label>
                   <input
@@ -385,19 +1039,34 @@ function ProductModal({ product, categories, onSave, onClose }) {
             {/* General images (no colors) */}
             {form.colors.length === 0 && (
               <div>
-                <p className="text-xs mb-2" style={{ color: creamDim }}>General product images</p>
-                <div className="flex gap-2 flex-wrap">
+                <p className="text-xs mb-2" style={{ color: creamDim }}>Product images — enter a type label for each (e.g. Round, Square)</p>
+                <div className="flex gap-3 flex-wrap">
                   {(form.images || []).map((url, i) => (
-                    <div key={i} className="relative">
-                      <img src={url} alt="" className="w-16 h-16 object-cover" style={{ border: `1px solid ${border}` }} />
-                      <button onClick={() => set("images", form.images.filter(x => x !== url))}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center"
-                        style={{ background: "#f87171", color: "#fff", borderRadius: "50%" }}>
-                        <X size={9} />
-                      </button>
+                    <div key={i} className="flex flex-col gap-1" style={{ width: 80 }}>
+                      <div className="relative">
+                        <img src={url} alt="" className="w-20 h-20 object-cover" style={{ border: `1px solid ${border}` }} />
+                        <button onClick={() => {
+                          set("images", form.images.filter(x => x !== url));
+                          const it = { ...(form.image_types || {}) };
+                          delete it[url];
+                          set("image_types", it);
+                        }}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center"
+                          style={{ background: "#f87171", color: "#fff", borderRadius: "50%" }}>
+                          <X size={9} />
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Type"
+                        value={form.image_types?.[url] ?? ""}
+                        onChange={e => set("image_types", { ...(form.image_types || {}), [url]: e.target.value })}
+                        style={{ ...inputStyle, padding: "4px 6px", fontSize: 11, textAlign: "center" }}
+                        onFocus={focusGold} onBlur={blurBorder}
+                      />
                     </div>
                   ))}
-                  <label className="w-16 h-16 flex flex-col items-center justify-center cursor-pointer gap-1"
+                  <label className="w-20 h-20 flex flex-col items-center justify-center cursor-pointer gap-1"
                     style={{ border: `1px dashed ${uploading === "general" ? gold : border}` }}>
                     <input type="file" accept="image/*" className="hidden"
                       onChange={e => handleImageUpload(e, "general")} />

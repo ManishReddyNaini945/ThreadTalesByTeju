@@ -20,7 +20,7 @@ export function CartProvider({ children }) {
 
   useEffect(() => { fetchCart(); }, [fetchCart]);
 
-  const addToCart = async (productId, quantity = 1, color = null, size = null) => {
+  const addToCart = async (productId, quantity = 1, color = null, size = null, customNote = null) => {
     if (!user) { toast.error("Please login to add items to cart"); return false; }
     setLoading(true);
     try {
@@ -29,6 +29,7 @@ export function CartProvider({ children }) {
         quantity,
         selected_color: color,
         selected_size: size,
+        custom_note: customNote || null,
       });
       setCart(data);
       toast.success("Added to cart!");

@@ -16,6 +16,7 @@ export const adminService = {
   // Categories
   getCategories: () => api.get("/admin/categories"),
   createCategory: (data) => api.post("/admin/categories", data),
+  updateCategory: (id, data) => api.put(`/admin/categories/${id}`, data),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
   // Orders
   getOrders: (params) => api.get("/admin/orders", { params }),

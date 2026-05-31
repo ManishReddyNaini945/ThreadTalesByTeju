@@ -131,7 +131,9 @@ def create_product(payload: ProductCreate, db: Session = Depends(get_db), admin:
         slug = f"{base_slug}-{counter}"
         counter += 1
 
-    product = Product(**payload.model_dump(), slug=slug)
+    data = payload.model_dump()
+    data["sku"] = data["sku"] or None
+    product = Product(**data, slug=slug)
     db.add(product)
     db.commit()
     db.refresh(product)
@@ -145,7 +147,10 @@ def update_product(product_id: int, payload: ProductUpdate, db: Session = Depend
         raise HTTPException(status_code=404, detail="Product not found")
 
     was_out_of_stock = product.stock_quantity == 0
-    for field, value in payload.model_dump(exclude_none=True).items():
+    updates = payload.model_dump(exclude_none=True)
+    if "sku" in updates:
+        updates["sku"] = updates["sku"] or None
+    for field, value in updates.items():
         setattr(product, field, value)
     db.commit()
     db.refresh(product)
@@ -247,6 +252,20 @@ def admin_list_categories(db: Session = Depends(get_db), admin: User = Depends(g
 def create_category(payload: CategoryCreate, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
     cat = Category(**payload.model_dump())
     db.add(cat)
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
+@router.put("/categories/{cat_id}", response_model=CategoryOut)
+def update_category(cat_id: int, payload: CategoryCreate, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    cat = db.query(Category).filter(Category.id == cat_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    cat.name = payload.name
+    if payload.description is not None:
+        cat.description = payload.description
+    cat.parent_id = payload.parent_id
     db.commit()
     db.refresh(cat)
     return cat

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..database import Base
@@ -25,6 +25,7 @@ class CartItem(Base):
     quantity = Column(Integer, default=1, nullable=False)
     selected_color = Column(String(100), nullable=True)
     selected_size = Column(String(100), nullable=True)
+    custom_note = Column(Text, nullable=True)
     price_at_add = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

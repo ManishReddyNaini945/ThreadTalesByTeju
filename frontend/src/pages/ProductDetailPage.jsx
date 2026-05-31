@@ -51,6 +51,28 @@ function ReviewCard({ review }) {
   );
 }
 
+const COLOR_SWATCHES = {
+  white: "#f5f5f5", ivory: "#fffff0", cream: "#fffdd0", off_white: "#faf9f6",
+  black: "#1a1a1a", grey: "#9ca3af", gray: "#9ca3af", silver: "#c0c0c0",
+  gold: "#c8a45c", golden: "#c8a45c", antique_gold: "#b8860b",
+  red: "#ef4444", dark_red: "#991b1b", maroon: "#7f1d1d", crimson: "#dc143c",
+  pink: "#f472b6", hot_pink: "#ec4899", baby_pink: "#fbb6ce", rose: "#fb7185",
+  orange: "#f97316", peach: "#ffcba4", coral: "#ff6b6b",
+  yellow: "#facc15", lemon: "#fef08a",
+  green: "#22c55e", dark_green: "#15803d", olive: "#65a30d", mint: "#86efac", peacock_green: "#009b77",
+  blue: "#3b82f6", dark_blue: "#1e3a8a", navy_blue: "#1e40af", navy: "#1e3a8a", sky_blue: "#38bdf8", royal_blue: "#4169e1",
+  purple: "#a855f7", violet: "#7c3aed", lavender: "#c4b5fd",
+  brown: "#92400e", copper: "#b87333",
+  turquoise: "#40e0d0", teal: "#0d9488", cyan: "#22d3ee",
+  magenta: "#d946ef", fuchsia: "#e879f9",
+  multicolor: "linear-gradient(135deg,#ef4444,#facc15,#22c55e,#3b82f6,#a855f7)",
+};
+
+function getSwatchColor(colorName) {
+  const key = colorName.toLowerCase().replace(/[\s-]+/g, "_");
+  return COLOR_SWATCHES[key] || null;
+}
+
 export default function ProductDetailPage() {
   const { slug } = useParams();
   const [product, setProduct] = useState(null);
@@ -64,6 +86,7 @@ export default function ProductDetailPage() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, title: "", body: "" });
   const [customColor, setCustomColor] = useState("");
+  const [customNote, setCustomNote] = useState("");
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyDone, setNotifyDone] = useState(false);
   const [notifyLoading, setNotifyLoading] = useState(false);
@@ -110,7 +133,7 @@ export default function ProductDetailPage() {
       return;
     }
     setAddingToCart(true);
-    await addToCart(product.id, quantity, effectiveColor, selectedSize);
+    await addToCart(product.id, quantity, effectiveColor, selectedSize, customNote.trim() || null);
     setAddingToCart(false);
   };
 
@@ -163,10 +186,22 @@ export default function ProductDetailPage() {
   const colorImgs = selectedColor && product.color_images?.[selectedColor]?.length
     ? product.color_images[selectedColor]
     : null;
-  const images = colorImgs || (product.images?.length ? product.images : ["/placeholder.jpg"]);
+  // Which color's images are actually being shown (null = general product images)
+  const fallbackColorKey = !colorImgs
+    ? Object.keys(product.color_images || {}).find(c => product.color_images[c]?.length) || null
+    : null;
+  const fallbackColorImgs = fallbackColorKey ? product.color_images[fallbackColorKey] : null;
+  const images = colorImgs
+    || (product.images?.length ? product.images : null)
+    || fallbackColorImgs
+    || ["/placeholder.jpg"];
+  // True when we're showing a different color's image as fallback
+  const showingFallbackColor = !colorImgs && !!fallbackColorKey && fallbackColorKey !== selectedColor;
 
   const displayPrice = (selectedColor && product.color_prices?.[selectedColor])
     ? product.color_prices[selectedColor]
+    : (selectedSize && product.size_prices?.[selectedSize])
+    ? product.size_prices[selectedSize]
     : product.price;
   const discount = product.compare_price
     ? Math.round(((product.compare_price - displayPrice) / product.compare_price) * 100)
@@ -214,13 +249,26 @@ export default function ProductDetailPage() {
             </motion.div>
             {images.length > 1 && (
               <div className="flex gap-2 overflow-x-auto pb-1">
-                {images.map((img, i) => (
-                  <button key={i} onClick={() => setSelectedImage(i)}
-                    className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 overflow-hidden transition-all"
-                    style={{ border: `2px solid ${selectedImage === i ? "var(--gold)" : "var(--border)"}` }}>
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                  </button>
-                ))}
+                {images.map((img, i) => {
+                  const typeLabel = product.image_types?.[img];
+                  return typeLabel ? (
+                    <button key={i} onClick={() => setSelectedImage(i)}
+                      className="flex-shrink-0 flex flex-col items-center gap-1 transition-all"
+                      style={{ border: `2px solid ${selectedImage === i ? "var(--gold)" : "var(--border)"}`, padding: 4 }}>
+                      <img src={img} alt="" className="w-14 h-14 sm:w-16 sm:h-16 object-cover" />
+                      <span className="text-[10px] uppercase tracking-wider"
+                        style={{ color: selectedImage === i ? "var(--gold)" : "var(--cream-dim)" }}>
+                        {typeLabel}
+                      </span>
+                    </button>
+                  ) : (
+                    <button key={i} onClick={() => setSelectedImage(i)}
+                      className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 overflow-hidden transition-all"
+                      style={{ border: `2px solid ${selectedImage === i ? "var(--gold)" : "var(--border)"}` }}>
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -235,13 +283,16 @@ export default function ProductDetailPage() {
             )}
 
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-normal leading-tight"
-              style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>{product.name}</h1>
+              style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+              {(selectedColor && product.color_names?.[selectedColor]) || product.name}
+            </h1>
 
             <StarRating rating={product.avg_rating} count={product.review_count} />
 
             {/* Price */}
             {(() => {
-              const packageSize = product.sizes?.[0]; // e.g. "10g", "1kg"
+              const isWeightBased = product.pricing_unit === "gram" || product.pricing_unit === "kg";
+              const packageSize = isWeightBased ? product.sizes?.[0] : null;
               const packageGrams = packageSize
                 ? packageSize.endsWith("kg")
                   ? parseFloat(packageSize) * 1000
@@ -303,18 +354,53 @@ export default function ProductDetailPage() {
                   </span>
                 </p>
                 <div className="flex gap-2 flex-wrap">
-                  {product.colors.map((c) => (
-                    <button key={c} onClick={() => { setSelectedColor(c); setCustomColor(""); setSelectedImage(0); }}
-                      className="px-4 py-2.5 text-sm transition-all min-h-[44px]"
-                      style={{
-                        border: `1px solid ${selectedColor === c ? "var(--gold)" : "var(--border)"}`,
-                        color: selectedColor === c ? "var(--gold)" : "var(--cream-dim)",
-                        background: selectedColor === c ? "rgba(200,164,92,0.1)" : "transparent",
-                      }}>
-                      {c}
-                    </button>
-                  ))}
+                  {product.colors.map((c) => {
+                    const swatch = getSwatchColor(c);
+                    const isSelected = selectedColor === c;
+                    const hasOwnImage = product.color_images?.[c]?.length > 0;
+                    return (
+                      <button key={c} onClick={() => { setSelectedColor(c); setCustomColor(""); setSelectedImage(0); }}
+                        className="flex items-center gap-2 px-3 py-2.5 text-sm transition-all min-h-[44px] relative"
+                        style={{
+                          border: `1px solid ${isSelected ? "var(--gold)" : "var(--border)"}`,
+                          color: isSelected ? "var(--gold)" : "var(--cream-dim)",
+                          background: isSelected ? "rgba(200,164,92,0.1)" : "transparent",
+                        }}>
+                        {swatch && (
+                          <span style={{
+                            width: 14, height: 14, borderRadius: "50%",
+                            background: swatch,
+                            border: "1px solid rgba(255,255,255,0.2)",
+                            flexShrink: 0, display: "inline-block",
+                          }} />
+                        )}
+                        {c}
+                        {hasOwnImage && (
+                          <span title="Image available" style={{
+                            width: 6, height: 6, borderRadius: "50%",
+                            background: "var(--gold)", flexShrink: 0,
+                            display: "inline-block", opacity: 0.8,
+                          }} />
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
+                {showingFallbackColor && (
+                  <div className="flex items-start gap-2 px-3 py-2 text-xs rounded"
+                    style={{
+                      background: "rgba(200,164,92,0.12)",
+                      border: "1px solid rgba(200,164,92,0.35)",
+                      color: "var(--cream)",
+                    }}>
+                    <span style={{ fontSize: 14, lineHeight: 1.2, flexShrink: 0 }}>📷</span>
+                    <span>
+                      Image shown is for{" "}
+                      <span style={{ color: "var(--gold)", fontWeight: 600 }}>{fallbackColorKey}</span>
+                      {" "}· All listed colors are available to order
+                    </span>
+                  </div>
+                )}
                 <div className="pt-1">
                   <p className="text-xs mb-1.5" style={{ color: "var(--cream-dim)" }}>
                     Want a different color? Type it below:
@@ -343,29 +429,79 @@ export default function ProductDetailPage() {
             )}
 
             {/* Sizes */}
-            {product.sizes?.length > 0 && (
-              <div>
-                <p className="text-sm font-medium mb-2" style={{ color: "var(--cream)" }}>
-                  Size: <span style={{ color: "var(--gold)" }}>{selectedSize}</span>
-                </p>
-                <div className="flex gap-2 flex-wrap">
-                  {product.sizes.map((s) => (
-                    <button key={s} onClick={() => setSelectedSize(s)}
-                      className="px-4 py-2.5 text-sm transition-all min-h-[44px] min-w-[56px]"
-                      style={{
-                        border: `1px solid ${selectedSize === s ? "var(--gold)" : "var(--border)"}`,
-                        color: selectedSize === s ? "var(--gold)" : "var(--cream-dim)",
-                        background: selectedSize === s ? "rgba(200,164,92,0.1)" : "transparent",
-                      }}>
-                      {s}
-                    </button>
-                  ))}
+            {product.sizes?.length > 0 && (() => {
+              const isPiecePack = product.pricing_unit === "piece" && product.sizes.length === 1;
+              const sizeLabel = product.pricing_unit === "bangle" ? "Size" : product.pricing_unit === "piece" ? "Pack Size" : "Size";
+              const formatPackSize = (s) => /^\d+$/.test(s) ? `${s} Pieces` : s;
+              if (isPiecePack) {
+                return (
+                  <p className="text-sm" style={{ color: "var(--cream-dim)" }}>
+                    Sold as:{" "}
+                    <span style={{ color: "var(--gold)", fontWeight: 600 }}>{formatPackSize(product.sizes[0])}</span>
+                  </p>
+                );
+              }
+              return (
+                <div>
+                  <p className="text-sm font-medium mb-2" style={{ color: "var(--cream)" }}>
+                    {sizeLabel}: <span style={{ color: "var(--gold)" }}>{selectedSize}</span>
+                  </p>
+                  <div className="flex gap-2 flex-wrap">
+                    {product.sizes.map((s) => {
+                      const sizePrice = product.size_prices?.[s];
+                      return (
+                        <button key={s} onClick={() => setSelectedSize(s)}
+                          className="px-4 py-2.5 text-sm transition-all min-h-[44px] min-w-[56px] flex flex-col items-center"
+                          style={{
+                            border: `1px solid ${selectedSize === s ? "var(--gold)" : "var(--border)"}`,
+                            color: selectedSize === s ? "var(--gold)" : "var(--cream-dim)",
+                            background: selectedSize === s ? "rgba(200,164,92,0.1)" : "transparent",
+                          }}>
+                          <span>{s}</span>
+                          {sizePrice && (
+                            <span className="text-xs font-semibold mt-0.5" style={{ color: selectedSize === s ? "var(--gold)" : "var(--cream-dim)" }}>
+                              ₹{sizePrice.toLocaleString()}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
+              );
+            })()}
+
+            {/* Custom note — shown when a pack/size is selected */}
+            {selectedSize && (
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium" style={{ color: "var(--cream)" }}>
+                  Your Preferences
+                  <span className="ml-1 text-xs font-normal" style={{ color: "var(--cream-dim)" }}>(optional)</span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={customNote}
+                  onChange={e => setCustomNote(e.target.value)}
+                  placeholder={`e.g. Colors: Red, Blue, Green${product.colors?.length ? "" : " · Any specific design preference"}`}
+                  className="w-full px-3 py-2 text-sm resize-none focus:outline-none"
+                  style={{
+                    background: "var(--bg-card)",
+                    border: `1px solid ${customNote.trim() ? "var(--gold)" : "var(--border)"}`,
+                    color: "var(--cream)",
+                  }}
+                  onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                  onBlur={e => { if (!customNote.trim()) e.target.style.borderColor = "var(--border)"; }}
+                />
+                {customNote.trim() && (
+                  <p className="text-xs" style={{ color: "var(--gold)" }}>
+                    ✓ Your note will be included with the order
+                  </p>
+                )}
               </div>
             )}
 
             {/* Quantity / Weight */}
-            {product.pricing_unit === "gram" || product.pricing_unit === "kg" ? (
+            {(product.pricing_unit === "gram" || product.pricing_unit === "kg") ? (
               <div className="space-y-2">
                 {(() => {
                   const pkg = product.sizes?.[0];
@@ -376,9 +512,7 @@ export default function ProductDetailPage() {
                   const total = pricePerGram * quantity;
                   return (
                     <>
-                      <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>
-                        Weight (grams)
-                      </p>
+                      <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>Weight (grams)</p>
                       <div className="flex items-center gap-3 flex-wrap">
                         <input
                           type="number"
@@ -404,20 +538,33 @@ export default function ProductDetailPage() {
                 })()}
               </div>
             ) : (
-              <div className="flex items-center gap-3 flex-wrap">
-                <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>Quantity</p>
-                <div className="flex items-center gap-3 px-4 py-2.5 min-h-[44px]" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
-                  <button onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
-                    <Minus size={16} />
-                  </button>
-                  <span className="font-semibold w-6 text-center" style={{ color: "var(--cream)" }}>{quantity}</span>
-                  <button onClick={() => setQuantity(Math.min(product.stock_quantity, quantity + 1))}
-                    className="transition-colors p-1" style={{ color: "var(--cream-dim)" }}>
-                    <Plus size={16} />
-                  </button>
+              <div className="space-y-2">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <p className="text-sm font-medium" style={{ color: "var(--cream)" }}>Quantity</p>
+                  <div className="flex items-center" style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      className="flex items-center justify-center transition-colors"
+                      style={{ width: 44, height: 44, color: "var(--cream-dim)" }}>
+                      <Minus size={16} />
+                    </button>
+                    <span className="font-semibold text-center" style={{ width: 40, color: "var(--cream)" }}>{quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => setQuantity(q => Math.min(product.stock_quantity, q + 1))}
+                      className="flex items-center justify-center transition-colors"
+                      style={{ width: 44, height: 44, color: "var(--cream-dim)" }}>
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  <span className="text-xs" style={{ color: "var(--cream-dim)" }}>{product.stock_quantity} available</span>
                 </div>
-                <span className="text-xs" style={{ color: "var(--cream-dim)" }}>{product.stock_quantity} available</span>
+                {quantity > 1 && (
+                  <p className="text-sm font-medium" style={{ color: "var(--gold)" }}>
+                    Total: ₹{(displayPrice * quantity).toLocaleString()}
+                  </p>
+                )}
               </div>
             )}
 
@@ -630,7 +777,10 @@ export default function ProductDetailPage() {
           style={{ background: "var(--bg-card)", borderTop: "1px solid var(--border)" }}>
           <div className="flex-1 min-w-0">
             <p className="text-xs truncate" style={{ color: "var(--cream-dim)" }}>{product.name}</p>
-            <p className="text-sm font-bold" style={{ color: "var(--gold)" }}>₹{product.price.toLocaleString()}</p>
+            <p className="text-sm font-bold" style={{ color: "var(--gold)" }}>
+              ₹{(displayPrice * quantity).toLocaleString()}
+              {quantity > 1 && <span className="text-xs font-normal ml-1" style={{ color: "var(--cream-dim)" }}>×{quantity}</span>}
+            </p>
           </div>
           <motion.button whileTap={{ scale: 0.97 }} onClick={handleAddToCart} disabled={addingToCart}
             className="btn-gold px-6 py-3 text-sm flex items-center gap-2 disabled:opacity-50 flex-shrink-0">

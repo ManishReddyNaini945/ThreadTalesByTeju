@@ -91,29 +91,46 @@ function ProductCard({ product }) {
             {product.name}
           </h3>
           {(() => {
+            const isWeightBased = product.pricing_unit === "gram" || product.pricing_unit === "kg";
+            const isSizeBased = product.pricing_unit === "ml" || product.pricing_unit === "metre" || product.pricing_unit === "bangle";
             const pkg = product.sizes?.[0];
-            const pkgGrams = pkg
+            const pkgGrams = isWeightBased && pkg
               ? pkg.endsWith("kg") ? parseFloat(pkg) * 1000 : parseFloat(pkg)
               : null;
             const perKg = pkgGrams
               ? (product.price / pkgGrams) * 1000
               : product.pricing_unit === "gram" ? product.price * 1000 : null;
+            const sizeList = isSizeBased && product.sizes?.length > 0 ? product.sizes : null;
+            const sizePriceValues = isSizeBased
+              ? Object.values(product.size_prices || {}).filter(v => v > 0)
+              : [];
+            const startingPrice = sizePriceValues.length > 0 ? Math.min(...sizePriceValues) : null;
             return (
               <>
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium" style={{ color: "var(--gold)" }}>
-                    ₹{product.price}
-                    {(product.pricing_unit === "gram" || product.pricing_unit === "kg") && pkg && (
-                      <span className="text-[10px] font-normal">/{pkg}</span>
-                    )}
-                    {product.pricing_unit === "gram" && !pkg && <span className="text-[10px] font-normal">/gram</span>}
-                    {product.pricing_unit === "kg"   && !pkg && <span className="text-[10px] font-normal">/kg</span>}
+                    {isSizeBased
+                      ? startingPrice
+                        ? <>from ₹{startingPrice}</>
+                        : <>₹{product.price}</>
+                      : <>
+                          ₹{product.price}
+                          {isWeightBased && pkg && <span className="text-[10px] font-normal">/{pkg}</span>}
+                          {product.pricing_unit === "gram" && !pkg && <span className="text-[10px] font-normal">/gram</span>}
+                          {product.pricing_unit === "kg"   && !pkg && <span className="text-[10px] font-normal">/kg</span>}
+                        </>
+                    }
                   </span>
                   {product.compare_price && (
                     <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price}</span>
                   )}
                 </div>
-                {perKg && (
+                {isSizeBased && sizeList && (
+                  <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
+                    {sizeList.join(" · ")}
+                  </p>
+                )}
+                {!isSizeBased && perKg && (
                   <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
                     ₹{perKg.toLocaleString()}/kg
                   </p>
