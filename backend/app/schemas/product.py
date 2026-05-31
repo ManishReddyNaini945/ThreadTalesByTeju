@@ -104,6 +104,16 @@ class ProductOut(ProductBase):
     created_at: Optional[datetime] = None
     category: Optional[CategoryOut] = None
 
+    @field_validator("avg_rating", mode="before")
+    @classmethod
+    def coerce_avg_rating(cls, v):
+        return v if v is not None else 0.0
+
+    @field_validator("review_count", mode="before")
+    @classmethod
+    def coerce_review_count(cls, v):
+        return v if v is not None else 0
+
     class Config:
         from_attributes = True
 
