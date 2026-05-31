@@ -98,10 +98,10 @@ class ProductOut(ProductBase):
     id: int
     slug: str
     status: ProductStatus
-    avg_rating: float
-    review_count: int
+    avg_rating: float = 0.0
+    review_count: int = 0
     sale_ends_at: Optional[datetime] = None
-    created_at: datetime
+    created_at: Optional[datetime] = None
     category: Optional[CategoryOut] = None
 
     class Config:
