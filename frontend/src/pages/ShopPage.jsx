@@ -6,6 +6,7 @@ import { productService } from "../services/productService";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useDebounce } from "../hooks/useDebounce";
+import ProductShareButton from "../components/ProductShareButton";
 import Footer from "../components/Footer";
 import Navbar from "../components/Navbar";
 
@@ -47,38 +48,45 @@ function ProductCard({ product }) {
       }}
     >
       {/* Image — clean, full visibility */}
-      <Link to={`/product/${product.slug}`} className="block">
-        <div className="relative overflow-hidden" style={{ aspectRatio: "1/1", background: "var(--bg)" }}>
+      <div className="relative overflow-hidden" style={{ aspectRatio: "1/1", background: "var(--bg)" }}>
+        <Link to={`/product/${product.slug}`} className="absolute inset-0 block">
           {img && (
             <img src={img} alt={product.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
           )}
+        </Link>
 
-          {/* Hover gradient — desktop only */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{ background: "linear-gradient(to top, rgba(12,10,9,0.5) 0%, transparent 60%)" }} />
+        {/* Hover gradient — desktop only */}
+        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+          style={{ background: "linear-gradient(to top, rgba(12,10,9,0.5) 0%, transparent 60%)" }} />
 
-          {/* Badges */}
-          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-            {product.is_bestseller && (
-              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
-                style={{ background: "var(--gold)", color: "var(--bg)" }}>Bestseller</span>
-            )}
-            {product.is_featured && !product.is_bestseller && (
-              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase"
-                style={{ background: "rgba(12,10,9,0.85)", color: "var(--cream)", border: "1px solid var(--gold)" }}>Featured</span>
-            )}
-          </div>
+        {/* Badges */}
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+          {product.is_bestseller && (
+            <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
+              style={{ background: "var(--gold)", color: "var(--bg)" }}>Bestseller</span>
+          )}
+          {product.is_featured && !product.is_bestseller && (
+            <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase"
+              style={{ background: "rgba(12,10,9,0.85)", color: "var(--cream)", border: "1px solid var(--gold)" }}>Featured</span>
+          )}
+        </div>
 
-          {/* Wishlist icon — top right */}
+        {/* Share + wishlist icons — top right */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+          <ProductShareButton
+            product={product}
+            className="w-9 h-9"
+            style={{ background: "rgba(12,10,9,0.85)", border: "1px solid var(--border)", color: "var(--cream-dim)" }}
+          />
           <button onClick={(e) => { e.preventDefault(); toggleWishlist?.(product.id); }}
-            className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center transition-all duration-300"
+            className="w-9 h-9 flex items-center justify-center transition-all duration-300"
             style={{ background: "rgba(12,10,9,0.85)", border: "1px solid var(--border)" }}>
             <Heart size={13} fill={wishlisted ? "var(--pink)" : "none"}
               style={{ color: wishlisted ? "var(--pink)" : "var(--cream-dim)" }} />
           </button>
         </div>
-      </Link>
+      </div>
 
       {/* Info panel + Add to Cart below image */}
       <div className="p-3" style={{ borderTop: "1px solid var(--border)" }}>

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Heart, ShoppingBag, Trash2 } from "lucide-react";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
+import ProductShareButton from "../components/ProductShareButton";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -42,6 +43,11 @@ function WishlistCard({ product }) {
             className="btn-gold flex-1 py-2.5 flex items-center justify-center gap-1.5 text-xs">
             <ShoppingBag size={14} /> Add to Cart
           </button>
+          <ProductShareButton
+            product={product}
+            className="w-10 h-10"
+            style={{ border: "1px solid var(--border)", background: "transparent", color: "var(--cream-dim)" }}
+          />
           <button onClick={() => toggleWishlist(product.id)}
             className="p-2.5 transition-colors"
             style={{ border: "1px solid #f87171", color: "#f87171" }}

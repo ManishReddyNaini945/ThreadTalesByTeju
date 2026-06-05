@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { Heart, ShoppingBag, ArrowRight, Star } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import ProductShareButton from "./ProductShareButton";
 import api from "../services/api";
 
 function ProductCard({ product, index }) {
@@ -32,8 +33,8 @@ function ProductCard({ product, index }) {
     >
       <div className="group block">
         {/* Image — clean, no overlay button */}
-        <Link to={`/product/${product.slug}`} className="block">
-          <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", background: "var(--bg-card)" }}>
+        <div className="relative overflow-hidden" style={{ aspectRatio: "3/4", background: "var(--bg-card)" }}>
+          <Link to={`/product/${product.slug}`} className="absolute inset-0 block">
             {image && (
               <img
                 src={image}
@@ -41,27 +42,34 @@ function ProductCard({ product, index }) {
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
             )}
+          </Link>
 
-            {/* Badges */}
-            <div className="absolute top-3 left-3 flex flex-col gap-2">
-              {product.is_bestseller && (
-                <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
-                  style={{ background: "var(--gold)", color: "var(--bg)" }}>
-                  Bestseller
-                </span>
-              )}
-              {product.is_featured && !product.is_bestseller && (
-                <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
-                  style={{ background: "var(--bg-card)", color: "var(--cream)", border: "1px solid var(--border)" }}>
-                  Featured
-                </span>
-              )}
-            </div>
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-2">
+            {product.is_bestseller && (
+              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
+                style={{ background: "var(--gold)", color: "var(--bg)" }}>
+                Bestseller
+              </span>
+            )}
+            {product.is_featured && !product.is_bestseller && (
+              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
+                style={{ background: "var(--bg-card)", color: "var(--cream)", border: "1px solid var(--border)" }}>
+                Featured
+              </span>
+            )}
+          </div>
 
-            {/* Wishlist icon — top right */}
+          {/* Share + wishlist icons — top right */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+            <ProductShareButton
+              product={product}
+              className="w-9 h-9"
+              style={{ background: "rgba(12,10,9,0.8)", border: "1px solid var(--border)", color: "var(--cream-dim)" }}
+            />
             <button
               onClick={(e) => { e.preventDefault(); addToWishlist(product.id); }}
-              className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center transition-all duration-300"
+              className="w-9 h-9 flex items-center justify-center transition-all duration-300"
               style={{ background: "rgba(12,10,9,0.8)", border: "1px solid var(--border)" }}
             >
               <Heart
@@ -71,7 +79,7 @@ function ProductCard({ product, index }) {
               />
             </button>
           </div>
-        </Link>
+        </div>
 
         {/* Info + Add to Cart below image */}
         <div className="pt-3 pb-1">

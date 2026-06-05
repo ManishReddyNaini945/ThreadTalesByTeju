@@ -1,0 +1,1 @@
+import{u as a,a as o,r}from"./index-R4zDghXe.js";const c=()=>{const{collectionId:e}=a(),t=o();return r.useEffect(()=>{t(`/shop?category=${e}`,{replace:!0})},[e,t]),null};export{c as CollectionDetailPage};

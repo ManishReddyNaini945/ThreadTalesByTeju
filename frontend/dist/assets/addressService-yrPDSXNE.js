@@ -1,0 +1,1 @@
+import{k as s}from"./index-R4zDghXe.js";const r={getAddresses:()=>s.get("/addresses"),createAddress:e=>s.post("/addresses",e),updateAddress:(e,d)=>s.put(`/addresses/${e}`,d),setDefault:e=>s.patch(`/addresses/${e}/default`),deleteAddress:e=>s.delete(`/addresses/${e}`)};export{r as a};

@@ -1,0 +1,1 @@
+import{k as t}from"./index-R4zDghXe.js";const o={getProducts:e=>t.get("/products/",{params:e}),getProduct:e=>t.get(`/products/${e}`),getCategories:()=>t.get("/products/categories"),getReviews:e=>t.get(`/reviews/product/${e}`),createReview:e=>t.post("/reviews",e),deleteReview:e=>t.delete(`/reviews/${e}`),getRelated:e=>t.get(`/products/${e}/related`)};export{o as p};

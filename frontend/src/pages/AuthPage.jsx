@@ -167,13 +167,13 @@ export default function AuthPage() {
             {/* Google */}
             {mode !== "forgot" && (
               <>
-                <div className="flex justify-center mb-6">
+                <div className="flex justify-center mb-6 w-full">
                   <GoogleLogin
                     onSuccess={handleGoogleSuccess}
                     onError={() => toast.error("Google sign-in failed")}
                     theme="filled_black"
                     size="large"
-                    width="400"
+                    width="100%"
                     shape="rectangular"
                     text="continue_with"
                   />

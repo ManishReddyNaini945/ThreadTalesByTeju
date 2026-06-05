@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, ShoppingBag, Star, ChevronLeft, Share2, MessageCircle, Minus, Plus, Check, X, ZoomIn } from "lucide-react";
+import { Heart, ShoppingBag, Star, ChevronLeft, MessageCircle, Minus, Plus, Check, X, ZoomIn } from "lucide-react";
 import { productService } from "../services/productService";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import api from "../services/api";
 import CountdownTimer from "../components/CountdownTimer";
+import ProductShareButton from "../components/ProductShareButton";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -116,6 +117,8 @@ export default function ProductDetailPage() {
           const grams = pkg.endsWith("kg") ? parseFloat(pkg) * 1000 : parseFloat(pkg);
           if (grams) setQuantity(grams);
         }
+        // Scroll to top when product loads
+        window.scrollTo(0, 0);
       } catch {
         toast.error("Product not found");
       } finally {
@@ -282,10 +285,18 @@ export default function ProductDetailPage() {
               </Link>
             )}
 
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-normal leading-tight"
-              style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
-              {(selectedColor && product.color_names?.[selectedColor]) || product.name}
-            </h1>
+            <div className="flex items-start gap-3">
+              <h1 className="flex-1 text-2xl sm:text-3xl lg:text-4xl font-normal leading-tight"
+                style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+                {(selectedColor && product.color_names?.[selectedColor]) || product.name}
+              </h1>
+              <ProductShareButton
+                product={product}
+                className="w-11 h-11 sm:w-12 sm:h-12"
+                style={{ background: "rgba(12,10,9,0.85)", border: "1px solid var(--border)", color: "var(--cream-dim)" }}
+                iconSize={16}
+              />
+            </div>
 
             <StarRating rating={product.avg_rating} count={product.review_count} />
 
@@ -664,13 +675,25 @@ export default function ProductDetailPage() {
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {relatedProducts.map((p) => (
-                <Link key={p.id} to={`/product/${p.slug}`}
+                <div
+                  key={p.id}
                   className="group overflow-hidden transition-all"
-                  style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}>
-                  <div className="aspect-square overflow-hidden">
-                    <img src={p.images?.[0] || Object.values(p.color_images || {}).find(a => a?.length)?.[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  style={{ border: "1px solid var(--border)", background: "var(--bg-card)" }}
+                >
+                  <div className="relative aspect-square overflow-hidden">
+                    <Link to={`/product/${p.slug}`} className="absolute inset-0 block">
+                      <img src={p.images?.[0] || Object.values(p.color_images || {}).find(a => a?.length)?.[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    </Link>
+                    <div className="absolute top-2 right-2 z-10">
+                      <ProductShareButton
+                        product={p}
+                        className="w-8 h-8"
+                        style={{ background: "rgba(12,10,9,0.9)", border: "1px solid var(--border)", color: "var(--cream-dim)" }}
+                        iconSize={13}
+                      />
+                    </div>
                   </div>
-                  <div className="p-2 sm:p-3">
+                  <Link to={`/product/${p.slug}`} className="block p-2 sm:p-3">
                     <p className="text-xs sm:text-sm font-medium line-clamp-2 mb-1 transition-colors group-hover:text-[#c8a45c]"
                       style={{ color: "var(--cream)" }}>{p.name}</p>
                     <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
@@ -679,8 +702,8 @@ export default function ProductDetailPage() {
                         <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{p.compare_price.toLocaleString()}</span>
                       )}
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                </div>
               ))}
             </div>
           </div>

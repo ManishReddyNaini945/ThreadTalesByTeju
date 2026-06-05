@@ -37,7 +37,12 @@ export default function HeroSection() {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  const [featuredProduct, setFeaturedProduct] = useState(FALLBACK);
+  const [featuredProduct, setFeaturedProduct] = useState({
+    name: "Traditional Green & Gold Bridal Bangle Stack Set for Women",
+    price: 649,
+    images: [HERO_IMAGE],
+    slug: null,
+  });
 
   useEffect(() => {
     fetch(`${API_BASE}/products/?search=Traditional+Green+%26+Gold+Bridal+Bangle+Stack+Set&page_size=1`)
@@ -50,13 +55,13 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section ref={ref} className="relative overflow-hidden mt-14 sm:mt-20 lg:mt-24" style={{ background: "var(--bg)" }}>
+    <section ref={ref} className="relative overflow-hidden mt-0 sm:mt-20 lg:mt-24" style={{ background: "var(--bg)" }}>
 
       {/* ── MOBILE HERO (hidden on lg+) ───────────────────────────── */}
       <div className="lg:hidden flex flex-col">
 
         {/* Full-bleed image with text overlay */}
-        <div className="relative" style={{ height: "calc(100vh - 3.5rem)" }}>
+        <div className="relative h-[100svh] sm:h-[calc(100vh-5rem)]">
 
           {/* Hero image */}
           <img

@@ -141,7 +141,19 @@ export default function Navbar() {
     return location.pathname === path;
   };
 
-  const iconColor = "var(--cream-dim)";
+  const isMobile = window.innerWidth < 768;
+  const iconColor = scrolled
+    ? "var(--cream-dim)"
+    : isMobile
+      ? "rgba(247,245,242,0.95)"
+      : "rgba(247,245,242,0.85)";
+  const textColor = scrolled
+    ? "var(--cream-dim)"
+    : isMobile
+      ? "rgba(247,245,242,0.95)"
+      : "rgba(247,245,242,0.8)";
+  const activeTextColor = "var(--gold)";
+  const goldColor = "var(--gold)";
 
   return (
     <>
@@ -149,11 +161,15 @@ export default function Navbar() {
         initial={{ y: -80 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
-          background: "rgba(12,10,9,0.95)",
-          backdropFilter: "blur(20px)",
-          boxShadow: scrolled ? "0 1px 0 rgba(45,40,36,0.6)" : "none",
+          background: scrolled
+            ? "rgba(12,10,9,0.95)"
+            : window.innerWidth < 768
+              ? "transparent"
+              : "rgba(12,10,9,0.35)",
+          backdropFilter: scrolled ? "blur(20px)" : (window.innerWidth < 768 ? "none" : "blur(8px)"),
+          boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.35)" : "none",
         }}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
@@ -162,7 +178,13 @@ export default function Navbar() {
             {/* Logo */}
             <Link to="/" className="flex-shrink-0">
               <div className="w-10 h-10 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-full bg-white overflow-hidden"
-                style={{ boxShadow: "0 0 16px rgba(200,164,92,0.3)" }}>
+                style={{
+                  boxShadow: scrolled
+                    ? "0 0 16px rgba(200,164,92,0.3)"
+                    : isMobile
+                      ? "0 4px 16px rgba(0,0,0,0.5), 0 0 16px rgba(200,164,92,0.3)"
+                      : "0 4px 16px rgba(0,0,0,0.4), 0 0 16px rgba(200,164,92,0.3)"
+                }}>
                 <img
                   src="/web-app-manifest-512x512.png"
                   alt="Thread Tales by Teju"
@@ -183,7 +205,10 @@ export default function Navbar() {
                   >
                     <button
                       className="flex items-center gap-1 text-sm tracking-wide transition-colors duration-200"
-                      style={{ color: activeDropdown === link.label ? "var(--gold)" : "var(--cream-dim)" }}
+                      style={{
+                        color: activeDropdown === link.label ? activeTextColor : textColor,
+                        textShadow: scrolled ? "none" : (isMobile ? "0 2px 6px rgba(0,0,0,0.6)" : "0 2px 4px rgba(0,0,0,0.4)")
+                      }}
                     >
                       {link.label}
                       <ChevronDown
@@ -295,7 +320,10 @@ export default function Navbar() {
                     to={link.path}
                     onClick={(e) => handleHashNav(e, link.path)}
                     className="text-sm tracking-wide transition-colors duration-200"
-                    style={{ color: isActive(link.path) ? "var(--gold)" : "var(--cream-dim)" }}
+                    style={{
+                      color: isActive(link.path) ? activeTextColor : textColor,
+                      textShadow: scrolled ? "none" : (isMobile ? "0 2px 6px rgba(0,0,0,0.6)" : "0 2px 4px rgba(0,0,0,0.4)")
+                    }}
                   >
                     {link.label}
                   </Link>
@@ -308,7 +336,10 @@ export default function Navbar() {
               <button
                 onClick={() => setSearchOpen(true)}
                 className="w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center transition-colors duration-200"
-                style={{ color: iconColor }}
+                style={{
+                  color: iconColor,
+                  filter: scrolled ? "none" : (isMobile ? "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.4))")
+                }}
                 aria-label="Search"
               >
                 <Search size={18} />
@@ -317,7 +348,10 @@ export default function Navbar() {
               <Link
                 to="/wishlist"
                 className="relative w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center"
-                style={{ color: iconColor }}
+                style={{
+                  color: iconColor,
+                  filter: scrolled ? "none" : (isMobile ? "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.4))")
+                }}
                 aria-label="Wishlist"
               >
                 <Heart size={18} />
@@ -332,7 +366,10 @@ export default function Navbar() {
               <Link
                 to="/cart"
                 className="relative w-10 h-10 sm:w-9 sm:h-9 flex items-center justify-center"
-                style={{ color: iconColor }}
+                style={{
+                  color: iconColor,
+                  filter: scrolled ? "none" : (isMobile ? "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.4))")
+                }}
                 aria-label="Cart"
               >
                 <ShoppingCart size={18} />
@@ -347,7 +384,10 @@ export default function Navbar() {
               <Link
                 to={user ? "/profile" : "/auth"}
                 className="hidden sm:flex w-9 h-9 items-center justify-center"
-                style={{ color: iconColor }}
+                style={{
+                  color: iconColor,
+                  filter: scrolled ? "none" : (isMobile ? "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.4))")
+                }}
                 aria-label="Account"
               >
                 <User size={18} />
@@ -355,7 +395,10 @@ export default function Navbar() {
 
               <button
                 className="lg:hidden w-10 h-10 flex items-center justify-center"
-                style={{ color: iconColor }}
+                style={{
+                  color: iconColor,
+                  filter: scrolled ? "none" : (isMobile ? "drop-shadow(0 2px 6px rgba(0,0,0,0.6))" : "drop-shadow(0 2px 4px rgba(0,0,0,0.4))")
+                }}
                 onClick={() => setMenuOpen(!menuOpen)}
                 aria-label="Menu"
               >
