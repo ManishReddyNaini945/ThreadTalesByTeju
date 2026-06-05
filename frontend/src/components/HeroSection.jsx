@@ -22,14 +22,6 @@ const STATS = [
   { num: "100%", label: "Handcrafted" },
 ];
 
-const HERO_IMAGE = "https://res.cloudinary.com/dilo6efzb/image/upload/v1777224155/threadtales/products/thread_bangle_15.jpg";
-
-const FALLBACK = {
-  name: "Traditional Green & Gold Bridal Bangle Stack Set for Women",
-  price: 649,
-  images: [HERO_IMAGE],
-  slug: null,
-};
 
 export default function HeroSection() {
   const ref = useRef(null);
@@ -37,23 +29,37 @@ export default function HeroSection() {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  const [featuredProduct, setFeaturedProduct] = useState({
-    name: "Traditional Green & Gold Bridal Bangle Stack Set for Women",
-    price: 649,
-    images: [HERO_IMAGE],
-    slug: null,
-  });
+  const [featuredProduct, setFeaturedProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`${API_BASE}/products/?search=Traditional+Green+%26+Gold+Bridal+Bangle+Stack+Set&page_size=1`)
+    fetch(
+      `${API_BASE}/products/?search=Traditional+Green+%26+Gold+Bridal+Bangle+Stack+Set&page_size=1`
+    )
       .then((r) => r.json())
       .then((data) => {
         const product = data?.items?.[0];
-        if (product?.images?.length > 0) setFeaturedProduct(product);
-      })
-      .catch(() => {});
-  }, []);
 
+        if (product?.images?.length > 0) {
+          setFeaturedProduct(product);
+        }
+      })
+      .catch((err) => {
+        console.error("Hero product fetch failed:", err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+  if (loading) {
+    return (
+      <section className="relative overflow-hidden mt-0 sm:mt-20 lg:mt-24 h-[100svh] sm:h-[calc(100vh-5rem)] lg:h-[calc(100vh-6rem)]" style={{ background: "var(--bg)" }}>
+        <div className="w-full h-full bg-gradient-to-b from-zinc-800 to-zinc-900 animate-pulse" />
+      </section>
+    );
+  }
+
+  if (!featuredProduct?.images?.length) return null;
   return (
     <section ref={ref} className="relative overflow-hidden mt-0 sm:mt-20 lg:mt-24" style={{ background: "var(--bg)" }}>
 
@@ -64,12 +70,11 @@ export default function HeroSection() {
         <div className="relative h-[100svh] sm:h-[calc(100vh-5rem)]">
 
           {/* Hero image */}
-          <img
-            src={featuredProduct.images?.[0] || HERO_IMAGE}
-            alt={featuredProduct.name}
-            className="absolute inset-0 w-full h-full object-cover object-top"
-          />
-
+        <img
+  src={featuredProduct.images[0]}
+  alt={featuredProduct.name}
+  className="absolute inset-0 w-full h-full object-cover object-top"
+/>
           {/* Bottom-to-top gradient — darkens lower half for text */}
           <div
             className="absolute inset-0"
@@ -244,11 +249,10 @@ export default function HeroSection() {
                 <div className="relative overflow-hidden"
                   style={{ aspectRatio: "3/4", border: "1px solid var(--border)" }}>
                   <img
-                    src={featuredProduct.images?.[0] || HERO_IMAGE}
-                    alt={featuredProduct.name}
-                    className="w-full h-full object-cover"
-                    style={{ transition: "transform 8s ease", transform: "scale(1.05)" }}
-                  />
+  src={featuredProduct.images[0]}
+  alt={featuredProduct.name}
+  className="absolute inset-0 w-full h-full object-cover object-top"
+/>
                   {/* Gradient overlay */}
                   <div className="absolute inset-0"
                     style={{ background: "linear-gradient(to top, rgba(12,10,9,0.75) 0%, transparent 55%)" }} />
