@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, Tags, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Tags, LogOut, Menu, X, ChevronRight, Settings } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: "/admin/products", label: "Products", icon: Package },
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { to: "/admin/categories", label: "Categories", icon: Tags },
+  { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
 const bg = "#0c0a09";

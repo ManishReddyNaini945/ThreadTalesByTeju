@@ -58,6 +58,12 @@ function ProductCard({ product, index }) {
                 Featured
               </span>
             )}
+            {product.compare_price && product.compare_price > product.price && (
+              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-bold"
+                style={{ background: "#16a34a", color: "#fff" }}>
+                {Math.round(((product.compare_price - product.price) / product.compare_price) * 100)}% off
+              </span>
+            )}
           </div>
 
           {/* Share + wishlist icons — top right */}
@@ -91,22 +97,32 @@ function ProductCard({ product, index }) {
               style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
               {product.name}
             </h3>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-base font-medium" style={{ color: "var(--gold)" }}>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-base font-semibold" style={{ color: "var(--gold)" }}>
                 ₹{product.price}
               </span>
-              {product.compare_price && (
+              {product.compare_price && product.compare_price > product.price && (
                 <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>
-                  ₹{product.compare_price}
+                  MRP ₹{product.compare_price}
+                </span>
+              )}
+              {product.compare_price && product.compare_price > product.price && (
+                <span className="text-[11px] font-medium" style={{ color: "#4ade80" }}>
+                  {Math.round(((product.compare_price - product.price) / product.compare_price) * 100)}% off
                 </span>
               )}
             </div>
+            {product.compare_price && product.compare_price > product.price && (
+              <p className="text-[11px] font-medium mb-1" style={{ color: "#4ade80" }}>
+                Save ₹{(product.compare_price - product.price).toLocaleString()}
+              </p>
+            )}
           </Link>
 
           {/* Add to Cart — always visible below price */}
           <button
             onClick={handleAddToCart}
-            className="w-full py-2.5 flex items-center justify-center gap-1.5 text-[11px] tracking-widest uppercase font-medium transition-colors duration-200"
+            className="w-full mt-3 py-2.5 flex items-center justify-center gap-1.5 text-[11px] tracking-widest uppercase font-medium transition-colors duration-200"
             style={{ background: adding ? "var(--gold-dim)" : "var(--gold)", color: "var(--bg)" }}
           >
             <ShoppingBag size={12} />

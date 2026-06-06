@@ -8,9 +8,10 @@ import { useCart } from "../context/CartContext";
 import { orderService } from "../services/orderService";
 import { addressService } from "../services/addressService";
 import { toast } from "sonner";
-import { Tag, CreditCard, Truck, CheckCircle, MapPin, Gift } from "lucide-react";
+import { Tag, CreditCard, Truck, CheckCircle, MapPin, Gift, Sparkles } from "lucide-react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { usePromoSettings } from "../hooks/usePromoSettings";
 
 const addressSchema = z.object({
   full_name: z.string().min(2, "Required"),
@@ -46,6 +47,11 @@ export default function CheckoutPage() {
   const [giftWrap, setGiftWrap] = useState(false);
   const GIFT_WRAP_FEE = 50;
 
+  // Promo: dynamic from admin settings
+  const promo = usePromoSettings();
+  const promoEligible = promo.enabled && cart.subtotal >= promo.threshold;
+  const promoDiscount = promoEligible ? Math.round(cart.subtotal * (promo.discount_pct / 100)) : 0;
+
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
 
@@ -60,7 +66,10 @@ export default function CheckoutPage() {
   }, []);
 
   const shipping = cart.subtotal >= 500 || cart.subtotal === 0 ? 0 : 50;
-  const total = cart.subtotal - couponDiscount + shipping + (giftWrap ? GIFT_WRAP_FEE : 0);
+  // Promo gives free shipping regardless; coupon discount is ignored when promo is active
+  const effectiveDiscount = promoEligible ? promoDiscount : couponDiscount;
+  const effectiveShipping = promoEligible ? 0 : shipping;
+  const total = cart.subtotal - effectiveDiscount + effectiveShipping + (giftWrap ? GIFT_WRAP_FEE : 0);
 
   const validateCoupon = async () => {
     if (!couponCode.trim()) return;
@@ -90,7 +99,7 @@ export default function CheckoutPage() {
       const { data: order } = await orderService.createOrder({
         shipping_address: addressData,
         payment_method: paymentMethod,
-        coupon_code: couponDiscount > 0 ? couponCode : undefined,
+        coupon_code: (!promoEligible && couponDiscount > 0) ? couponCode : undefined,
         notes: giftWrap ? "Gift wrapping requested" : undefined,
       });
 
@@ -269,6 +278,22 @@ export default function CheckoutPage() {
                   Order Summary
                 </h2>
 
+                {/* Promo Banner */}
+                {promoEligible && (
+                  <div className="flex items-center gap-3 p-3 mb-2"
+                    style={{ background: "rgba(200,164,92,0.12)", border: "1px solid var(--gold)" }}>
+                    <Sparkles size={16} style={{ color: "var(--gold)", flexShrink: 0 }} />
+                    <div>
+                      <p className="text-xs font-medium" style={{ color: "var(--gold)" }}>
+                        15% off + Free Shipping applied!
+                      </p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>
+                        You're saving ₹{promoDiscount.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Items */}
                 <div className="space-y-3 max-h-48 overflow-y-auto">
                   {cart.items.map((item) => (
@@ -283,7 +308,8 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
-                {/* Coupon */}
+                {/* Coupon — hidden when promo is already active */}
+                {!promoEligible && (
                 <div>
                   <label className="flex items-center gap-1 text-xs font-medium mb-1.5" style={{ color: "var(--cream-dim)" }}>
                     <Tag size={12} /> Coupon Code
@@ -308,6 +334,7 @@ export default function CheckoutPage() {
                     <p className={`text-xs mt-1 ${couponDiscount > 0 ? "text-green-400" : "text-red-400"}`}>{couponMsg}</p>
                   )}
                 </div>
+                )}
 
                 {/* Totals */}
                 <div className="space-y-2 text-sm pt-4" style={{ borderTop: "1px solid var(--border)" }}>
@@ -315,15 +342,20 @@ export default function CheckoutPage() {
                     <span style={{ color: "var(--cream-dim)" }}>Subtotal</span>
                     <span style={{ color: "var(--cream)" }}>₹{cart.subtotal.toLocaleString()}</span>
                   </div>
-                  {couponDiscount > 0 && (
+                  {promoEligible ? (
+                    <div className="flex justify-between" style={{ color: "#4ade80" }}>
+                      <span>15% Promo Discount</span>
+                      <span>−₹{promoDiscount.toLocaleString()}</span>
+                    </div>
+                  ) : couponDiscount > 0 ? (
                     <div className="flex justify-between text-green-400">
                       <span>Coupon Discount</span><span>-₹{couponDiscount.toLocaleString()}</span>
                     </div>
-                  )}
+                  ) : null}
                   <div className="flex justify-between">
                     <span style={{ color: "var(--cream-dim)" }}>Shipping</span>
-                    <span style={{ color: shipping === 0 ? "#4ade80" : "var(--cream)" }}>
-                      {shipping === 0 ? "FREE" : `₹${shipping}`}
+                    <span style={{ color: effectiveShipping === 0 ? "#4ade80" : "var(--cream)" }}>
+                      {effectiveShipping === 0 ? "FREE" : `₹${effectiveShipping}`}
                     </span>
                   </div>
                   {giftWrap && (

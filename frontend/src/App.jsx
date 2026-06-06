@@ -29,6 +29,7 @@ const TermsPage = lazy(() => import("./pages/TermsPage"));
 const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
 
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 // Admin pages
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -80,6 +81,7 @@ function App() {
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="categories" element={<AdminCategories />} />
+                  <Route path="settings" element={<AdminSettings />} />
                 </Route>
               </Routes>
             </Suspense>

@@ -17,7 +17,7 @@ const MARQUEE_TEXT = ["Thread Bangles", "Bridal Sets", "Invisible Chains", "Hair
 
 export default function CollectionSection() {
   return (
-    <section className="py-16 lg:py-32" style={{ background: "var(--bg)" }}>
+    <section className="pt-8 pb-16 lg:py-32" style={{ background: "var(--bg)" }}>
 
       {/* Marquee strip */}
       <div className="overflow-hidden border-y py-4 mb-20" style={{ borderColor: "var(--border)" }}>

@@ -32,6 +32,31 @@ def calculate_discount(coupon: Coupon, subtotal: float) -> float:
     return min(coupon.discount_value, subtotal)
 
 
+from ..routers.settings import _get as get_setting
+
+# Fallback constants (used if DB not yet seeded)
+_PROMO_THRESHOLD_DEFAULT = 999.0
+_PROMO_DISCOUNT_DEFAULT  = 15.0
+
+
+def _get_promo_config(db: Session):
+    enabled     = get_setting(db, "promo_enabled") == "true"
+    threshold   = float(get_setting(db, "promo_threshold")    or _PROMO_THRESHOLD_DEFAULT)
+    discount_pct = float(get_setting(db, "promo_discount_pct") or _PROMO_DISCOUNT_DEFAULT)
+    return enabled, threshold, discount_pct
+
+
+PROMO_THRESHOLD = 999.0
+PROMO_DISCOUNT_PCT = 15.0
+
+
+def get_promo_discount(subtotal: float) -> float:
+    """Auto-apply 15% off when subtotal >= ₹999. (static fallback for validate-coupon endpoint)"""
+    if subtotal >= PROMO_THRESHOLD:
+        return round(subtotal * (PROMO_DISCOUNT_PCT / 100), 2)
+    return 0.0
+
+
 @router.post("/validate-coupon", response_model=CouponValidateResponse)
 def validate_coupon(payload: CouponValidate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     coupon = db.query(Coupon).filter(
@@ -59,6 +84,22 @@ def validate_coupon(payload: CouponValidate, db: Session = Depends(get_db), curr
     return CouponValidateResponse(valid=True, discount_amount=discount, message="Coupon applied successfully!")
 
 
+@router.get("/promo-status")
+def get_promo_status(order_amount: float, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Return whether the promo is active and how much is saved."""
+    promo_enabled, promo_threshold, promo_discount_pct = _get_promo_config(db)
+    eligible = promo_enabled and order_amount >= promo_threshold
+    promo_discount = round(order_amount * (promo_discount_pct / 100), 2) if eligible else 0.0
+    return {
+        "eligible":      eligible,
+        "enabled":       promo_enabled,
+        "threshold":     promo_threshold,
+        "discount_pct":  promo_discount_pct,
+        "discount_amount": promo_discount,
+        "remaining":     max(0.0, round(promo_threshold - order_amount, 2)),
+    }
+
+
 @router.post("/", response_model=OrderOut, status_code=201)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Get user's cart
@@ -72,19 +113,31 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
     subtotal = sum(item.price_at_add * item.quantity for item in cart.items)
     discount = 0.0
     coupon_code = None
+    promo_applied = False
 
-    # Apply coupon
-    if payload.coupon_code:
+    # Read promo config from DB
+    promo_enabled, promo_threshold, promo_discount_pct = _get_promo_config(db)
+
+    # Auto-apply promo if enabled and subtotal qualifies
+    if promo_enabled and subtotal >= promo_threshold:
+        discount = round(subtotal * (promo_discount_pct / 100), 2)
+        promo_applied = True
+
+    # Apply coupon only if promo is NOT already active
+    if payload.coupon_code and not promo_applied:
         coupon = db.query(Coupon).filter(
             Coupon.code == payload.coupon_code.upper(),
             Coupon.is_active == True
         ).first()
         if coupon:
-            discount = calculate_discount(coupon, subtotal)
-            coupon.used_count += 1
-            coupon_code = coupon.code
+            coupon_discount = calculate_discount(coupon, subtotal)
+            if coupon_discount > 0:
+                discount = coupon_discount
+                coupon.used_count += 1
+                coupon_code = coupon.code
 
-    shipping = 0.0 if subtotal >= 500 else 50.0
+    # Free shipping: always free when subtotal >= 500, or when promo is active
+    shipping = 0.0 if (subtotal >= 500 or promo_applied) else 50.0
     tax = round(subtotal * 0.0, 2)  # No tax for now
     total = round(subtotal - discount + shipping + tax, 2)
 

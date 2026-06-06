@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Heart, User, Search, Menu, X, ChevronDown, ChevronRight } from "lucide-react";
+import { ShoppingCart, Heart, User, Search, Menu, X, ChevronDown, ChevronRight, Tag, Sparkles } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
+import { usePromoSettings } from "../hooks/usePromoSettings";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
@@ -58,6 +59,8 @@ export default function Navbar() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [offerDismissed, setOfferDismissed] = useState(false);
+  const promo = usePromoSettings();
   const navigate = useNavigate();
   const location = useLocation();
   const { cart } = useCart();
@@ -157,21 +160,81 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -80 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
-        style={{
-          background: scrolled
-            ? "rgba(12,10,9,0.95)"
-            : window.innerWidth < 768
-              ? "transparent"
-              : "rgba(12,10,9,0.35)",
-          backdropFilter: scrolled ? "blur(20px)" : (window.innerWidth < 768 ? "none" : "blur(8px)"),
-          boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.35)" : "none",
-        }}
-      >
+      {/* Single fixed container: offer banner + navbar stacked */}
+      <div className="fixed top-0 left-0 right-0 z-50">
+
+        {/* ── OFFER BANNER — desktop only, mobile has it below hero ── */}
+        <AnimatePresence>
+          {!offerDismissed && promo.enabled && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="hidden lg:block"
+              style={{
+                background: "linear-gradient(90deg, var(--bg) 0%, #1c1810 35%, #1c1810 65%, var(--bg) 100%)",
+                borderBottom: "1px solid rgba(200,164,92,0.2)",
+                overflow: "hidden",
+              }}
+            >
+              <div className="relative flex items-center justify-center gap-2.5 px-10 py-[7px]">
+                {/* Left line */}
+                <span className="hidden sm:block absolute left-8 h-px w-14 pointer-events-none"
+                  style={{ background: "linear-gradient(to right, transparent, rgba(200,164,92,0.4))" }} />
+
+                <Sparkles size={9} className="hidden sm:block flex-shrink-0" style={{ color: "var(--gold)", opacity: 0.55 }} />
+                <Tag size={10} className="flex-shrink-0" style={{ color: "var(--gold)" }} />
+
+                <p className="text-[11px] sm:text-xs tracking-wide text-center" style={{ color: "var(--cream-dim)" }}>
+                  <span className="font-bold" style={{ color: "var(--gold)", letterSpacing: "0.06em" }}>
+                    {promo.label}
+                  </span>
+                  <span className="mx-1.5 opacity-25" style={{ color: "var(--cream)" }}>·</span>
+                  <span>orders above </span>
+                  <span className="font-semibold" style={{ color: "var(--cream)" }}>₹{promo.threshold.toLocaleString()}</span>
+                  <span className="hidden sm:inline" style={{ color: "var(--cream-dim)" }}> — auto-applied at checkout</span>
+                  <span className="mx-1.5 opacity-25" style={{ color: "var(--cream)" }}>·</span>
+                  <Link to="/shop"
+                    className="font-semibold transition-opacity hover:opacity-70"
+                    style={{ color: "var(--gold)", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+                    Shop Now →
+                  </Link>
+                </p>
+
+                <Sparkles size={9} className="hidden sm:block flex-shrink-0" style={{ color: "var(--gold)", opacity: 0.55 }} />
+
+                {/* Right line */}
+                <span className="hidden sm:block absolute right-8 h-px w-14 pointer-events-none"
+                  style={{ background: "linear-gradient(to left, transparent, rgba(200,164,92,0.4))" }} />
+
+                {/* Dismiss */}
+                <button onClick={() => setOfferDismissed(true)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center opacity-30 hover:opacity-80 transition-opacity"
+                  aria-label="Dismiss offer">
+                  <X size={11} style={{ color: "var(--cream-dim)" }} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── NAVBAR ── */}
+        <motion.nav
+          initial={{ y: -80 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+          className="transition-all duration-300"
+          style={{
+            background: scrolled
+              ? "rgba(12,10,9,0.95)"
+              : window.innerWidth < 768
+                ? "transparent"
+                : "rgba(12,10,9,0.35)",
+            backdropFilter: scrolled ? "blur(20px)" : (window.innerWidth < 768 ? "none" : "blur(8px)"),
+            boxShadow: scrolled ? "0 2px 12px rgba(0,0,0,0.35)" : "none",
+          }}
+        >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10">
           <div className="flex items-center justify-between h-14 sm:h-20 lg:h-24">
 
@@ -408,6 +471,7 @@ export default function Navbar() {
           </div>
         </div>
       </motion.nav>
+      </div>{/* end fixed container */}
 
       {/* Search overlay */}
       <AnimatePresence>

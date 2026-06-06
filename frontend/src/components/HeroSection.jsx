@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
+import { usePromoSettings } from "../hooks/usePromoSettings";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:8001/api/v1";
 
@@ -28,6 +29,7 @@ export default function HeroSection() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const promo = usePromoSettings();
 
   const [featuredProduct, setFeaturedProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -153,7 +155,45 @@ export default function HeroSection() {
             </motion.div>
           ))}
         </motion.div>
-      </div>
+
+        {/* ── MOBILE OFFER STRIP ── */}
+        {promo.enabled && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          style={{
+            background: "linear-gradient(135deg, #1a1508 0%, #1e1912 50%, #1a1508 100%)",
+            border: "1px solid rgba(200,164,92,0.25)",
+            margin: "12px 16px 0 16px",
+            borderRadius: "2px",
+          }}
+        >
+          <Link to="/shop" className="flex items-center gap-4 px-4 py-4">
+            <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center"
+              style={{ border: "1px solid rgba(200,164,92,0.4)", background: "rgba(200,164,92,0.08)" }}>
+              <Sparkles size={16} style={{ color: "var(--gold)" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] tracking-[0.18em] uppercase mb-0.5" style={{ color: "var(--cream-dim)" }}>
+                Limited Offer
+              </p>
+              <p className="text-sm font-semibold leading-snug" style={{ color: "var(--gold)", fontFamily: "Playfair Display, serif" }}>
+                {promo.label}
+              </p>
+              <p className="text-[11px] mt-0.5" style={{ color: "var(--cream-dim)" }}>
+                On orders above{" "}
+                <span style={{ color: "var(--cream)", fontWeight: 600 }}>₹{promo.threshold.toLocaleString()}</span>
+                <span style={{ color: "rgba(200,164,92,0.5)" }}> · </span>
+                <span>Auto-applied</span>
+              </p>
+            </div>
+            <ArrowRight size={15} style={{ color: "var(--gold)", flexShrink: 0, opacity: 0.7 }} />
+          </Link>
+        </motion.div>
+        )}
+
+      </div>{/* end lg:hidden */}
 
       {/* ── DESKTOP HERO (hidden below lg) ───────────────────────── */}
       <div className="hidden lg:block">

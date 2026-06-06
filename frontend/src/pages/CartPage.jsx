@@ -1,8 +1,9 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, ShoppingCart } from "lucide-react";
+import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart } from "../context/CartContext";
+import { usePromoSettings } from "../hooks/usePromoSettings";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -85,9 +86,16 @@ function CartItemRow({ item }) {
 
 export default function CartPage() {
   const { cart, loading } = useCart();
+  const promo = usePromoSettings();
   const subtotal = cart?.subtotal || 0;
+  const PROMO_THRESHOLD = promo.threshold;
+  const promoEligible = promo.enabled && subtotal >= PROMO_THRESHOLD;
+  const promoDiscount = promoEligible ? Math.round(subtotal * (promo.discount_pct / 100)) : 0;
+  const remaining = Math.max(0, PROMO_THRESHOLD - subtotal);
+  const progress = Math.min(100, (subtotal / PROMO_THRESHOLD) * 100);
   const shipping = subtotal >= 500 || subtotal === 0 ? 0 : 50;
-  const total = subtotal + shipping;
+  const effectiveShipping = promoEligible ? 0 : shipping;
+  const total = subtotal - promoDiscount + effectiveShipping;
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
 
@@ -138,6 +146,58 @@ export default function CartPage() {
 
             {/* Cart items */}
             <div className="lg:col-span-2 flex flex-col gap-3">
+
+              {/* Promo Progress Banner */}
+              {cart.items.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4"
+                  style={{
+                    background: promoEligible ? "rgba(200,164,92,0.12)" : "var(--bg-card)",
+                    border: `1px solid ${promoEligible ? "var(--gold)" : "var(--border)"}`,
+                  }}
+                >
+                  {promoEligible ? (
+                    <div className="flex items-center gap-3">
+                      <Sparkles size={18} style={{ color: "var(--gold)", flexShrink: 0 }} />
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: "var(--gold)" }}>
+                          🎉 15% off + Free Shipping unlocked!
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>
+                          You're saving ₹{promoDiscount.toLocaleString()} on this order
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <Sparkles size={14} style={{ color: "var(--gold)" }} />
+                          <p className="text-xs font-medium" style={{ color: "var(--cream)" }}>
+                            Add <span style={{ color: "var(--gold)" }}>₹{remaining.toLocaleString()}</span> more to unlock
+                            <span style={{ color: "var(--gold)" }}> 15% off + Free Shipping</span>
+                          </p>
+                        </div>
+                        <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
+                          ₹{subtotal.toLocaleString()} / ₹{PROMO_THRESHOLD.toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "var(--border)" }}>
+                        <motion.div
+                          className="h-full rounded-full"
+                          style={{ background: "var(--gold)" }}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress}%` }}
+                          transition={{ duration: 0.6, ease: "easeOut" }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
               <AnimatePresence>
                 {cart.items.map((item) => <CartItemRow key={item.id} item={item} />)}
               </AnimatePresence>
@@ -162,15 +222,21 @@ export default function CartPage() {
                     <span style={{ color: "var(--cream-dim)" }}>Subtotal</span>
                     <span style={{ color: "var(--cream)" }}>₹{subtotal.toLocaleString()}</span>
                   </div>
+                  {promoEligible && (
+                    <div className="flex justify-between" style={{ color: "#4ade80" }}>
+                      <span>15% Promo Discount</span>
+                      <span>−₹{promoDiscount.toLocaleString()}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span style={{ color: "var(--cream-dim)" }}>Shipping</span>
-                    <span style={{ color: shipping === 0 ? "#4ade80" : "var(--cream)" }}>
-                      {shipping === 0 ? "FREE" : `₹${shipping}`}
+                    <span style={{ color: effectiveShipping === 0 ? "#4ade80" : "var(--cream)" }}>
+                      {effectiveShipping === 0 ? "FREE" : `₹${effectiveShipping}`}
                     </span>
                   </div>
-                  {shipping > 0 && (
+                  {!promoEligible && shipping > 0 && (
                     <p className="text-xs" style={{ color: "var(--gold)" }}>
-                      Add ₹{(500 - subtotal).toFixed(0)} more for free shipping
+                      Add ₹{remaining.toFixed(0)} more for 15% off + free shipping
                     </p>
                   )}
                 </div>

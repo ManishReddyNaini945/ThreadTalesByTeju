@@ -9,3 +9,4 @@ from .review import Review
 from .coupon import Coupon
 from .stock_notification import StockNotification
 from .newsletter import NewsletterSubscriber
+from .site_settings import SiteSettings

@@ -60,17 +60,23 @@ function ProductCard({ product }) {
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
           style={{ background: "linear-gradient(to top, rgba(12,10,9,0.5) 0%, transparent 60%)" }} />
 
-        {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
-          {product.is_bestseller && (
-            <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
-              style={{ background: "var(--gold)", color: "var(--bg)" }}>Bestseller</span>
-          )}
-          {product.is_featured && !product.is_bestseller && (
-            <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase"
-              style={{ background: "rgba(12,10,9,0.85)", color: "var(--cream)", border: "1px solid var(--gold)" }}>Featured</span>
-          )}
-        </div>
+          {/* Badges */}
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
+            {product.is_bestseller && (
+              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
+                style={{ background: "var(--gold)", color: "var(--bg)" }}>Bestseller</span>
+            )}
+            {product.is_featured && !product.is_bestseller && (
+              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase"
+                style={{ background: "rgba(12,10,9,0.85)", color: "var(--cream)", border: "1px solid var(--gold)" }}>Featured</span>
+            )}
+            {product.compare_price && product.compare_price > product.price && (
+              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-bold"
+                style={{ background: "#16a34a", color: "#fff" }}>
+                {Math.round(((product.compare_price - product.price) / product.compare_price) * 100)}% off
+              </span>
+            )}
+          </div>
 
         {/* Share + wishlist icons — top right */}
         <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
@@ -115,8 +121,8 @@ function ProductCard({ product }) {
             const startingPrice = sizePriceValues.length > 0 ? Math.min(...sizePriceValues) : null;
             return (
               <>
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium" style={{ color: "var(--gold)" }}>
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <span className="font-semibold text-sm" style={{ color: "var(--gold)" }}>
                     {isSizeBased
                       ? startingPrice
                         ? <>from ₹{startingPrice}</>
@@ -129,10 +135,17 @@ function ProductCard({ product }) {
                         </>
                     }
                   </span>
-                  {product.compare_price && (
-                    <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price}</span>
+                  {product.compare_price && product.compare_price > product.price && (
+                    <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>
+                      MRP ₹{product.compare_price}
+                    </span>
                   )}
                 </div>
+                {product.compare_price && product.compare_price > product.price && (
+                  <p className="text-[11px] font-medium mb-2" style={{ color: "#4ade80" }}>
+                    Save ₹{(product.compare_price - product.price).toLocaleString()}
+                  </p>
+                )}
                 {isSizeBased && sizeList && (
                   <p className="text-[10px] mb-2" style={{ color: "var(--cream-dim)" }}>
                     {sizeList.join(" · ")}
@@ -148,7 +161,7 @@ function ProductCard({ product }) {
                     ₹{(product.price / 1000).toFixed(3)}/gram
                   </p>
                 )}
-                {product.pricing_unit === "piece" && <div className="mb-3" />}
+                {product.pricing_unit === "piece" && !product.compare_price && <div className="mb-3" />}
               </>
             );
           })()}
