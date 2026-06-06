@@ -167,6 +167,27 @@ export default function Footer() {
           <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
             © 2025 Thread Tales by Teju. All rights reserved.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Link to="/privacy-policy" className="text-xs transition-colors duration-200 hover:opacity-80"
+              style={{ color: "var(--cream-dim)" }}>
+              Privacy Policy
+            </Link>
+            <span className="text-xs" style={{ color: "var(--border)" }}>|</span>
+            <Link to="/terms-and-conditions" className="text-xs transition-colors duration-200 hover:opacity-80"
+              style={{ color: "var(--cream-dim)" }}>
+              Terms &amp; Conditions
+            </Link>
+            <span className="text-xs" style={{ color: "var(--border)" }}>|</span>
+            <Link to="/refund-policy" className="text-xs transition-colors duration-200 hover:opacity-80"
+              style={{ color: "var(--cream-dim)" }}>
+              Refund Policy
+            </Link>
+            <span className="text-xs" style={{ color: "var(--border)" }}>|</span>
+            <Link to="/contact" className="text-xs transition-colors duration-200 hover:opacity-80"
+              style={{ color: "var(--cream-dim)" }}>
+              Contact
+            </Link>
+          </div>
           <p className="text-xs flex items-center gap-1.5" style={{ color: "var(--cream-dim)" }}>
             Made with <Heart size={10} fill="var(--pink)" style={{ color: "var(--pink)" }} /> in Hyderabad
           </p>

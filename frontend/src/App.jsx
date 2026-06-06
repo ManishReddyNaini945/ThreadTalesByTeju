@@ -6,6 +6,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import ScrollToTop from "./components/ScrollToTop";
 
 // Eagerly loaded
 import LandingPage from "./pages/LandingPage";
@@ -23,6 +24,10 @@ const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const OrderSuccessPage = lazy(() => import("./pages/OrderSuccessPage"));
 const OrderHistoryPage = lazy(() => import("./pages/OrderHistoryPage"));
 const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const TermsPage = lazy(() => import("./pages/TermsPage"));
+const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
 
 // Admin pages
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
@@ -44,6 +49,7 @@ function App() {
         <CartProvider>
           <WishlistProvider>
             <Toaster position="top-right" richColors closeButton />
+            <ScrollToTop />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public */}
@@ -54,6 +60,10 @@ function App() {
                 <Route path="/product/:slug" element={<ProductDetailPage />} />
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/terms-and-conditions" element={<TermsPage />} />
+                <Route path="/refund-policy" element={<RefundPolicyPage />} />
+                <Route path="/contact" element={<ContactPage />} />
 
                 {/* Protected – customer */}
                 <Route path="/cart" element={<ProtectedRoute><CartPage /></ProtectedRoute>} />
