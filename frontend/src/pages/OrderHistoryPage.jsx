@@ -239,7 +239,7 @@ function OrderDetailView({ orderId }) {
               <div className="space-y-2 pt-4 text-sm" style={{ borderTop: "1px solid var(--border)" }}>
                 <div className="flex justify-between">
                   <span style={{ color: "var(--cream-dim)" }}>Subtotal</span>
-                  <span style={{ color: "var(--cream)" }}>₹{order.subtotal_amount?.toLocaleString()}</span>
+                  <span style={{ color: "var(--cream)" }}>₹{order.subtotal?.toLocaleString()}</span>
                 </div>
                 {order.discount_amount > 0 && (
                   <div className="flex justify-between text-green-400">
@@ -350,9 +350,16 @@ export default function OrderHistoryPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 gap-4">
-            {orders.map((order) => <OrderCard key={order.id} order={order} />)}
-          </div>
+          <>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {orders.map((order) => <OrderCard key={order.id} order={order} />)}
+            </div>
+            <div className="text-center mt-10">
+              <Link to="/shop" className="btn-outline inline-flex items-center gap-2 px-8 py-3.5">
+                Continue Shopping →
+              </Link>
+            </div>
+          </>
         )}
       </main>
       <Footer />
