@@ -14,6 +14,7 @@ app = FastAPI(
     description="Production-ready ecommerce API for Thread Tales by Teju",
     version="1.0.0",
     docs_url="/docs" if settings.DEBUG else None,
+    redirect_slashes=False,
 )
 
 _frontend_origins = [o.strip() for o in settings.FRONTEND_URL.split(",") if o.strip()]
