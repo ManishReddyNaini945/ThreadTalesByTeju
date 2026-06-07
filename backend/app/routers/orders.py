@@ -100,7 +100,8 @@ def get_promo_status(order_amount: float, db: Session = Depends(get_db), current
     }
 
 
-@router.post("/", response_model=OrderOut, status_code=201)
+@router.post("", response_model=OrderOut, status_code=201)
+@router.post("/", response_model=OrderOut, status_code=201, include_in_schema=False)
 def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     # Get user's cart
     cart = db.query(Cart).options(
@@ -183,7 +184,8 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
     return order
 
 
-@router.get("/", response_model=List[OrderOut])
+@router.get("", response_model=List[OrderOut])
+@router.get("/", response_model=List[OrderOut], include_in_schema=False)
 def get_my_orders(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     orders = db.query(Order).options(
         joinedload(Order.items)

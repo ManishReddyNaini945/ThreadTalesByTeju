@@ -31,7 +31,8 @@ def _build_cart_out(cart: Cart) -> CartOut:
     )
 
 
-@router.get("/", response_model=CartOut)
+@router.get("", response_model=CartOut)
+@router.get("/", response_model=CartOut, include_in_schema=False)
 def get_cart(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     cart = db.query(Cart).options(
         joinedload(Cart.items).joinedload(CartItem.product)
@@ -128,7 +129,8 @@ def remove_cart_item(item_id: int, db: Session = Depends(get_db), current_user: 
     return _build_cart_out(cart)
 
 
-@router.delete("/")
+@router.delete("")
+@router.delete("/", include_in_schema=False)
 def clear_cart(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     cart = _get_or_create_cart(current_user, db)
     db.query(CartItem).filter(CartItem.cart_id == cart.id).delete()

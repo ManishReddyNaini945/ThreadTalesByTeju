@@ -10,12 +10,14 @@ from ..schemas.address import AddressIn, AddressOut
 router = APIRouter(prefix="/addresses", tags=["Addresses"])
 
 
-@router.get("/", response_model=List[AddressOut])
+@router.get("", response_model=List[AddressOut])
+@router.get("/", response_model=List[AddressOut], include_in_schema=False)
 def get_addresses(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return db.query(Address).filter(Address.user_id == current_user.id).order_by(Address.is_default.desc(), Address.created_at.desc()).all()
 
 
-@router.post("/", response_model=AddressOut, status_code=201)
+@router.post("", response_model=AddressOut, status_code=201)
+@router.post("/", response_model=AddressOut, status_code=201, include_in_schema=False)
 def create_address(payload: AddressIn, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     if payload.is_default:
         db.query(Address).filter(Address.user_id == current_user.id).update({"is_default": False})
