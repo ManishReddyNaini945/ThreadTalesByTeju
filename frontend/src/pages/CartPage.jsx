@@ -93,8 +93,8 @@ export default function CartPage() {
   const promoDiscount = promoEligible ? Math.round(subtotal * (promo.discount_pct / 100)) : 0;
   const remaining = Math.max(0, PROMO_THRESHOLD - subtotal);
   const progress = Math.min(100, (subtotal / PROMO_THRESHOLD) * 100);
-  const shipping = subtotal >= 500 || subtotal === 0 ? 0 : 50;
-  const effectiveShipping = promoEligible ? 0 : shipping;
+  const SHIPPING_FEE = 50;
+  const effectiveShipping = promoEligible ? 0 : SHIPPING_FEE;
   const total = subtotal - promoDiscount + effectiveShipping;
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
@@ -234,7 +234,7 @@ export default function CartPage() {
                       {effectiveShipping === 0 ? "FREE" : `₹${effectiveShipping}`}
                     </span>
                   </div>
-                  {!promoEligible && shipping > 0 && (
+                  {!promoEligible && (
                     <p className="text-xs" style={{ color: "var(--gold)" }}>
                       Add ₹{remaining.toFixed(0)} more for 15% off + free shipping
                     </p>

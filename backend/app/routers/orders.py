@@ -137,8 +137,8 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
                 coupon.used_count += 1
                 coupon_code = coupon.code
 
-    # Free shipping: always free when subtotal >= 500, or when promo is active
-    shipping = 0.0 if (subtotal >= 500 or promo_applied) else 50.0
+    # Free shipping only when promo is active; otherwise always ₹50
+    shipping = 0.0 if promo_applied else 50.0
     tax = round(subtotal * 0.0, 2)  # No tax for now
     total = round(subtotal - discount + shipping + tax, 2)
 

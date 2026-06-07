@@ -6,7 +6,7 @@ import { toast } from "sonner";
 const CartContext = createContext(null);
 
 export function CartProvider({ children }) {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [cart, setCart] = useState({ items: [], subtotal: 0, item_count: 0 });
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +18,13 @@ export function CartProvider({ children }) {
     } catch { /* silently fail */ }
   }, [user]);
 
-  useEffect(() => { fetchCart(); }, [fetchCart]);
+  // Wait for auth to finish loading before fetching cart
+  // This ensures we fetch cart when user is already logged in on page load
+  useEffect(() => {
+    if (!authLoading) {
+      fetchCart();
+    }
+  }, [fetchCart, authLoading]);
 
   const addToCart = async (productId, quantity = 1, color = null, size = null, customNote = null) => {
     if (!user) { toast.error("Please login to add items to cart"); return false; }

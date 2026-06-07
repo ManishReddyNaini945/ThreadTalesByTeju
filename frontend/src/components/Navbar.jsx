@@ -67,7 +67,7 @@ export default function Navbar() {
   const { wishlistItems } = useWishlist();
   const { user } = useAuth();
 
-  const cartCount = cart?.item_count || 0;
+  const cartCount = cart?.items?.length || 0;
   const wishlistCount = wishlistItems?.length || 0;
 
   useEffect(() => {

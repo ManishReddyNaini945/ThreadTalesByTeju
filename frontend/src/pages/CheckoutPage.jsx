@@ -43,7 +43,6 @@ export default function CheckoutPage() {
   const [couponMsg, setCouponMsg] = useState("");
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [placingOrder, setPlacingOrder] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("razorpay");
   const [giftWrap, setGiftWrap] = useState(false);
   const GIFT_WRAP_FEE = 50;
 
@@ -65,10 +64,10 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, []);
 
-  const shipping = cart.subtotal >= 500 || cart.subtotal === 0 ? 0 : 50;
-  // Promo gives free shipping regardless; coupon discount is ignored when promo is active
+  const SHIPPING_FEE = 50;
+  // Promo gives free shipping; otherwise always ₹50
   const effectiveDiscount = promoEligible ? promoDiscount : couponDiscount;
-  const effectiveShipping = promoEligible ? 0 : shipping;
+  const effectiveShipping = promoEligible ? 0 : SHIPPING_FEE;
   const total = cart.subtotal - effectiveDiscount + effectiveShipping + (giftWrap ? GIFT_WRAP_FEE : 0);
 
   const validateCoupon = async () => {
@@ -98,54 +97,48 @@ export default function CheckoutPage() {
       // Create order
       const { data: order } = await orderService.createOrder({
         shipping_address: addressData,
-        payment_method: paymentMethod,
+        payment_method: "razorpay",
         coupon_code: (!promoEligible && couponDiscount > 0) ? couponCode : undefined,
         notes: giftWrap ? "Gift wrapping requested" : undefined,
       });
 
-      if (paymentMethod === "razorpay") {
-        const loaded = await loadRazorpay();
-        if (!loaded) { toast.error("Razorpay SDK failed to load"); setPlacingOrder(false); return; }
+      const loaded = await loadRazorpay();
+      if (!loaded) { toast.error("Razorpay SDK failed to load"); setPlacingOrder(false); return; }
 
-        const { data: rzpOrder } = await orderService.createRazorpayOrder(order.id);
+      const { data: rzpOrder } = await orderService.createRazorpayOrder(order.id);
 
-        const options = {
-          key: RAZORPAY_KEY,
-          amount: rzpOrder.amount,
-          currency: rzpOrder.currency,
-          name: "Thread Tales by Teju",
-          description: `Order #${order.order_number}`,
-          order_id: rzpOrder.razorpay_order_id,
-          handler: async (response) => {
-            try {
-              await orderService.verifyRazorpayPayment({
-                razorpay_order_id: response.razorpay_order_id,
-                razorpay_payment_id: response.razorpay_payment_id,
-                razorpay_signature: response.razorpay_signature,
-                order_id: order.id,
-              });
-              clearCart();
-              navigate(`/order-success/${order.id}`);
-            } catch {
-              toast.error("Payment verification failed. Contact support.");
-            }
-          },
-          prefill: { name: addressData.full_name, contact: addressData.phone.replace(/\D/g, "").slice(-10) },
-          theme: { color: "#c8a45c" },
-          modal: {
-            ondismiss: () => {
-              toast.error("Payment cancelled");
-              setPlacingOrder(false);
-            }
+      const options = {
+        key: RAZORPAY_KEY,
+        amount: rzpOrder.amount,
+        currency: rzpOrder.currency,
+        name: "Thread Tales by Teju",
+        description: `Order #${order.order_number}`,
+        order_id: rzpOrder.razorpay_order_id,
+        handler: async (response) => {
+          try {
+            await orderService.verifyRazorpayPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              order_id: order.id,
+            });
+            clearCart();
+            navigate(`/order-success/${order.id}`);
+          } catch {
+            toast.error("Payment verification failed. Contact support.");
           }
-        };
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-      } else {
-        // COD
-        clearCart();
-        navigate(`/order-success/${order.id}`);
-      }
+        },
+        prefill: { name: addressData.full_name, contact: addressData.phone.replace(/\D/g, "").slice(-10) },
+        theme: { color: "#c8a45c" },
+        modal: {
+          ondismiss: () => {
+            toast.error("Payment cancelled");
+            setPlacingOrder(false);
+          }
+        }
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
       toast.error(err.response?.data?.detail || "Failed to place order");
       setPlacingOrder(false);
@@ -227,46 +220,34 @@ export default function CheckoutPage() {
                 </div>
               </div>
 
-              {/* Payment Method */}
+              {/* Gift Wrap */}
               <div className="p-4 sm:p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
                 <h2 className="font-normal text-base mb-5 flex items-center gap-2"
                   style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
-                  <CreditCard size={18} style={{ color: "var(--gold)" }} /> Payment Method
+                  <Gift size={18} style={{ color: "var(--gold)" }} /> Add-ons
                 </h2>
-                <div className="space-y-3">
-                  {[
-                    { id: "razorpay", label: "Pay Online (UPI, Cards, Netbanking)", sub: "Powered by Razorpay — secure & instant" },
-                    { id: "cod", label: "Cash on Delivery", sub: "Pay when you receive your order" },
-                  ].map(({ id, label, sub }) => (
-                    <label key={id} className="flex items-center gap-4 p-4 cursor-pointer transition-all"
-                      style={{
-                        border: `1px solid ${paymentMethod === id ? "var(--gold)" : "var(--border)"}`,
-                        background: paymentMethod === id ? "rgba(200,164,92,0.07)" : "transparent",
-                      }}>
-                      <input type="radio" name="payment" value={id} checked={paymentMethod === id}
-                        onChange={() => setPaymentMethod(id)} className="accent-[#c8a45c]" />
-                      <div>
-                        <p className="font-medium text-sm" style={{ color: "var(--cream)" }}>{label}</p>
-                        <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>{sub}</p>
-                      </div>
-                    </label>
-                  ))}
-
-                  {/* Gift Wrap */}
-                  <label className="flex items-center gap-4 p-4 cursor-pointer transition-all"
-                    style={{
-                      border: `1px solid ${giftWrap ? "var(--gold)" : "var(--border)"}`,
-                      background: giftWrap ? "rgba(200,164,92,0.07)" : "transparent",
-                    }}>
-                    <input type="checkbox" checked={giftWrap} onChange={(e) => setGiftWrap(e.target.checked)} className="accent-[#c8a45c]" />
-                    <div className="flex items-center gap-2">
-                      <Gift size={16} style={{ color: "var(--gold)" }} />
-                      <div>
-                        <p className="font-medium text-sm" style={{ color: "var(--cream)" }}>Gift Wrapping (+₹{GIFT_WRAP_FEE})</p>
-                        <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>Beautifully wrapped with a handwritten note</p>
-                      </div>
+                <label className="flex items-center gap-4 p-4 cursor-pointer transition-all"
+                  style={{
+                    border: `1px solid ${giftWrap ? "var(--gold)" : "var(--border)"}`,
+                    background: giftWrap ? "rgba(200,164,92,0.07)" : "transparent",
+                  }}>
+                  <input type="checkbox" checked={giftWrap} onChange={(e) => setGiftWrap(e.target.checked)} className="accent-[#c8a45c]" />
+                  <div className="flex items-center gap-2">
+                    <Gift size={16} style={{ color: "var(--gold)" }} />
+                    <div>
+                      <p className="font-medium text-sm" style={{ color: "var(--cream)" }}>Gift Wrapping (+₹{GIFT_WRAP_FEE})</p>
+                      <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>Beautifully wrapped with a handwritten note</p>
                     </div>
-                  </label>
+                  </div>
+                </label>
+
+                {/* Payment info */}
+                <div className="flex items-center gap-3 mt-4 p-3"
+                  style={{ background: "rgba(200,164,92,0.06)", border: "1px solid rgba(200,164,92,0.2)" }}>
+                  <CreditCard size={14} style={{ color: "var(--gold)", flexShrink: 0 }} />
+                  <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
+                    Payment via <span style={{ color: "var(--cream)" }}>Razorpay</span> — UPI, Cards, Netbanking, Wallets accepted. 100% secure.
+                  </p>
                 </div>
               </div>
             </div>
