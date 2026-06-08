@@ -126,7 +126,7 @@ function OrderDetailView({ orderId }) {
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:32px">
           <div><h1 style="margin:0">Thread Tales by Teju</h1>
             <p style="margin:4px 0;color:#666;font-size:13px">Hyderabad, Telangana, India</p>
-            <p style="margin:2px 0;color:#666;font-size:13px">tejureddy6060@gmail.com | +91 98660 52260</p>
+            <p style="margin:2px 0;color:#666;font-size:13px">threadtalesbyteju946@gmail.com | +91 98660 52260</p>
           </div>
           <div style="text-align:right">
             <p style="font-size:20px;font-weight:bold;margin:0">INVOICE</p>

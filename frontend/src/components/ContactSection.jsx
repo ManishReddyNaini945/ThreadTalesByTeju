@@ -5,7 +5,7 @@ import { Mail, Phone, Instagram, MessageCircle } from "lucide-react";
 const CONTACTS = [
   { icon: MessageCircle, label: "WhatsApp", value: "+91 98660 52260", href: "https://wa.me/919866052260", color: "#25D366" },
   { icon: Instagram, label: "Instagram", value: "@thread_tales_by_teju", href: "https://instagram.com/thread_tales_by_teju", color: "#E1306C" },
-  { icon: Mail, label: "Email", value: "tejureddy6060@gmail.com", href: "mailto:tejureddy6060@gmail.com", color: "var(--gold)" },
+  { icon: Mail, label: "Email", value: "threadtalesbyteju946@gmail.com", href: "mailto:threadtalesbyteju946@gmail.com", color: "var(--gold)" },
   { icon: Phone, label: "Phone", value: "+91 98660 52260", href: "tel:+919866052260", color: "var(--gold)" },
 ];
 

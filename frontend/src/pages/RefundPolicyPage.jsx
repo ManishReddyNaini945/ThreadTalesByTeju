@@ -65,8 +65,8 @@ export default function RefundPolicyPage() {
           <p>
             <strong style={{ color: "var(--cream)" }}>Before Dispatch:</strong> You may cancel your
             order within 24 hours of placing it by contacting us at{" "}
-            <a href="mailto:tejureddy6060@gmail.com" style={{ color: "var(--gold)" }}>
-              tejureddy6060@gmail.com
+            <a href="mailto:threadtalesbyteju946@gmail.com" style={{ color: "var(--gold)" }}>
+              threadtalesbyteju946@gmail.com
             </a>{" "}
             or calling +91 98660 52260. A full refund will be initiated once the cancellation is
             confirmed.
@@ -93,8 +93,8 @@ export default function RefundPolicyPage() {
           </ul>
           <p>
             To initiate a return, contact us with your order number and photos of the product at{" "}
-            <a href="mailto:tejureddy6060@gmail.com" style={{ color: "var(--gold)" }}>
-              tejureddy6060@gmail.com
+            <a href="mailto:threadtalesbyteju946@gmail.com" style={{ color: "var(--gold)" }}>
+              threadtalesbyteju946@gmail.com
             </a>
             .
           </p>
@@ -158,8 +158,8 @@ export default function RefundPolicyPage() {
           <ul className="list-none space-y-1">
             <li>
               Email:{" "}
-              <a href="mailto:tejureddy6060@gmail.com" style={{ color: "var(--gold)" }}>
-                tejureddy6060@gmail.com
+              <a href="mailto:threadtalesbyteju946@gmail.com" style={{ color: "var(--gold)" }}>
+                threadtalesbyteju946@gmail.com
               </a>
             </li>
             <li>Phone: +91 98660 52260</li>

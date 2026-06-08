@@ -147,10 +147,10 @@ export default function PrivacyPolicyPage() {
           <p>
             To exercise these rights, contact us at{" "}
             <a
-              href="mailto:tejureddy6060@gmail.com"
+              href="mailto:threadtalesbyteju946@gmail.com"
               style={{ color: "var(--gold)" }}
             >
-              tejureddy6060@gmail.com
+              threadtalesbyteju946@gmail.com
             </a>
             .
           </p>
@@ -176,8 +176,8 @@ export default function PrivacyPolicyPage() {
           <ul className="list-none space-y-1">
             <li>
               Email:{" "}
-              <a href="mailto:tejureddy6060@gmail.com" style={{ color: "var(--gold)" }}>
-                tejureddy6060@gmail.com
+              <a href="mailto:threadtalesbyteju946@gmail.com" style={{ color: "var(--gold)" }}>
+                threadtalesbyteju946@gmail.com
               </a>
             </li>
             <li>Phone: +91 98660 52260</li>

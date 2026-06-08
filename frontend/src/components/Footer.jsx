@@ -114,7 +114,7 @@ export default function Footer() {
               <li className="flex items-start gap-3">
                 <Mail size={14} className="mt-0.5 flex-shrink-0" style={{ color: "var(--gold)" }} />
                 <span className="text-sm" style={{ color: "var(--cream-dim)" }}>
-                  tejureddy6060@gmail.com
+                  threadtalesbyteju946@gmail.com
                 </span>
               </li>
               <li className="flex items-start gap-3">

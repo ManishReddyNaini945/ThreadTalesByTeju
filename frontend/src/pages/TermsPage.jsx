@@ -68,7 +68,7 @@ export default function TermsPage() {
             and saree pins.
           </p>
           <ul className="list-none space-y-1">
-            <li>Email: tejureddy6060@gmail.com</li>
+            <li>Email: threadtalesbyteju946@gmail.com</li>
             <li>Phone: +91 98660 52260</li>
             <li>Address: Hyderabad, Telangana, India</li>
           </ul>
@@ -132,8 +132,8 @@ export default function TermsPage() {
             You are responsible for maintaining the confidentiality of your account credentials. Any
             activity under your account is your responsibility. Notify us immediately if you suspect
             unauthorised access at{" "}
-            <a href="mailto:tejureddy6060@gmail.com" style={{ color: "var(--gold)" }}>
-              tejureddy6060@gmail.com
+            <a href="mailto:threadtalesbyteju946@gmail.com" style={{ color: "var(--gold)" }}>
+              threadtalesbyteju946@gmail.com
             </a>
             .
           </p>
@@ -182,8 +182,8 @@ export default function TermsPage() {
           <ul className="list-none space-y-1">
             <li>
               Email:{" "}
-              <a href="mailto:tejureddy6060@gmail.com" style={{ color: "var(--gold)" }}>
-                tejureddy6060@gmail.com
+              <a href="mailto:threadtalesbyteju946@gmail.com" style={{ color: "var(--gold)" }}>
+                threadtalesbyteju946@gmail.com
               </a>
             </li>
             <li>Phone: +91 98660 52260</li>
