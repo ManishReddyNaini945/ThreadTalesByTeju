@@ -306,23 +306,56 @@ def update_order_status(
     db: Session = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = db.query(Order).options(joinedload(Order.user)).filter(Order.id == order_id).first()
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     order.status = status
     if tracking_number:
         order.tracking_number = tracking_number
-    db.commit()
-    db.refresh(order)
 
-    if order.user and order.user.email:
+    # Capture values before commit expires the ORM objects
+    user_email = order.user.email if order.user else None
+    order_number = order.order_number
+
+    db.commit()
+
+    if user_email:
         threading.Thread(
             target=send_status_update,
-            args=(order.user.email, order.order_number, status.value, tracking_number),
+            args=(user_email, order_number, status.value, tracking_number),
             daemon=True
         ).start()
 
     return {"message": "Order status updated"}
+
+
+@router.post("/test-email")
+def test_email(admin: User = Depends(get_admin_user)):
+    """Send a test email to diagnose SMTP issues."""
+    import smtplib
+    from ..config import settings
+    try:
+        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            server.starttls()
+            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+            server.sendmail(
+                settings.SMTP_USER,
+                settings.SMTP_USER,
+                f"Subject: Test Email\n\nSMTP is working on Thread Tales by Teju."
+            )
+        return {
+            "success": True,
+            "smtp_user": settings.SMTP_USER,
+            "email_from": settings.EMAIL_FROM,
+            "message": "Test email sent successfully"
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "smtp_user": settings.SMTP_USER,
+            "email_from": settings.EMAIL_FROM,
+            "error": str(e)
+        }
 
 
 # ── Coupons ────────────────────────────────────────────────────────────────────
