@@ -170,9 +170,36 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
-        <div className="w-10 h-10 border-2 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: "var(--gold)", borderTopColor: "transparent" }} />
+      <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 sm:pt-28 pb-28 lg:pb-20">
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-20">
+            {/* Images skeleton */}
+            <div className="space-y-4">
+              <div className="skeleton aspect-square" style={{ border: "1px solid var(--border)" }} />
+              <div className="flex gap-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="skeleton flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20" />
+                ))}
+              </div>
+            </div>
+
+            {/* Info skeleton */}
+            <div className="space-y-4 sm:space-y-6">
+              <div className="skeleton h-3 w-24" />
+              <div className="skeleton h-9 w-3/4" />
+              <div className="skeleton h-4 w-32" />
+              <div className="skeleton h-7 w-28" />
+              <div className="space-y-2">
+                <div className="skeleton h-3 w-full" />
+                <div className="skeleton h-3 w-full" />
+                <div className="skeleton h-3 w-2/3" />
+              </div>
+              <div className="skeleton h-12 w-full" />
+              <div className="skeleton h-12 w-full" />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -210,8 +237,35 @@ export default function ProductDetailPage() {
     ? Math.round(((product.compare_price - displayPrice) / product.compare_price) * 100)
     : null;
 
+  const productSchema = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: images.filter(Boolean),
+    sku: String(product.id),
+    brand: { "@type": "Brand", name: "Thread Tales by Teju" },
+    ...(product.review_count > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: product.avg_rating,
+        reviewCount: product.review_count,
+      },
+    }),
+    offers: {
+      "@type": "Offer",
+      url: window.location.href,
+      priceCurrency: "INR",
+      price: displayPrice,
+      availability: product.stock_quantity > 0
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       <Navbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 sm:pt-28 pb-28 lg:pb-20">
@@ -682,7 +736,7 @@ export default function ProductDetailPage() {
                 >
                   <div className="relative aspect-square overflow-hidden">
                     <Link to={`/product/${p.slug}`} className="absolute inset-0 block">
-                      <img src={p.images?.[0] || Object.values(p.color_images || {}).find(a => a?.length)?.[0]} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img src={p.images?.[0] || Object.values(p.color_images || {}).find(a => a?.length)?.[0]} alt={p.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     </Link>
                     <div className="absolute top-2 right-2 z-10">
                       <ProductShareButton

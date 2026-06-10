@@ -30,6 +30,8 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     EMAIL_FROM: str = "Thread Tales by Teju <noreply@threadtalesbyteju.com>"
 
+    SENTRY_DSN: str = ""
+
     # Legacy SMTP (kept for local dev fallback)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587

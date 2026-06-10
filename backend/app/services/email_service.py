@@ -126,6 +126,35 @@ def send_stock_notification(to: str, product_name: str, product_url: str) -> Non
     _send(to, f"✨ {product_name} is back in stock | Thread Tales by Teju", _base(content))
 
 
+def send_abandoned_cart_email(to: str, items: list, cart_url: str) -> None:
+    items_html = "".join(
+        f'<tr><td style="padding:8px 0;color:#f7f5f2;border-bottom:1px solid #2d2824">{name}</td>'
+        f'<td style="padding:8px 0;text-align:center;color:#a89f94;border-bottom:1px solid #2d2824">×{qty}</td></tr>'
+        for name, qty in items
+    )
+    content = f"""
+      <p style="margin:0 0 4px;font-size:34px;text-align:center">🛍️</p>
+      <h2 style="color:#c8a45c;margin:0 0 4px;text-align:center">You Left Something Behind!</h2>
+      <p style="color:#a89f94;text-align:center">Your handpicked treasures are still waiting in your cart — don't let them slip away.</p>
+      <table style="width:100%;border-collapse:collapse;margin:20px 0">
+        <thead><tr>
+          <th style="text-align:left;padding-bottom:8px;color:#a89f94;font-size:12px;border-bottom:1px solid #2d2824">Item</th>
+          <th style="text-align:center;padding-bottom:8px;color:#a89f94;font-size:12px;border-bottom:1px solid #2d2824">Qty</th>
+        </tr></thead>
+        <tbody>{items_html}</tbody>
+      </table>
+      {_quote("&ldquo;The things we love don't like to be kept waiting.&rdquo;")}
+      <div style="text-align:center">
+        <a href="{cart_url}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
+          Complete Your Order
+        </a>
+      </div>
+      <p style="margin-top:24px;color:#a89f94;font-size:13px;text-align:center">
+        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+      </p>"""
+    _send(to, "🛍️ You left something in your cart | Thread Tales by Teju", _base(content))
+
+
 def send_password_reset(to: str, reset_link: str) -> None:
     content = f"""
       <h2 style="color:#c8a45c;margin-top:0">Reset Your Password</h2>

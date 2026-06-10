@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 from ..database import get_db
 from ..models.user import User, UserRole, AuthProvider
@@ -10,6 +10,7 @@ from ..dependencies import get_current_user
 from ..models.address import Address
 from ..services.email_service import send_password_reset
 from ..config import settings
+from ..limiter import limiter
 from typing import List
 import secrets
 from datetime import datetime, timedelta
@@ -25,7 +26,8 @@ def _build_token(user: User) -> Token:
 
 
 @router.post("/signup", response_model=Token, status_code=status.HTTP_201_CREATED)
-def signup(payload: UserCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/hour")
+def signup(request: Request, payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
@@ -49,7 +51,8 @@ def signup(payload: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-def login(payload: UserLogin, db: Session = Depends(get_db)):
+@limiter.limit("10/minute")
+def login(request: Request, payload: UserLogin, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="No account found with this email. Please register first.")
@@ -138,7 +141,8 @@ def change_password(payload: ChangePassword, db: Session = Depends(get_db), curr
 
 
 @router.post("/forgot-password")
-def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+@limiter.limit("5/hour")
+def forgot_password(request: Request, payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == payload.email).first()
     # Always return success to prevent email enumeration
     if user and user.hashed_password:

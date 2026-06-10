@@ -29,6 +29,7 @@ const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
 const TermsPage = lazy(() => import("./pages/TermsPage"));
 const RefundPolicyPage = lazy(() => import("./pages/RefundPolicyPage"));
 const ContactPage = lazy(() => import("./pages/ContactPage"));
+const NotFoundPage = lazy(() => import("./pages/NotFoundPage"));
 
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 // Admin pages
@@ -85,6 +86,9 @@ function App() {
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
+
+                {/* 404 */}
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </Suspense>
           </WishlistProvider>

@@ -17,3 +17,6 @@ python-dotenv==1.0.1
 google-auth==2.29.0
 google-auth-httplib2==0.2.0
 resend==2.10.0
+slowapi==0.1.9
+apscheduler==3.10.4
+sentry-sdk[fastapi]==2.13.0

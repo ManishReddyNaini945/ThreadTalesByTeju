@@ -79,7 +79,7 @@ export default function OrderSuccessPage() {
                   {order.items?.map((item) => (
                     <div key={item.id} className="flex items-center gap-3">
                       {item.product_image && (
-                        <img src={item.product_image} alt=""
+                        <img src={item.product_image} alt="" loading="lazy"
                           className="w-12 h-12 object-cover flex-shrink-0"
                           style={{ border: "1px solid var(--border)" }} />
                       )}

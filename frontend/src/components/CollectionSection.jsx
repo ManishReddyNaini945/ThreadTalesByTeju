@@ -83,6 +83,7 @@ export default function CollectionSection() {
                   <img
                     src={col.image}
                     alt={col.name}
+                    loading="lazy"
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-108"
                     style={{ transform: "scale(1)", transition: "transform 0.7s ease" }}
                     onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.08)"}

@@ -30,6 +30,7 @@ export default function AboutSection() {
               <img
                 src={`${CDN}/making_image.png`}
                 alt="Handcrafting jewelry"
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0"

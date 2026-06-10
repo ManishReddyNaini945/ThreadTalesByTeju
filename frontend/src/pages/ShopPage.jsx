@@ -51,7 +51,7 @@ function ProductCard({ product }) {
       <div className="relative overflow-hidden" style={{ aspectRatio: "1/1", background: "var(--bg)" }}>
         <Link to={`/product/${product.slug}`} className="absolute inset-0 block">
           {img && (
-            <img src={img} alt={product.name}
+            <img src={img} alt={product.name} loading="lazy"
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
           )}
         </Link>

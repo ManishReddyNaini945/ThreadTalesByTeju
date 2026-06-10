@@ -19,7 +19,7 @@ function WishlistCard({ product }) {
     <motion.div layout initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
       className="group overflow-hidden" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
       <Link to={`/product/${product.slug}`} className="block relative aspect-square overflow-hidden">
-        <img src={img} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img src={img} alt={product.name} loading="lazy" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         {discount && (
           <span className="absolute top-3 left-3 text-xs font-medium px-2 py-1"
             style={{ background: "#4ade80", color: "var(--bg)" }}>{discount}% off</span>

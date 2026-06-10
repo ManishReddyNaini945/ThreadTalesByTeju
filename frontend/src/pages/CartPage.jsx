@@ -18,7 +18,7 @@ function CartItemRow({ item }) {
       {/* Image */}
       <Link to={`/product/${item.product?.slug}`} className="flex-shrink-0">
         <div className="w-20 h-20 sm:w-24 sm:h-24 overflow-hidden" style={{ border: "1px solid var(--border)" }}>
-          {img && <img src={img} alt={item.product?.name} className="w-full h-full object-cover" />}
+          {img && <img src={img} alt={item.product?.name} loading="lazy" className="w-full h-full object-cover" />}
         </div>
       </Link>
 
@@ -101,9 +101,40 @@ export default function CartPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
-        <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-          style={{ borderColor: "var(--gold)", borderTopColor: "transparent" }} />
+      <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+        <Navbar />
+        <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 pt-24 sm:pt-32 pb-20">
+          <div className="skeleton h-8 w-48 mb-10" />
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Cart items skeleton */}
+            <div className="lg:col-span-2 flex flex-col gap-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="flex gap-3 sm:gap-5 p-3 sm:p-5"
+                  style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                  <div className="skeleton flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24" />
+                  <div className="flex-1 min-w-0 space-y-3">
+                    <div className="skeleton h-4 w-3/4" />
+                    <div className="skeleton h-3 w-1/3" />
+                    <div className="skeleton h-6 w-24" />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Summary skeleton */}
+            <div className="p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <div className="skeleton h-5 w-32 mb-6 pb-4" />
+              <div className="space-y-3 mb-6">
+                <div className="skeleton h-4 w-full" />
+                <div className="skeleton h-4 w-full" />
+                <div className="skeleton h-4 w-2/3" />
+              </div>
+              <div className="skeleton h-6 w-full mb-6" />
+              <div className="skeleton h-12 w-full" />
+            </div>
+          </div>
+        </main>
       </div>
     );
   }

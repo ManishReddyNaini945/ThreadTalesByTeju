@@ -40,7 +40,7 @@ function OrderCard({ order }) {
         {order.items?.slice(0, 4).map((item) => (
           <div key={item.id} className="relative">
             {item.product_image && (
-              <img src={item.product_image} alt="" className="w-12 h-12 object-cover" style={{ border: "1px solid var(--border)" }} />
+              <img src={item.product_image} alt="" loading="lazy" className="w-12 h-12 object-cover" style={{ border: "1px solid var(--border)" }} />
             )}
             {item.quantity > 1 && (
               <span className="absolute -top-1 -right-1 text-[10px] w-4 h-4 rounded-full flex items-center justify-center"
@@ -199,7 +199,7 @@ function OrderDetailView({ orderId }) {
               {order.items?.map((item) => (
                 <div key={item.id} className="flex items-center gap-4">
                   {item.product_image && (
-                    <img src={item.product_image} alt="" className="w-16 h-16 object-cover flex-shrink-0"
+                    <img src={item.product_image} alt="" loading="lazy" className="w-16 h-16 object-cover flex-shrink-0"
                       style={{ border: "1px solid var(--border)" }} />
                   )}
                   <div className="flex-1 min-w-0">
