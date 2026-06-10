@@ -331,31 +331,22 @@ def update_order_status(
 
 @router.post("/test-email")
 def test_email(admin: User = Depends(get_admin_user)):
-    """Send a test email to diagnose SMTP issues."""
-    import smtplib
+    """Send a test email to verify Resend is configured correctly."""
+    import resend
     from ..config import settings
+    if not settings.RESEND_API_KEY:
+        return {"success": False, "error": "RESEND_API_KEY is not set in environment variables"}
     try:
-        with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
-            server.starttls()
-            server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-            server.sendmail(
-                settings.SMTP_USER,
-                settings.SMTP_USER,
-                f"Subject: Test Email\n\nSMTP is working on Thread Tales by Teju."
-            )
-        return {
-            "success": True,
-            "smtp_user": settings.SMTP_USER,
-            "email_from": settings.EMAIL_FROM,
-            "message": "Test email sent successfully"
-        }
+        resend.api_key = settings.RESEND_API_KEY
+        resend.Emails.send({
+            "from": settings.EMAIL_FROM,
+            "to": [admin.email],
+            "subject": "Test Email | Thread Tales by Teju",
+            "html": "<p>SMTP is working correctly on Thread Tales by Teju.</p>",
+        })
+        return {"success": True, "sent_to": admin.email, "from": settings.EMAIL_FROM}
     except Exception as e:
-        return {
-            "success": False,
-            "smtp_user": settings.SMTP_USER,
-            "email_from": settings.EMAIL_FROM,
-            "error": str(e)
-        }
+        return {"success": False, "error": str(e), "from": settings.EMAIL_FROM}
 
 
 # ── Coupons ────────────────────────────────────────────────────────────────────

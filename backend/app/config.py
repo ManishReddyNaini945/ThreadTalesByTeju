@@ -27,11 +27,14 @@ class Settings(BaseSettings):
     APP_NAME: str = "Thread Tales by Teju"
     DEBUG: bool = True
 
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "Thread Tales by Teju <noreply@threadtalesbyteju.com>"
+
+    # Legacy SMTP (kept for local dev fallback)
     SMTP_HOST: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""
-    EMAIL_FROM: str = "Thread Tales by Teju <noreply@threadtalesbyteju.com>"
 
     class Config:
         env_file = ".env"
