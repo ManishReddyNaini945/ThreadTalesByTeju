@@ -7,6 +7,7 @@ import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import ScrollToTop from "./components/ScrollToTop";
+import AnalyticsTracker from "./components/AnalyticsTracker";
 
 // Eagerly loaded
 import LandingPage from "./pages/LandingPage";
@@ -51,6 +52,7 @@ function App() {
           <WishlistProvider>
             <Toaster position="top-right" richColors closeButton />
             <ScrollToTop />
+            <AnalyticsTracker />
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 {/* Public */}
