@@ -18,7 +18,7 @@ from ..models.coupon import Coupon
 from ..schemas.product import ProductCreate, ProductUpdate, ProductOut, CategoryCreate, CategoryOut
 from ..schemas.order import OrderOut
 from ..config import settings
-from ..services.email_service import send_status_update, send_stock_notification
+from ..services.email_service import send_status_update, send_stock_notification, send_tracking_update
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -302,7 +302,6 @@ def admin_list_orders(
 def update_order_status(
     order_id: int,
     status: OrderStatus,
-    tracking_number: Optional[str] = None,
     db: Session = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -310,12 +309,11 @@ def update_order_status(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     order.status = status
-    if tracking_number:
-        order.tracking_number = tracking_number
 
     # Capture values before commit expires the ORM objects
     user_email = order.user.email if order.user else None
     order_number = order.order_number
+    tracking_number = order.tracking_number
 
     db.commit()
 
@@ -327,6 +325,33 @@ def update_order_status(
         ).start()
 
     return {"message": "Order status updated"}
+
+
+@router.put("/orders/{order_id}/tracking")
+def update_order_tracking(
+    order_id: int,
+    tracking_number: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    order = db.query(Order).options(joinedload(Order.user)).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    order.tracking_number = tracking_number
+
+    user_email = order.user.email if order.user else None
+    order_number = order.order_number
+
+    db.commit()
+
+    if user_email and tracking_number:
+        threading.Thread(
+            target=send_tracking_update,
+            args=(user_email, order_number, tracking_number),
+            daemon=True
+        ).start()
+
+    return {"message": "Tracking number updated"}
 
 
 @router.post("/test-email")

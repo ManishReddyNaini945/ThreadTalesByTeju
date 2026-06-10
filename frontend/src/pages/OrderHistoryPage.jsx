@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Package, ChevronRight, ChevronLeft, Clock, Truck, CheckCircle, XCircle, MapPin, CreditCard, Ban, Download } from "lucide-react";
+import { Package, ChevronRight, ChevronLeft, Clock, Truck, CheckCircle, XCircle, MapPin, CreditCard, Download } from "lucide-react";
 import { orderService } from "../services/orderService";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -82,29 +82,13 @@ function OrderCard({ order }) {
 function OrderDetailView({ orderId }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     orderService.getOrder(orderId).then(({ data }) => setOrder(data)).catch(() => {}).finally(() => setLoading(false));
   }, [orderId]);
 
-  const handleCancel = async () => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
-    setCancelling(true);
-    try {
-      await orderService.cancelOrder(order.id);
-      setOrder((prev) => ({ ...prev, status: "cancelled" }));
-      toast.success("Order cancelled successfully");
-    } catch (err) {
-      toast.error(err.response?.data?.detail || "Failed to cancel order");
-    } finally {
-      setCancelling(false);
-    }
-  };
-
   const cfg = order ? (statusConfig[order.status] || statusConfig.pending) : null;
   const StatusIcon = cfg?.icon;
-  const canCancel = order && ["pending", "confirmed"].includes(order.status);
 
   const downloadInvoice = () => {
     const addr = order.shipping_address || {};
@@ -204,15 +188,6 @@ function OrderDetailView({ orderId }) {
                   onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--cream-dim)"; }}>
                   <Download size={14} /> Invoice
                 </button>
-                {canCancel && (
-                  <button onClick={handleCancel} disabled={cancelling}
-                    className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-all disabled:opacity-50"
-                    style={{ border: "1px solid #f87171", color: "#f87171" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.1)"}
-                    onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                    <Ban size={14} /> {cancelling ? "Cancelling..." : "Cancel Order"}
-                  </button>
-                )}
               </div>
             </div>
 

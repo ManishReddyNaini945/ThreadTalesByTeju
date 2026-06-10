@@ -49,12 +49,22 @@ export default function AdminOrders() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  const updateStatus = async (orderId, newStatus, tracking) => {
+  const updateStatus = async (orderId, newStatus) => {
     try {
-      await adminService.updateOrderStatus(orderId, newStatus, tracking);
+      await adminService.updateOrderStatus(orderId, newStatus);
       toast.success("Status updated");
       fetchOrders();
     } catch { toast.error("Failed to update"); }
+  };
+
+  const saveTracking = async (orderId) => {
+    const tracking = trackingInputs[orderId];
+    if (!tracking) { toast.error("Enter a tracking number"); return; }
+    try {
+      await adminService.updateOrderTracking(orderId, tracking);
+      toast.success("Tracking number saved & email sent");
+      fetchOrders();
+    } catch { toast.error("Failed to save tracking number"); }
   };
 
   const sendWhatsApp = (order, customMsg) => {
@@ -132,7 +142,7 @@ export default function AdminOrders() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <select value={order.status} onClick={e => e.stopPropagation()}
-                          onChange={e => updateStatus(order.id, e.target.value, trackingInputs[order.id])}
+                          onChange={e => updateStatus(order.id, e.target.value)}
                           className="text-xs px-2 py-1.5 focus:outline-none"
                           style={inputStyle}>
                           {orderStatuses.map(s => <option key={s} value={s}>{STATUS_CFG[s].label}</option>)}
@@ -195,7 +205,7 @@ export default function AdminOrders() {
                                 className="flex-1 focus:outline-none text-xs"
                                 style={inputStyle}
                                 onClick={e => e.stopPropagation()} />
-                              <button onClick={e => { e.stopPropagation(); updateStatus(order.id, order.status, trackingInputs[order.id]); }}
+                              <button onClick={e => { e.stopPropagation(); saveTracking(order.id); }}
                                 className="px-3 py-1.5 text-xs transition-colors"
                                 style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
                                 Save

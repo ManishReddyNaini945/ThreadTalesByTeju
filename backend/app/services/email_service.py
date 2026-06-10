@@ -36,6 +36,13 @@ def _base(content: str) -> str:
     </div>"""
 
 
+def _quote(text: str) -> str:
+    return f"""
+      <div style="background:#1c1916;border-left:3px solid #c8a45c;padding:14px 18px;margin:20px 0">
+        <p style="margin:0;font-style:italic;font-family:Georgia,serif;color:#d4cdc4;font-size:14px;line-height:1.6">{text}</p>
+      </div>"""
+
+
 def send_order_confirmation(to: str, order) -> None:
     items_html = "".join(
         f'<tr><td style="padding:8px 0;color:#f7f5f2;border-bottom:1px solid #2d2824">{i.product_name}</td>'
@@ -45,9 +52,11 @@ def send_order_confirmation(to: str, order) -> None:
     )
     addr = order.shipping_address or {}
     content = f"""
-      <h2 style="color:#f7f5f2;margin-top:0">Order Confirmed!</h2>
-      <p style="color:#a89f94">Thank you for shopping with us. Your order has been placed successfully.</p>
-      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0">
+      <p style="margin:0 0 4px;font-size:34px;text-align:center">🎉</p>
+      <h2 style="color:#f7f5f2;margin:0 0 4px;text-align:center">Yay! Your Order is Confirmed</h2>
+      <p style="color:#a89f94;text-align:center">Thank you for choosing Thread Tales by Teju — every piece is made with love, just for you.</p>
+      {_quote("&ldquo;Every thread tells a story, and yours has just begun.&rdquo;")}
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0;text-align:center">
         <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
         <p style="margin:0;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order.order_number}</p>
       </div>
@@ -70,25 +79,51 @@ def send_order_confirmation(to: str, order) -> None:
         <p style="margin:4px 0 0;color:#a89f94">{addr.get('address_line1','')}{', ' + addr.get('address_line2','') if addr.get('address_line2') else ''}</p>
         <p style="margin:2px 0 0;color:#a89f94">{addr.get('city','')}, {addr.get('state','')} – {addr.get('pincode','')}</p>
       </div>
-      <p style="margin-top:24px;color:#a89f94;font-size:13px">
-        We'll notify you when your order is shipped. For queries, WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+      <p style="margin-top:24px;color:#a89f94;font-size:13px;text-align:center">
+        Sit back and relax — we're already working our magic. 🧵✨<br/>
+        We'll email you the moment it ships!
+      </p>
+      <p style="margin-top:16px;color:#a89f94;font-size:13px;text-align:center">
+        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
       </p>"""
-    _send(to, f"Order Confirmed – #{order.order_number} | Thread Tales by Teju", _base(content))
+    _send(to, f"🎉 Order Confirmed – #{order.order_number} | Thread Tales by Teju", _base(content))
+
+
+def send_tracking_update(to: str, order_number: str, tracking_number: str) -> None:
+    content = f"""
+      <p style="margin:0 0 4px;font-size:34px;text-align:center">📦</p>
+      <h2 style="color:#fb923c;margin:0 0 4px;text-align:center">Your Tracking Number is Here!</h2>
+      <p style="color:#a89f94;text-align:center">Your order is on the move — here's how you can follow along.</p>
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0;text-align:center">
+        <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
+        <p style="margin:0 0 12px;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order_number}</p>
+        <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Tracking Number</p>
+        <p style="margin:0;font-size:20px;color:#f7f5f2;font-family:Georgia,serif">{tracking_number}</p>
+      </div>
+      {_quote("&ldquo;Good things come to those who track their packages.&rdquo; 😉")}
+      <p style="color:#a89f94;font-size:13px;margin-top:24px;text-align:center">
+        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+      </p>"""
+    _send(to, f"📦 Tracking Number Added – #{order_number} | Thread Tales by Teju", _base(content))
 
 
 def send_stock_notification(to: str, product_name: str, product_url: str) -> None:
     content = f"""
-      <h2 style="color:#c8a45c;margin-top:0">Back in Stock!</h2>
-      <p style="color:#a89f94">Good news! An item from your wishlist is back in stock.</p>
-      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0">
+      <p style="margin:0 0 4px;font-size:34px;text-align:center">✨</p>
+      <h2 style="color:#c8a45c;margin:0 0 4px;text-align:center">Back in Stock!</h2>
+      <p style="color:#a89f94;text-align:center">Good news! An item from your wishlist just made its grand return.</p>
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0;text-align:center">
         <p style="margin:0;font-size:16px;color:#f7f5f2;font-family:Georgia,serif">{product_name}</p>
         <p style="margin:8px 0 0;color:#a89f94;font-size:13px">is now available — grab it before it sells out again!</p>
       </div>
-      <a href="{product_url}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
-        Shop Now
-      </a>
-      <p style="margin-top:24px;color:#a89f94;font-size:12px">You received this because you signed up for back-in-stock alerts.</p>"""
-    _send(to, f"{product_name} is back in stock | Thread Tales by Teju", _base(content))
+      {_quote("&ldquo;Some pieces are worth the wait — and worth a second chance.&rdquo;")}
+      <div style="text-align:center">
+        <a href="{product_url}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
+          Shop Now
+        </a>
+      </div>
+      <p style="margin-top:24px;color:#a89f94;font-size:12px;text-align:center">You received this because you signed up for back-in-stock alerts.</p>"""
+    _send(to, f"✨ {product_name} is back in stock | Thread Tales by Teju", _base(content))
 
 
 def send_password_reset(to: str, reset_link: str) -> None:
@@ -105,23 +140,53 @@ def send_password_reset(to: str, reset_link: str) -> None:
 
 def send_status_update(to: str, order_number: str, status: str, tracking_number: str = None) -> None:
     status_messages = {
-        "confirmed": ("Order Confirmed", "Your order has been confirmed and is being prepared.", "#60a5fa"),
-        "processing": ("Order Processing", "Your order is currently being processed and packed.", "#c084fc"),
-        "shipped": ("Order Shipped!", "Great news – your order is on its way!", "#fb923c"),
-        "delivered": ("Order Delivered", "Your order has been delivered. We hope you love it!", "#4ade80"),
-        "cancelled": ("Order Cancelled", "Your order has been cancelled. Refund (if applicable) will be processed within 5-7 days.", "#f87171"),
+        "confirmed": (
+            "✅", "Order Confirmed",
+            "We've got your order! Our artisans are getting started on your handcrafted pieces.",
+            "&ldquo;Good things are worth the wait — and yours are already in the making.&rdquo;",
+            "#60a5fa",
+        ),
+        "processing": (
+            "🧵", "Your Order is Being Crafted",
+            "Your items are being carefully packed and prepped for their journey to you.",
+            "&ldquo;Patience is the secret ingredient behind every beautiful thing.&rdquo;",
+            "#c084fc",
+        ),
+        "shipped": (
+            "📦", "Your Order is on Its Way!",
+            "Pack your excitement — your order has left our hands and is heading straight to yours!",
+            "&ldquo;Good things come to those who track their packages.&rdquo; 😉",
+            "#fb923c",
+        ),
+        "delivered": (
+            "💛", "Delivered With Love",
+            "Your order has arrived! We hope it brings as much joy to you as it brought us making it.",
+            "&ldquo;Happiness is a little box of handcrafted treasures.&rdquo;",
+            "#4ade80",
+        ),
+        "cancelled": (
+            "🤍", "Order Cancelled",
+            "Your order has been cancelled. Refund (if applicable) will be processed within 5-7 days.",
+            "&ldquo;Every ending is just a new beginning waiting to happen — we'll be here when you're ready.&rdquo;",
+            "#f87171",
+        ),
     }
-    title, msg, color = status_messages.get(status, ("Order Update", f"Your order status has been updated to {status}.", "#c8a45c"))
+    emoji, title, msg, quote, color = status_messages.get(
+        status, ("✨", "Order Update", f"Your order status has been updated to {status}.", "", "#c8a45c")
+    )
     tracking_html = f'<p style="margin-top:16px;color:#a89f94">Tracking Number: <strong style="color:#c8a45c">{tracking_number}</strong></p>' if tracking_number else ""
+    quote_html = _quote(quote) if quote else ""
     content = f"""
-      <h2 style="color:{color};margin-top:0">{title}</h2>
-      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:16px 0">
+      <p style="margin:0 0 4px;font-size:34px;text-align:center">{emoji}</p>
+      <h2 style="color:{color};margin:0 0 4px;text-align:center">{title}</h2>
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:16px 0;text-align:center">
         <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
         <p style="margin:0;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order_number}</p>
       </div>
-      <p style="color:#a89f94">{msg}</p>
+      <p style="color:#a89f94;text-align:center">{msg}</p>
       {tracking_html}
-      <p style="color:#a89f94;font-size:13px;margin-top:24px">
+      {quote_html}
+      <p style="color:#a89f94;font-size:13px;margin-top:24px;text-align:center">
         Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
       </p>"""
-    _send(to, f"{title} – #{order_number} | Thread Tales by Teju", _base(content))
+    _send(to, f"{emoji} {title} – #{order_number} | Thread Tales by Teju", _base(content))

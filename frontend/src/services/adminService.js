@@ -20,8 +20,10 @@ export const adminService = {
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
   // Orders
   getOrders: (params) => api.get("/admin/orders", { params }),
-  updateOrderStatus: (id, status, tracking_number) =>
-    api.put(`/admin/orders/${id}/status`, null, { params: { status, tracking_number } }),
+  updateOrderStatus: (id, status) =>
+    api.put(`/admin/orders/${id}/status`, null, { params: { status } }),
+  updateOrderTracking: (id, tracking_number) =>
+    api.put(`/admin/orders/${id}/tracking`, null, { params: { tracking_number } }),
   // Coupons
   getCoupons: () => api.get("/admin/coupons"),
   createCoupon: (data) => api.post("/admin/coupons", data),
