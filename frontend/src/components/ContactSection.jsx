@@ -72,11 +72,11 @@ export default function ContactSection() {
                     style={{ border: "1px solid var(--border)" }}>
                     <Icon size={15} style={{ color }} />
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-[10px] tracking-widest uppercase mb-1" style={{ color: "var(--cream-dim)" }}>
                       {label}
                     </p>
-                    <p className="text-sm" style={{ color: "var(--cream)" }}>{value}</p>
+                    <p className="text-sm break-words" style={{ color: "var(--cream)" }}>{value}</p>
                   </div>
                 </motion.a>
               ))}

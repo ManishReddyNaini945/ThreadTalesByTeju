@@ -101,7 +101,7 @@ function OrderDetailView({ orderId }) {
         <td style="padding:8px 0;border-bottom:1px solid #eee;text-align:right">₹${i.total_price.toLocaleString()}</td>
       </tr>`).join("");
 
-    const html = `<!DOCTYPE html><html><head><title>Invoice #${order.order_number}</title>
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Invoice #${order.order_number}</title>
       <style>body{font-family:Arial,sans-serif;max-width:700px;margin:40px auto;color:#1a1614}
       h1{color:#c8a45c;font-family:Georgia,serif}table{width:100%;border-collapse:collapse}
       th{text-align:left;padding-bottom:8px;border-bottom:2px solid #c8a45c;font-size:13px}
@@ -140,7 +140,7 @@ function OrderDetailView({ orderId }) {
         </button>
       </body></html>`;
 
-    const blob = new Blob([html], { type: "text/html" });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     window.open(url, "_blank");
   };
