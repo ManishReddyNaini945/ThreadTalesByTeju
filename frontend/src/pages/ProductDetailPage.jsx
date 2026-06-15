@@ -709,8 +709,6 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <p className="text-xs text-center" style={{ color: "var(--cream-dim)" }}>Free shipping on orders above ₹500</p>
-
             {/* Description */}
             {product.description && (
               <div className="pt-6" style={{ borderTop: "1px solid var(--border)" }}>
