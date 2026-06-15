@@ -14,6 +14,7 @@ const STATUS_CFG = {
   confirmed:  { color: "#60a5fa", label: "Confirmed" },
   processing: { color: "#c084fc", label: "Processing" },
   shipped:    { color: "#fb923c", label: "Shipped" },
+  out_for_delivery: { color: "#fbbf24", label: "Out for Delivery" },
   delivered:  { color: "#4ade80", label: "Delivered" },
   cancelled:  { color: "#f87171", label: "Cancelled" },
 };

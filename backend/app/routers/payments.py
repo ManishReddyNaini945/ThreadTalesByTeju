@@ -11,6 +11,7 @@ from ..models.order import Order, PaymentStatus, OrderStatus
 from ..schemas.order import RazorpayOrderCreate, RazorpayVerify
 from ..config import settings
 from ..services.email_service import send_order_confirmation, send_status_update
+from ..services import notification_service
 
 router = APIRouter(prefix="/payments", tags=["Payments"])
 
@@ -80,6 +81,10 @@ def verify_razorpay_payment(
     if not hmac.compare_digest(expected, payload.razorpay_signature):
         order.payment_status = PaymentStatus.failed
         db.commit()
+        notification_service.notify_payment_event(
+            order, "failed",
+            customer_email=current_user.email,
+        )
         raise HTTPException(status_code=400, detail="Payment verification failed — signature mismatch")
 
     order.payment_status     = PaymentStatus.paid
@@ -95,6 +100,10 @@ def verify_razorpay_payment(
         args=(current_user.email, order),
         daemon=True,
     ).start()
+    notification_service.notify_payment_event(
+        order, "paid",
+        customer_email=current_user.email,
+    )
 
     return {"success": True, "message": "Payment verified", "order_number": order.order_number}
 
@@ -163,6 +172,10 @@ async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
                     args=(user.email, order),
                     daemon=True,
                 ).start()
+                notification_service.notify_payment_event(
+                    order, "paid",
+                    customer_email=user.email,
+                )
 
     # ── payment.failed ────────────────────────────────────────────────────────
     elif event == "payment.failed":
@@ -176,16 +189,35 @@ async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
             order.payment_status = PaymentStatus.failed
             db.commit()
 
+            user = db.query(User).filter(User.id == order.user_id).first()
+            notification_service.notify_payment_event(
+                order, "failed",
+                customer_email=user.email if user else None,
+            )
+
     # ── order.paid ────────────────────────────────────────────────────────────
     elif event == "order.paid":
         rzp_order_id = data["payload"]["order"]["entity"].get("id")
-        order = db.query(Order).filter(
+        order = db.query(Order).options(joinedload(Order.items)).filter(
             Order.razorpay_order_id == rzp_order_id
         ).first()
         if order and order.payment_status != PaymentStatus.paid:
             order.payment_status = PaymentStatus.paid
             order.status         = OrderStatus.confirmed
             db.commit()
+            db.refresh(order)
+
+            user = db.query(User).filter(User.id == order.user_id).first()
+            if user:
+                threading.Thread(
+                    target=send_order_confirmation,
+                    args=(user.email, order),
+                    daemon=True,
+                ).start()
+            notification_service.notify_payment_event(
+                order, "paid",
+                customer_email=user.email if user else None,
+            )
 
     # ── refund events ─────────────────────────────────────────────────────────
     elif event in ("refund.processed", "refund.created"):
@@ -207,6 +239,10 @@ async def razorpay_webhook(request: Request, db: Session = Depends(get_db)):
                     args=(user.email, order.order_number, "cancelled"),
                     daemon=True,
                 ).start()
+            notification_service.notify_payment_event(
+                order, "refunded",
+                customer_email=user.email if user else None,
+            )
 
     elif event == "refund.failed":
         import logging

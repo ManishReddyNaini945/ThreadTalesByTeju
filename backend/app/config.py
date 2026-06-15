@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     RESEND_API_KEY: str = ""
     EMAIL_FROM: str = "Thread Tales by Teju <noreply@threadtalesbyteju.com>"
 
+    # Admin notifications (for payment alerts)
+    ADMIN_EMAIL: str = ""
+
     SENTRY_DSN: str = ""
 
     # Legacy SMTP (kept for local dev fallback)

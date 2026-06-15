@@ -12,6 +12,7 @@ const statusConfig = {
   confirmed:  { icon: CheckCircle,  color: "#60a5fa", label: "Confirmed" },
   processing: { icon: Package,      color: "#c084fc", label: "Processing" },
   shipped:    { icon: Truck,        color: "#fb923c", label: "Shipped" },
+  out_for_delivery: { icon: Truck,  color: "#fbbf24", label: "Out for Delivery" },
   delivered:  { icon: CheckCircle,  color: "#4ade80", label: "Delivered" },
   cancelled:  { icon: XCircle,      color: "#f87171", label: "Cancelled" },
 };

@@ -10,6 +10,7 @@ class OrderStatus(str, enum.Enum):
     confirmed = "confirmed"
     processing = "processing"
     shipped = "shipped"
+    out_for_delivery = "out_for_delivery"
     delivered = "delivered"
     cancelled = "cancelled"
     refunded = "refunded"
@@ -67,6 +68,7 @@ class Order(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     delivered_at = Column(DateTime(timezone=True), nullable=True)
+    payment_reminder_sent_at = Column(DateTime(timezone=True), nullable=True)
 
     user = relationship("User", back_populates="orders")
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")

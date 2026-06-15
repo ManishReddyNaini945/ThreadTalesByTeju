@@ -179,7 +179,10 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
     db.commit()
     db.refresh(order)
 
-    threading.Thread(target=send_order_confirmation, args=(current_user.email, order), daemon=True).start()
+    # For online payments (Razorpay/Stripe), the confirmation email is sent once
+    # payment succeeds. COD orders have no separate payment step, so send it now.
+    if order.payment_method == PaymentMethod.cod:
+        threading.Thread(target=send_order_confirmation, args=(current_user.email, order), daemon=True).start()
 
     return order
 

@@ -11,6 +11,7 @@ from .limiter import limiter
 from .routers import auth, products, cart, wishlist, orders, payments, reviews, admin, addresses, stock_notify, newsletter
 from .routers import settings as settings_router
 from .services.abandoned_cart import send_abandoned_cart_emails
+from .services.payment_reminders import send_pending_payment_reminders
 from . import models  # noqa: F401 – ensures all models are registered before create_all
 
 if settings.SENTRY_DSN:
@@ -25,6 +26,7 @@ Base.metadata.create_all(bind=engine)
 async def lifespan(app: FastAPI):
     scheduler = BackgroundScheduler()
     scheduler.add_job(send_abandoned_cart_emails, "interval", hours=1)
+    scheduler.add_job(send_pending_payment_reminders, "interval", minutes=15)
     scheduler.start()
     yield
     scheduler.shutdown()

@@ -89,6 +89,69 @@ def send_order_confirmation(to: str, order) -> None:
     _send(to, f"🎉 Order Confirmed – #{order.order_number} | Thread Tales by Teju", _base(content))
 
 
+def send_payment_failed(to: str, order_number: str, amount: float) -> None:
+    content = f"""
+      <p style="margin:0 0 4px;font-size:34px;text-align:center">⚠️</p>
+      <h2 style="color:#f87171;margin:0 0 4px;text-align:center">Payment Unsuccessful</h2>
+      <p style="color:#a89f94;text-align:center">We couldn't complete the payment for your order — no worries, your items are still saved.</p>
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0;text-align:center">
+        <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
+        <p style="margin:0;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order_number}</p>
+        <p style="margin:12px 0 0;color:#f7f5f2">Amount: ₹{amount:,.0f}</p>
+      </div>
+      <p style="color:#a89f94;text-align:center">Please try again or use a different payment method to complete your order.</p>
+      <p style="margin-top:24px;color:#a89f94;font-size:13px;text-align:center">
+        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+      </p>"""
+    _send(to, f"⚠️ Payment Unsuccessful – #{order_number} | Thread Tales by Teju", _base(content))
+
+
+def send_payment_reminder(to: str, order) -> None:
+    orders_url = f"{settings.FRONTEND_URL}/orders"
+    content = f"""
+      <p style="margin:0 0 4px;font-size:34px;text-align:center">⏳</p>
+      <h2 style="color:#c8a45c;margin:0 0 4px;text-align:center">Your Payment is Incomplete</h2>
+      <p style="color:#a89f94;text-align:center">We noticed your payment for this order wasn't completed — your items are still reserved for now.</p>
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0;text-align:center">
+        <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
+        <p style="margin:0;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order.order_number}</p>
+        <p style="margin:12px 0 0;color:#f7f5f2">Amount: ₹{order.total_amount:,.0f}</p>
+      </div>
+      {_quote("&ldquo;Don't let your treasures slip away — finish what you started.&rdquo;")}
+      <div style="text-align:center">
+        <a href="{orders_url}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
+          Complete Payment
+        </a>
+      </div>
+      <p style="margin-top:24px;color:#a89f94;font-size:13px;text-align:center">
+        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+      </p>"""
+    _send(to, f"⏳ Complete Your Payment – #{order.order_number} | Thread Tales by Teju", _base(content))
+
+
+def send_admin_payment_alert(order, event: str) -> None:
+    if not settings.ADMIN_EMAIL:
+        return
+    titles = {
+        "paid": ("✅ Payment Received", "#4ade80"),
+        "failed": ("⚠️ Payment Failed", "#f87171"),
+        "refunded": ("💸 Refund Processed", "#fb923c"),
+        "pending": ("⏳ Payment Still Pending", "#c8a45c"),
+    }
+    title, color = titles.get(event, ("✨ Payment Update", "#c8a45c"))
+    addr = order.shipping_address or {}
+    content = f"""
+      <h2 style="color:{color};margin-top:0">{title}</h2>
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:16px 0">
+        <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
+        <p style="margin:0;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order.order_number}</p>
+        <p style="margin:12px 0 0;color:#f7f5f2">Amount: ₹{order.total_amount:,.0f}</p>
+        <p style="margin:4px 0 0;color:#f7f5f2">Customer: {addr.get('full_name', '')} · {addr.get('phone', '')}</p>
+        <p style="margin:4px 0 0;color:#a89f94">Payment status: {order.payment_status.value}</p>
+      </div>"""
+    _send(settings.ADMIN_EMAIL, f"{title} – #{order.order_number} | Thread Tales by Teju", _base(content))
+
+
 def send_tracking_update(to: str, order_number: str, tracking_number: str) -> None:
     content = f"""
       <p style="margin:0 0 4px;font-size:34px;text-align:center">📦</p>
@@ -186,6 +249,12 @@ def send_status_update(to: str, order_number: str, status: str, tracking_number:
             "Pack your excitement — your order has left our hands and is heading straight to yours!",
             "&ldquo;Good things come to those who track their packages.&rdquo; 😉",
             "#fb923c",
+        ),
+        "out_for_delivery": (
+            "🚚", "Out for Delivery!",
+            "Your order is out for delivery and should arrive with you very soon — keep an eye out!",
+            "&ldquo;The wait is almost over — your treasures are nearly home.&rdquo;",
+            "#fbbf24",
         ),
         "delivered": (
             "💛", "Delivered With Love",

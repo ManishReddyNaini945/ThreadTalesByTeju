@@ -12,7 +12,7 @@ from ..dependencies import get_admin_user
 from ..models.user import User
 from ..models.product import Product, ProductStatus
 from ..models.category import Category
-from ..models.order import Order, OrderItem, OrderStatus
+from ..models.order import Order, OrderItem, OrderStatus, PaymentStatus
 from ..models.stock_notification import StockNotification
 from ..models.coupon import Coupon
 from ..schemas.product import ProductCreate, ProductUpdate, ProductOut, CategoryCreate, CategoryOut
@@ -42,7 +42,7 @@ def slugify(text: str) -> str:
 def dashboard(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
     total_orders = db.query(func.count(Order.id)).scalar()
     total_revenue = db.query(func.sum(Order.total_amount)).filter(
-        Order.status != OrderStatus.cancelled
+        Order.payment_status == PaymentStatus.paid
     ).scalar() or 0.0
     total_products = db.query(func.count(Product.id)).scalar()
     total_users = db.query(func.count(User.id)).scalar()
@@ -61,7 +61,7 @@ def dashboard(db: Session = Depends(get_db), admin: User = Depends(get_admin_use
         func.count(Order.id).label("orders"),
     ).filter(
         Order.created_at >= thirty_days_ago,
-        Order.status != OrderStatus.cancelled,
+        Order.payment_status == PaymentStatus.paid,
     ).group_by(cast(Order.created_at, Date)).order_by("day").all()
 
     # Build complete 30-day series (fill missing days with 0)
@@ -79,6 +79,8 @@ def dashboard(db: Session = Depends(get_db), admin: User = Depends(get_admin_use
         OrderItem.product_name,
         func.sum(OrderItem.quantity).label("qty"),
         func.sum(OrderItem.total_price).label("revenue"),
+    ).join(Order, OrderItem.order_id == Order.id).filter(
+        Order.payment_status == PaymentStatus.paid
     ).group_by(OrderItem.product_name).order_by(desc("qty")).limit(5).all()
 
     return {
