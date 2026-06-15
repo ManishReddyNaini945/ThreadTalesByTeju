@@ -23,9 +23,11 @@ def _send(to: str, subject: str, html: str):
 
 
 def _base(content: str) -> str:
+    logo_url = f"{settings.FRONTEND_URL}/web-app-manifest-512x512.png"
     return f"""
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0c0a09;color:#f7f5f2;border:1px solid #2d2824">
       <div style="padding:32px 24px;border-bottom:1px solid #2d2824;text-align:center">
+        <img src="{logo_url}" alt="Thread Tales by Teju" width="56" height="56" style="display:block;margin:0 auto 12px;border-radius:50%" />
         <h1 style="margin:0;font-size:22px;color:#c8a45c;font-family:Georgia,serif">Thread Tales by Teju</h1>
         <p style="margin:4px 0 0;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#a89f94">Handcrafted with love</p>
       </div>
