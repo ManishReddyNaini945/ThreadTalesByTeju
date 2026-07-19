@@ -253,6 +253,8 @@ def admin_list_categories(db: Session = Depends(get_db), admin: User = Depends(g
 
 @router.post("/categories", response_model=CategoryOut, status_code=201)
 def create_category(payload: CategoryCreate, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    if db.query(Category).filter(func.lower(Category.name) == payload.name.lower()).first():
+        raise HTTPException(status_code=400, detail=f'A category named "{payload.name}" already exists')
     slug = slugify(payload.name)
     base_slug = slug
     counter = 1
@@ -271,7 +273,9 @@ def update_category(cat_id: int, payload: CategoryCreate, db: Session = Depends(
     cat = db.query(Category).filter(Category.id == cat_id).first()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
-    if payload.name != cat.name:
+    if payload.name.lower() != cat.name.lower():
+        if db.query(Category).filter(func.lower(Category.name) == payload.name.lower(), Category.id != cat_id).first():
+            raise HTTPException(status_code=400, detail=f'A category named "{payload.name}" already exists')
         slug = slugify(payload.name)
         base_slug = slug
         counter = 1

@@ -59,8 +59,9 @@ export default function AdminCategories() {
       toast.success("Category created!");
       setName(""); setDescription(""); setParentId("");
       load();
-    } catch { toast.error("Failed to create"); }
-    finally { setSaving(false); }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Failed to create category");
+    } finally { setSaving(false); }
   };
 
   const startEdit = (cat) => {
@@ -83,7 +84,9 @@ export default function AdminCategories() {
       toast.success("Category updated!");
       setEditingId(null);
       load();
-    } catch { toast.error("Failed to update"); }
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Failed to update category");
+    }
   };
 
   const handleDelete = async (id) => {
