@@ -26,6 +26,7 @@ def list_products(
     colors: Optional[str] = Query(None),  # comma-separated
     is_featured: Optional[bool] = Query(None),
     is_bestseller: Optional[bool] = Query(None),
+    is_new_arrival: Optional[bool] = Query(None),
     search: Optional[str] = Query(None),
     sort_by: str = Query("newest"),
     page: int = Query(1, ge=1),
@@ -51,6 +52,8 @@ def list_products(
         query = query.filter(Product.is_featured == is_featured)
     if is_bestseller is not None:
         query = query.filter(Product.is_bestseller == is_bestseller)
+    if is_new_arrival is not None:
+        query = query.filter(Product.is_new_arrival == is_new_arrival)
     if search:
         query = query.filter(
             or_(Product.name.ilike(f"%{search}%"), Product.description.ilike(f"%{search}%"))
@@ -89,6 +92,14 @@ def bestsellers(limit: int = 8, db: Session = Depends(get_db)):
     products = db.query(Product).filter(
         Product.is_bestseller == True, Product.status == ProductStatus.active
     ).limit(limit).all()
+    return products
+
+
+@router.get("/new-arrivals", response_model=List[ProductOut])
+def new_arrivals(limit: int = 8, db: Session = Depends(get_db)):
+    products = db.query(Product).filter(
+        Product.is_new_arrival == True, Product.status == ProductStatus.active
+    ).order_by(desc(Product.created_at)).limit(limit).all()
     return products
 
 

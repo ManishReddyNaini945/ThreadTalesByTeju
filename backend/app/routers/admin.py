@@ -16,6 +16,7 @@ from ..models.order import Order, OrderItem, OrderStatus, PaymentStatus
 from ..models.stock_notification import StockNotification
 from ..models.coupon import Coupon
 from ..schemas.product import ProductCreate, ProductUpdate, ProductOut, CategoryCreate, CategoryOut
+from ..schemas.coupon import CouponCreate, CouponUpdate, CouponOut
 from ..schemas.order import OrderOut
 from ..config import settings
 from ..services.email_service import send_status_update, send_stock_notification, send_tracking_update
@@ -252,7 +253,13 @@ def admin_list_categories(db: Session = Depends(get_db), admin: User = Depends(g
 
 @router.post("/categories", response_model=CategoryOut, status_code=201)
 def create_category(payload: CategoryCreate, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
-    cat = Category(**payload.model_dump())
+    slug = slugify(payload.name)
+    base_slug = slug
+    counter = 1
+    while db.query(Category).filter(Category.slug == slug).first():
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    cat = Category(**payload.model_dump(), slug=slug)
     db.add(cat)
     db.commit()
     db.refresh(cat)
@@ -264,6 +271,14 @@ def update_category(cat_id: int, payload: CategoryCreate, db: Session = Depends(
     cat = db.query(Category).filter(Category.id == cat_id).first()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
+    if payload.name != cat.name:
+        slug = slugify(payload.name)
+        base_slug = slug
+        counter = 1
+        while db.query(Category).filter(Category.slug == slug, Category.id != cat_id).first():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        cat.slug = slug
     cat.name = payload.name
     if payload.description is not None:
         cat.description = payload.description
@@ -377,15 +392,29 @@ def test_email(admin: User = Depends(get_admin_user)):
 
 
 # ── Coupons ────────────────────────────────────────────────────────────────────
-@router.get("/coupons")
+@router.get("/coupons", response_model=List[CouponOut])
 def list_coupons(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
-    return db.query(Coupon).all()
+    return db.query(Coupon).order_by(Coupon.created_at.desc()).all()
 
 
-@router.post("/coupons", status_code=201)
-def create_coupon(payload: dict, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
-    coupon = Coupon(**payload)
+@router.post("/coupons", response_model=CouponOut, status_code=201)
+def create_coupon(payload: CouponCreate, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    if db.query(Coupon).filter(Coupon.code == payload.code).first():
+        raise HTTPException(status_code=400, detail="A coupon with this code already exists")
+    coupon = Coupon(**payload.model_dump())
     db.add(coupon)
+    db.commit()
+    db.refresh(coupon)
+    return coupon
+
+
+@router.put("/coupons/{coupon_id}", response_model=CouponOut)
+def update_coupon(coupon_id: int, payload: CouponUpdate, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+    if not coupon:
+        raise HTTPException(status_code=404, detail="Coupon not found")
+    for field, value in payload.model_dump(exclude_unset=True).items():
+        setattr(coupon, field, value)
     db.commit()
     db.refresh(coupon)
     return coupon

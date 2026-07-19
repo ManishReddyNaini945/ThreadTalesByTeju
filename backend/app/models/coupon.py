@@ -22,5 +22,6 @@ class Coupon(Base):
     usage_limit = Column(Integer, nullable=True)
     used_count = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
+    starts_at = Column(DateTime(timezone=True), nullable=True)
     expires_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

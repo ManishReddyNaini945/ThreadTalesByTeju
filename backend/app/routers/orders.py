@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from ..database import get_db
 from ..dependencies import get_current_user
 from ..models.user import User
@@ -30,6 +30,31 @@ def calculate_discount(coupon: Coupon, subtotal: float) -> float:
             discount = min(discount, coupon.max_discount_amount)
         return round(discount, 2)
     return min(coupon.discount_value, subtotal)
+
+
+def _as_utc_naive(dt):
+    """Normalize a DB datetime (which may or may not carry tzinfo) for comparison with datetime.utcnow()."""
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+def check_coupon_validity(coupon: Coupon, order_amount: float) -> str:
+    """Returns an empty string if the coupon is valid to use, otherwise an error message."""
+    now = datetime.utcnow()
+    if not coupon.is_active:
+        return "Invalid coupon code"
+    if coupon.starts_at and _as_utc_naive(coupon.starts_at) > now:
+        return "Coupon is not active yet"
+    if coupon.expires_at and _as_utc_naive(coupon.expires_at) < now:
+        return "Coupon has expired"
+    if coupon.usage_limit and coupon.used_count >= coupon.usage_limit:
+        return "Coupon usage limit reached"
+    if order_amount < (coupon.min_order_amount or 0):
+        return f"Minimum order amount ₹{coupon.min_order_amount} required"
+    return ""
 
 
 from ..routers.settings import _get as get_setting
@@ -59,26 +84,14 @@ def get_promo_discount(subtotal: float) -> float:
 
 @router.post("/validate-coupon", response_model=CouponValidateResponse)
 def validate_coupon(payload: CouponValidate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    coupon = db.query(Coupon).filter(
-        Coupon.code == payload.code.upper(),
-        Coupon.is_active == True
-    ).first()
+    coupon = db.query(Coupon).filter(Coupon.code == payload.code.upper()).first()
 
     if not coupon:
         return CouponValidateResponse(valid=False, discount_amount=0, message="Invalid coupon code")
 
-    if coupon.expires_at and coupon.expires_at < datetime.utcnow():
-        return CouponValidateResponse(valid=False, discount_amount=0, message="Coupon has expired")
-
-    if coupon.usage_limit and coupon.used_count >= coupon.usage_limit:
-        return CouponValidateResponse(valid=False, discount_amount=0, message="Coupon usage limit reached")
-
-    if payload.order_amount < (coupon.min_order_amount or 0):
-        return CouponValidateResponse(
-            valid=False,
-            discount_amount=0,
-            message=f"Minimum order amount ₹{coupon.min_order_amount} required"
-        )
+    error = check_coupon_validity(coupon, payload.order_amount)
+    if error:
+        return CouponValidateResponse(valid=False, discount_amount=0, message=error)
 
     discount = calculate_discount(coupon, payload.order_amount)
     return CouponValidateResponse(valid=True, discount_amount=discount, message="Coupon applied successfully!")
@@ -126,11 +139,8 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
 
     # Apply coupon only if promo is NOT already active
     if payload.coupon_code and not promo_applied:
-        coupon = db.query(Coupon).filter(
-            Coupon.code == payload.coupon_code.upper(),
-            Coupon.is_active == True
-        ).first()
-        if coupon:
+        coupon = db.query(Coupon).filter(Coupon.code == payload.coupon_code.upper()).first()
+        if coupon and not check_coupon_validity(coupon, subtotal):
             coupon_discount = calculate_discount(coupon, subtotal)
             if coupon_discount > 0:
                 discount = coupon_discount

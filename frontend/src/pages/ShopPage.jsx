@@ -70,6 +70,10 @@ function ProductCard({ product }) {
               <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase"
                 style={{ background: "rgba(12,10,9,0.85)", color: "var(--cream)", border: "1px solid var(--gold)" }}>Featured</span>
             )}
+            {product.is_new_arrival && !product.is_bestseller && (
+              <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
+                style={{ background: "#fff", color: "#0c0a09" }}>New</span>
+            )}
             {product.compare_price && product.compare_price > product.price && (
               <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-bold"
                 style={{ background: "#16a34a", color: "#fff" }}>
@@ -210,6 +214,7 @@ export default function ShopPage() {
   const category = searchParams.get("category") || "";
   const isBestseller = searchParams.get("is_bestseller") === "true";
   const isFeatured = searchParams.get("is_featured") === "true";
+  const isNewArrival = searchParams.get("is_new_arrival") === "true";
 
   const setCategory = (slug) => {
     const p = new URLSearchParams(searchParams);
@@ -235,6 +240,7 @@ export default function ShopPage() {
       ...(maxPrice && { max_price: Number(maxPrice) }),
       ...(isBestseller && { is_bestseller: true }),
       ...(isFeatured && { is_featured: true }),
+      ...(isNewArrival && { is_new_arrival: true }),
     };
     productService.getProducts(params)
       .then(({ data }) => {
@@ -243,7 +249,7 @@ export default function ShopPage() {
       })
       .catch(() => { setProducts([]); setTotal(0); })
       .finally(() => setLoading(false));
-  }, [debouncedSearch, category, minPrice, maxPrice, sortBy, page, isBestseller, isFeatured]);
+  }, [debouncedSearch, category, minPrice, maxPrice, sortBy, page, isBestseller, isFeatured, isNewArrival]);
 
   const clearFilters = () => {
     setSearch(""); setMinPrice(""); setMaxPrice(""); setSortBy("newest"); setPage(1);

@@ -24,7 +24,7 @@ const emptyProduct = {
   name: "", description: "", short_description: "", price: "", compare_price: "",
   category_id: "", stock_quantity: 0, sku: "", images: [], colors: [], color_images: {}, color_prices: {}, color_names: {}, image_types: {}, sizes: [],
   size_prices: {},
-  tags: [], is_featured: false, is_bestseller: false, sale_ends_at: "",
+  tags: [], is_featured: false, is_bestseller: false, is_new_arrival: false, sale_ends_at: "",
   pricing_unit: "piece",
 };
 
@@ -1093,6 +1093,7 @@ function ProductModal({ product, categories, onSave, onClose }) {
           <div className="flex gap-6">
             <Toggle value={form.is_featured} onChange={() => set("is_featured", !form.is_featured)} label="Featured" />
             <Toggle value={form.is_bestseller} onChange={() => set("is_bestseller", !form.is_bestseller)} label="Bestseller" />
+            <Toggle value={form.is_new_arrival} onChange={() => set("is_new_arrival", !form.is_new_arrival)} label="New Arrival" />
           </div>
 
           {/* Actions */}

@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
 import CollectionSection from "../components/CollectionSection";
 import BestSellers from "../components/BestSellers";
+import NewArrivals from "../components/NewArrivals";
 import AboutSection from "../components/AboutSection";
 import ContactSection from "../components/ContactSection";
 import Footer from "../components/Footer";
@@ -18,6 +19,7 @@ export default function LandingPage() {
       <HeroSection />
       <CollectionSection />
       <BestSellers />
+      <NewArrivals />
       <AboutSection />
       <ContactSection />
       <Footer />

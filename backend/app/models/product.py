@@ -37,6 +37,7 @@ class Product(Base):
     pricing_unit = Column(String(20), default="piece", nullable=False, server_default="piece")
     is_featured = Column(Boolean, default=False)
     is_bestseller = Column(Boolean, default=False)
+    is_new_arrival = Column(Boolean, default=False)
     status = Column(Enum(ProductStatus), default=ProductStatus.active)
     avg_rating = Column(Float, default=0.0)
     review_count = Column(Integer, default=0)

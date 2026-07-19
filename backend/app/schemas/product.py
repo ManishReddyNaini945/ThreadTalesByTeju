@@ -6,7 +6,6 @@ from ..models.product import ProductStatus
 
 class CategoryBase(BaseModel):
     name: str
-    slug: str
     description: Optional[str] = None
     image_url: Optional[str] = None
     sort_order: int = 0
@@ -19,6 +18,7 @@ class CategoryCreate(CategoryBase):
 
 class CategoryOut(CategoryBase):
     id: int
+    slug: str
     is_active: bool = True
     created_at: Optional[datetime] = None
     children: List["CategoryOut"] = []
@@ -62,6 +62,7 @@ class ProductBase(BaseModel):
     pricing_unit: str = "piece"
     is_featured: bool = False
     is_bestseller: bool = False
+    is_new_arrival: bool = False
 
 
 class ProductCreate(ProductBase):
@@ -90,6 +91,7 @@ class ProductUpdate(BaseModel):
     pricing_unit: Optional[str] = None
     is_featured: Optional[bool] = None
     is_bestseller: Optional[bool] = None
+    is_new_arrival: Optional[bool] = None
     status: Optional[ProductStatus] = None
     sale_ends_at: Optional[datetime] = None
 
