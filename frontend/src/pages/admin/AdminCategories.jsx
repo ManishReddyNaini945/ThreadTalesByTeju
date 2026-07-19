@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Plus, Trash2, Tags, ChevronRight, Pencil, Check, X } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Plus, Trash2, Tags, ChevronRight, Pencil, Check, X, Image as ImageIcon, Upload } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
 
@@ -27,11 +27,32 @@ export default function AdminCategories() {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [parentId, setParentId] = useState("");
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editName, setEditName] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editParentId, setEditParentId] = useState("");
+  const [editImageUrl, setEditImageUrl] = useState("");
+  const [editUploadingImage, setEditUploadingImage] = useState(false);
+  const fileInputRef = useRef(null);
+  const editFileInputRef = useRef(null);
+
+  const uploadCategoryImage = async (file, setUrl, setUploading) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploading(true);
+    try {
+      const { data } = await adminService.uploadCategoryImage(formData);
+      setUrl(data.url);
+    } catch {
+      toast.error("Image upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const load = async () => {
     try {
@@ -55,9 +76,10 @@ export default function AdminCategories() {
         name: name.trim(),
         description: description.trim(),
         parent_id: parentId ? parseInt(parentId) : null,
+        image_url: imageUrl || null,
       });
       toast.success("Category created!");
-      setName(""); setDescription(""); setParentId("");
+      setName(""); setDescription(""); setParentId(""); setImageUrl("");
       load();
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Failed to create category");
@@ -69,6 +91,7 @@ export default function AdminCategories() {
     setEditName(cat.name);
     setEditDescription(cat.description || "");
     setEditParentId(cat.parent_id ? String(cat.parent_id) : "");
+    setEditImageUrl(cat.image_url || "");
   };
 
   const cancelEdit = () => setEditingId(null);
@@ -80,6 +103,7 @@ export default function AdminCategories() {
         name: editName.trim(),
         description: editDescription.trim(),
         parent_id: editParentId ? parseInt(editParentId) : null,
+        image_url: editImageUrl || null,
       });
       toast.success("Category updated!");
       setEditingId(null);
@@ -147,6 +171,34 @@ export default function AdminCategories() {
             onFocus={e => e.target.style.borderColor = gold}
             onBlur={e => e.target.style.borderColor = border} />
         </div>
+        <div>
+          <label className="block text-xs tracking-widest uppercase mb-1.5" style={{ color: creamDim }}>
+            Image <span style={{ textTransform: "none", letterSpacing: 0 }}>(shown in the homepage Collections section)</span>
+          </label>
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
+            onChange={e => uploadCategoryImage(e.target.files?.[0], setImageUrl, setUploadingImage)} />
+          <div className="flex items-center gap-3">
+            {imageUrl ? (
+              <div className="relative">
+                <img src={imageUrl} alt="Category" className="w-16 h-16 object-cover" style={{ border: `1px solid ${border}` }} />
+                <button type="button" onClick={() => setImageUrl("")}
+                  className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full"
+                  style={{ background: "#f87171", color: "#0c0a09" }}>
+                  <X size={12} />
+                </button>
+              </div>
+            ) : (
+              <div className="w-16 h-16 flex items-center justify-center" style={{ border: `1px dashed ${border}` }}>
+                <ImageIcon size={20} style={{ color: creamDim }} />
+              </div>
+            )}
+            <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploadingImage}
+              className="flex items-center gap-2 px-4 py-2 text-xs tracking-widest uppercase disabled:opacity-50"
+              style={{ border: `1px solid ${border}`, color: creamDim }}>
+              <Upload size={12} /> {uploadingImage ? "Uploading..." : "Upload Image"}
+            </button>
+          </div>
+        </div>
         <button type="submit" disabled={saving || !name.trim()}
           className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium tracking-widest uppercase transition-all disabled:opacity-50"
           style={{ background: gold, color: "#0c0a09" }}>
@@ -167,6 +219,7 @@ export default function AdminCategories() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: `1px solid ${border}` }}>
+                <th className="px-5 py-3" />
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Name</th>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Description</th>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Slug</th>
@@ -185,6 +238,32 @@ export default function AdminCategories() {
                   <tr key={cat.id} style={{ borderBottom: `1px solid ${border}`, background: isEditing ? "#1a1614" : "transparent" }}
                     onMouseEnter={e => { if (!isEditing) e.currentTarget.style.background = "#231f1b"; }}
                     onMouseLeave={e => { if (!isEditing) e.currentTarget.style.background = "transparent"; }}>
+
+                    {/* Image */}
+                    <td className="px-5 py-3.5">
+                      {isEditing ? (
+                        <>
+                          <input ref={editFileInputRef} type="file" accept="image/*" className="hidden"
+                            onChange={e => uploadCategoryImage(e.target.files?.[0], setEditImageUrl, setEditUploadingImage)} />
+                          <button type="button" onClick={() => editFileInputRef.current?.click()} disabled={editUploadingImage}
+                            className="relative block">
+                            {editImageUrl ? (
+                              <img src={editImageUrl} alt="" className="w-9 h-9 object-cover" style={{ border: `1px solid ${border}` }} />
+                            ) : (
+                              <div className="w-9 h-9 flex items-center justify-center" style={{ border: `1px dashed ${border}` }}>
+                                <Upload size={12} style={{ color: creamDim }} />
+                              </div>
+                            )}
+                          </button>
+                        </>
+                      ) : cat.image_url ? (
+                        <img src={cat.image_url} alt="" className="w-9 h-9 object-cover" style={{ border: `1px solid ${border}` }} />
+                      ) : (
+                        <div className="w-9 h-9 flex items-center justify-center" style={{ border: `1px dashed ${border}` }}>
+                          <ImageIcon size={12} style={{ color: creamDim }} />
+                        </div>
+                      )}
+                    </td>
 
                     {/* Name */}
                     <td className="px-5 py-3.5 font-medium" style={{ color: cream }}>

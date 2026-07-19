@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_, asc, desc
+from sqlalchemy import or_, asc, desc, func
 from typing import List, Optional
 from ..database import get_db
 from ..models.product import Product, ProductStatus
 from ..models.category import Category
-from ..schemas.product import ProductOut, ProductFilter, CategoryOut
+from ..schemas.product import ProductOut, ProductFilter, CategoryOut, CategoryWithCount
 import re
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -103,15 +103,23 @@ def new_arrivals(limit: int = 8, db: Session = Depends(get_db)):
     return products
 
 
-@router.get("/categories", response_model=List[CategoryOut])
+@router.get("/categories", response_model=List[CategoryWithCount])
 def list_categories(db: Session = Depends(get_db)):
-    return (
+    categories = (
         db.query(Category)
         .options(joinedload(Category.children))
         .filter(Category.is_active == True, Category.parent_id == None)
         .order_by(Category.sort_order)
         .all()
     )
+    result = []
+    for cat in categories:
+        all_ids = [cat.id] + [child.id for child in cat.children]
+        count = db.query(func.count(Product.id)).filter(
+            Product.category_id.in_(all_ids), Product.status == ProductStatus.active
+        ).scalar()
+        result.append(CategoryWithCount.model_validate(cat, from_attributes=True).model_copy(update={"product_count": count}))
+    return result
 
 
 @router.get("/{slug}", response_model=ProductOut)

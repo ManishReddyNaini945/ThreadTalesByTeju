@@ -30,6 +30,10 @@ class CategoryOut(CategoryBase):
 CategoryOut.model_rebuild()
 
 
+class CategoryWithCount(CategoryOut):
+    product_count: int = 0
+
+
 class ProductBase(BaseModel):
     name: str
     description: Optional[str] = None

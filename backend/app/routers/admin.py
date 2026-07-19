@@ -245,6 +245,16 @@ async def upload_product_image(file: UploadFile = File(...), admin: User = Depen
     return {"url": result["secure_url"], "public_id": result["public_id"]}
 
 
+@router.post("/categories/upload-image")
+async def upload_category_image(file: UploadFile = File(...), admin: User = Depends(get_admin_user)):
+    result = cloudinary.uploader.upload(
+        await file.read(),
+        folder="threadtales/categories",
+        transformation=[{"quality": "auto", "fetch_format": "auto"}]
+    )
+    return {"url": result["secure_url"], "public_id": result["public_id"]}
+
+
 # ── Categories ─────────────────────────────────────────────────────────────────
 @router.get("/categories", response_model=List[CategoryOut])
 def admin_list_categories(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
@@ -286,6 +296,8 @@ def update_category(cat_id: int, payload: CategoryCreate, db: Session = Depends(
     cat.name = payload.name
     if payload.description is not None:
         cat.description = payload.description
+    if payload.image_url is not None:
+        cat.image_url = payload.image_url
     cat.parent_id = payload.parent_id
     db.commit()
     db.refresh(cat)

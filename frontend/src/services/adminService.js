@@ -18,6 +18,9 @@ export const adminService = {
   createCategory: (data) => api.post("/admin/categories", data),
   updateCategory: (id, data) => api.put(`/admin/categories/${id}`, data),
   deleteCategory: (id) => api.delete(`/admin/categories/${id}`),
+  uploadCategoryImage: (formData) => api.post("/admin/categories/upload-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
   // Orders
   getOrders: (params) => api.get("/admin/orders", { params }),
   updateOrderStatus: (id, status) =>
