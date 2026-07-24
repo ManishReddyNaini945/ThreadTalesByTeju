@@ -1,7 +1,12 @@
 import logging
 from ..config import settings
+from .shipping_service import estimated_delivery_range
 
 logger = logging.getLogger(__name__)
+
+# FRONTEND_URL may hold a comma-separated list of allowed origins (used for CORS
+# in main.py) — emails need a single canonical link, so use the first entry.
+FRONTEND_URL = settings.FRONTEND_URL.split(",")[0].strip()
 
 
 def _send(to: str, subject: str, html: str):
@@ -23,7 +28,7 @@ def _send(to: str, subject: str, html: str):
 
 
 def _base(content: str) -> str:
-    logo_url = f"{settings.FRONTEND_URL}/web-app-manifest-512x512.png"
+    logo_url = f"{FRONTEND_URL}/web-app-manifest-512x512.png"
     return f"""
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#0c0a09;color:#f7f5f2;border:1px solid #2d2824">
       <div style="padding:32px 24px;border-bottom:1px solid #2d2824;text-align:center">
@@ -53,6 +58,8 @@ def send_order_confirmation(to: str, order) -> None:
         for i in order.items
     )
     addr = order.shipping_address or {}
+    eta_start, eta_end = estimated_delivery_range(addr.get("state", ""), order.created_at)
+    eta_text = f"{eta_start.strftime('%d %b')} – {eta_end.strftime('%d %b')}"
     content = f"""
       <p style="margin:0 0 4px;font-size:34px;text-align:center">🎉</p>
       <h2 style="color:#f7f5f2;margin:0 0 4px;text-align:center">Yay! Your Order is Confirmed</h2>
@@ -61,6 +68,8 @@ def send_order_confirmation(to: str, order) -> None:
       <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:20px 0;text-align:center">
         <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
         <p style="margin:0;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order.order_number}</p>
+        <p style="margin:12px 0 0;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Estimated Delivery</p>
+        <p style="margin:0;font-size:15px;color:#f7f5f2">{eta_text}</p>
       </div>
       <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
         <thead><tr>
@@ -109,7 +118,7 @@ def send_payment_failed(to: str, order_number: str, amount: float) -> None:
 
 
 def send_payment_reminder(to: str, order) -> None:
-    orders_url = f"{settings.FRONTEND_URL}/orders"
+    orders_url = f"{FRONTEND_URL}/orders"
     content = f"""
       <p style="margin:0 0 4px;font-size:34px;text-align:center">⏳</p>
       <h2 style="color:#c8a45c;margin:0 0 4px;text-align:center">Your Payment is Incomplete</h2>
@@ -131,8 +140,41 @@ def send_payment_reminder(to: str, order) -> None:
     _send(to, f"⏳ Complete Your Payment – #{order.order_number} | Thread Tales by Teju", _base(content))
 
 
+def send_admin_new_order_alert(order) -> None:
+    if not settings.ADMIN_EMAIL:
+        logger.warning(f"[Admin email skipped – ADMIN_EMAIL not set] Order #{order.order_number}")
+        return
+    items_html = "".join(
+        f'<tr><td style="padding:8px 0;color:#f7f5f2;border-bottom:1px solid #2d2824">{i.product_name}</td>'
+        f'<td style="padding:8px 0;text-align:center;color:#a89f94;border-bottom:1px solid #2d2824">×{i.quantity}</td>'
+        f'<td style="padding:8px 0;text-align:right;color:#f7f5f2;border-bottom:1px solid #2d2824">₹{i.total_price:,.0f}</td></tr>'
+        for i in order.items
+    )
+    addr = order.shipping_address or {}
+    content = f"""
+      <h2 style="color:#4ade80;margin-top:0">🛒 New Order Received</h2>
+      <div style="background:#1c1916;border:1px solid #2d2824;padding:16px;margin:16px 0">
+        <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
+        <p style="margin:0;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order.order_number}</p>
+        <p style="margin:12px 0 0;color:#f7f5f2">Amount: ₹{order.total_amount:,.0f}</p>
+        <p style="margin:4px 0 0;color:#f7f5f2">Payment Method: {order.payment_method.value.upper()}</p>
+        <p style="margin:4px 0 0;color:#f7f5f2">Customer: {addr.get('full_name', '')} · {addr.get('phone', '')}</p>
+        <p style="margin:4px 0 0;color:#a89f94">{addr.get('address_line1', '')}{', ' + addr.get('address_line2', '') if addr.get('address_line2') else ''}, {addr.get('city', '')}, {addr.get('state', '')} – {addr.get('pincode', '')}</p>
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr>
+          <th style="text-align:left;padding-bottom:8px;color:#a89f94;font-size:12px;border-bottom:1px solid #2d2824">Item</th>
+          <th style="text-align:center;padding-bottom:8px;color:#a89f94;font-size:12px;border-bottom:1px solid #2d2824">Qty</th>
+          <th style="text-align:right;padding-bottom:8px;color:#a89f94;font-size:12px;border-bottom:1px solid #2d2824">Price</th>
+        </tr></thead>
+        <tbody>{items_html}</tbody>
+      </table>"""
+    _send(settings.ADMIN_EMAIL, f"🛒 New Order – #{order.order_number} | Thread Tales by Teju", _base(content))
+
+
 def send_admin_payment_alert(order, event: str) -> None:
     if not settings.ADMIN_EMAIL:
+        logger.warning(f"[Admin email skipped – ADMIN_EMAIL not set] Order #{order.order_number} | Event: {event}")
         return
     titles = {
         "paid": ("✅ Payment Received", "#4ade80"),
@@ -154,6 +196,11 @@ def send_admin_payment_alert(order, event: str) -> None:
     _send(settings.ADMIN_EMAIL, f"{title} – #{order.order_number} | Thread Tales by Teju", _base(content))
 
 
+# DTDC's tracking page is captcha-gated with no deep-link query param support,
+# so this points to the generic page — the number is shown separately to paste in.
+DTDC_TRACKING_PAGE = "https://www.dtdc.com/track-your-shipment/"
+
+
 def send_tracking_update(to: str, order_number: str, tracking_number: str) -> None:
     content = f"""
       <p style="margin:0 0 4px;font-size:34px;text-align:center">📦</p>
@@ -165,6 +212,12 @@ def send_tracking_update(to: str, order_number: str, tracking_number: str) -> No
         <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Tracking Number</p>
         <p style="margin:0;font-size:20px;color:#f7f5f2;font-family:Georgia,serif">{tracking_number}</p>
       </div>
+      <div style="text-align:center">
+        <a href="{DTDC_TRACKING_PAGE}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
+          Track on DTDC
+        </a>
+      </div>
+      <p style="color:#a89f94;font-size:12px;text-align:center;margin-top:8px">Paste your tracking number above to see live status.</p>
       {_quote("&ldquo;Good things come to those who track their packages.&rdquo; 😉")}
       <p style="color:#a89f94;font-size:13px;margin-top:24px;text-align:center">
         Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
@@ -274,7 +327,10 @@ def send_status_update(to: str, order_number: str, status: str, tracking_number:
     emoji, title, msg, quote, color = status_messages.get(
         status, ("✨", "Order Update", f"Your order status has been updated to {status}.", "", "#c8a45c")
     )
-    tracking_html = f'<p style="margin-top:16px;color:#a89f94">Tracking Number: <strong style="color:#c8a45c">{tracking_number}</strong></p>' if tracking_number else ""
+    tracking_html = (
+        f'<p style="margin-top:16px;color:#a89f94">Tracking Number: <strong style="color:#c8a45c">{tracking_number}</strong></p>'
+        f'<p style="margin-top:4px"><a href="{DTDC_TRACKING_PAGE}" style="color:#c8a45c">Track on DTDC</a></p>'
+    ) if tracking_number else ""
     quote_html = _quote(quote) if quote else ""
     content = f"""
       <p style="margin:0 0 4px;font-size:34px;text-align:center">{emoji}</p>

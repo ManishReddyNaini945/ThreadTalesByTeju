@@ -2,10 +2,72 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Package, ChevronRight, ChevronLeft, Clock, Truck, CheckCircle, XCircle, MapPin, CreditCard, Download } from "lucide-react";
+import { Package, ChevronRight, ChevronLeft, Clock, Truck, CheckCircle, XCircle, MapPin, CreditCard, Download, ExternalLink } from "lucide-react";
 import { orderService } from "../services/orderService";
+import { trackShipment } from "../utils/tracking";
+import { estimatedDeliveryText } from "../utils/shipping";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+
+const PROGRESS_STEPS = [
+  { key: "pending", label: "Placed" },
+  { key: "confirmed", label: "Confirmed" },
+  { key: "processing", label: "Processing" },
+  { key: "shipped", label: "Shipped" },
+  { key: "out_for_delivery", label: "Out for Delivery" },
+  { key: "delivered", label: "Delivered" },
+];
+
+function OrderProgressTracker({ status }) {
+  if (status === "cancelled" || status === "refunded") {
+    return (
+      <div className="flex items-center gap-2 px-4 py-3 text-sm" style={{ background: "#f8717115", border: "1px solid #f8717140", color: "#f87171" }}>
+        <XCircle size={16} /> This order was {status}.
+      </div>
+    );
+  }
+
+  const currentIndex = PROGRESS_STEPS.findIndex((s) => s.key === status);
+
+  return (
+    <div className="flex items-start">
+      {PROGRESS_STEPS.map((step, i) => {
+        const done = i <= currentIndex;
+        const isLast = i === PROGRESS_STEPS.length - 1;
+        return (
+          <div key={step.key} className={`flex items-center ${isLast ? "" : "flex-1"}`}>
+            <div className="flex flex-col items-center" style={{ minWidth: 64 }}>
+              <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0"
+                style={{
+                  background: done ? "var(--gold)" : "transparent",
+                  border: `2px solid ${done ? "var(--gold)" : "var(--border)"}`,
+                }}>
+                {done && <CheckCircle size={13} style={{ color: "var(--bg)" }} />}
+              </div>
+              <p className="text-[10px] mt-1.5 text-center leading-tight" style={{ color: done ? "var(--cream)" : "var(--cream-dim)" }}>
+                {step.label}
+              </p>
+            </div>
+            {!isLast && (
+              <div className="flex-1 h-0.5 -mt-4" style={{ background: i < currentIndex ? "var(--gold)" : "var(--border)" }} />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function TrackShipmentButton({ trackingNumber, className }) {
+  return (
+    <button
+      onClick={(e) => { e.stopPropagation(); e.preventDefault(); trackShipment(trackingNumber, () => toast.success("Tracking number copied")); }}
+      className={`flex items-center gap-1.5 text-xs font-medium transition-colors ${className || ""}`}
+      style={{ color: "var(--gold)" }}>
+      <ExternalLink size={12} /> Track Shipment
+    </button>
+  );
+}
 
 const statusConfig = {
   pending:    { icon: Clock,        color: "#c8a45c", label: "Pending" },
@@ -72,8 +134,11 @@ function OrderCard({ order }) {
       </div>
 
       {order.tracking_number && (
-        <div className="mt-3 pt-3 flex items-center gap-1 text-xs" style={{ borderTop: "1px solid var(--border)", color: "var(--cream-dim)" }}>
-          <Truck size={12} /> Tracking: <span className="font-medium" style={{ color: "var(--cream)" }}>{order.tracking_number}</span>
+        <div className="mt-3 pt-3 flex items-center justify-between gap-2 text-xs" style={{ borderTop: "1px solid var(--border)", color: "var(--cream-dim)" }}>
+          <span className="flex items-center gap-1">
+            <Truck size={12} /> <span className="font-medium" style={{ color: "var(--cream)" }}>{order.tracking_number}</span>
+          </span>
+          <TrackShipmentButton trackingNumber={order.tracking_number} />
         </div>
       )}
     </motion.div>
@@ -192,6 +257,18 @@ function OrderDetailView({ orderId }) {
               </div>
             </div>
 
+            {/* Progress Tracker */}
+            <div className="p-6" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <OrderProgressTracker status={order.status} />
+              {order.status !== "cancelled" && order.status !== "refunded" && order.status !== "delivered" && (
+                <p className="text-xs text-center mt-5" style={{ color: "var(--cream-dim)" }}>
+                  Estimated Delivery: <span style={{ color: "var(--cream)" }}>
+                    {estimatedDeliveryText(order.shipping_address?.state, order.created_at)}
+                  </span>
+                </p>
+              )}
+            </div>
+
             {/* Items */}
             <div className="p-6 space-y-4" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
               <h2 className="font-normal text-base mb-4 pb-3" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)", borderBottom: "1px solid var(--border)" }}>
@@ -270,9 +347,12 @@ function OrderDetailView({ orderId }) {
                   </span>
                 </div>
                 {order.tracking_number && (
-                  <div className="flex justify-between">
+                  <div className="flex justify-between items-center">
                     <span>Tracking Number</span>
-                    <span style={{ color: "var(--cream)" }}>{order.tracking_number}</span>
+                    <span className="flex items-center gap-3">
+                      <span style={{ color: "var(--cream)" }}>{order.tracking_number}</span>
+                      <TrackShipmentButton trackingNumber={order.tracking_number} />
+                    </span>
                   </div>
                 )}
               </div>

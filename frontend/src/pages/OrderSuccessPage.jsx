@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, Package, MessageCircle, Home, ArrowRight } from "lucide-react";
+import { CheckCircle, Package, MessageCircle, Home, ArrowRight, Calendar } from "lucide-react";
 import { orderService } from "../services/orderService";
+import { estimatedDeliveryText } from "../utils/shipping";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -106,6 +107,14 @@ export default function OrderSuccessPage() {
                   <span style={{ color: "var(--cream-dim)" }}>Status:</span>
                   <span className="capitalize font-medium" style={{ color: "var(--cream)" }}>
                     {order.status}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm mt-2">
+                  <Calendar size={14} style={{ color: "var(--gold)" }} />
+                  <span style={{ color: "var(--cream-dim)" }}>Estimated Delivery:</span>
+                  <span className="font-medium" style={{ color: "var(--cream)" }}>
+                    {estimatedDeliveryText(order.shipping_address?.state, order.created_at)}
                   </span>
                 </div>
               </>

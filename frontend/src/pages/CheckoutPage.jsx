@@ -12,6 +12,7 @@ import { Tag, CreditCard, Truck, CheckCircle, MapPin, Gift, Sparkles } from "luc
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { usePromoSettings } from "../hooks/usePromoSettings";
+import { calculateShipping, SHIPPING_OTHER } from "../utils/shipping";
 
 const addressSchema = z.object({
   full_name: z.string().min(2, "Required"),
@@ -54,7 +55,8 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
 
-  const { register, handleSubmit, formState: { errors }, reset } = useForm({ resolver: zodResolver(addressSchema) });
+  const { register, handleSubmit, watch, formState: { errors }, reset } = useForm({ resolver: zodResolver(addressSchema) });
+  const stateValue = watch("state");
 
   useEffect(() => {
     addressService.getAddresses().then(({ data }) => {
@@ -64,10 +66,9 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, []);
 
-  const SHIPPING_FEE = 50;
-  // Promo gives free shipping; otherwise always ₹50
+  // Promo gives free shipping; otherwise ₹70 for Telangana/Andhra Pradesh, ₹80 elsewhere
   const effectiveDiscount = promoEligible ? promoDiscount : couponDiscount;
-  const effectiveShipping = promoEligible ? 0 : SHIPPING_FEE;
+  const effectiveShipping = promoEligible ? 0 : (calculateShipping(stateValue) ?? SHIPPING_OTHER);
   const total = cart.subtotal - effectiveDiscount + effectiveShipping + (giftWrap ? GIFT_WRAP_FEE : 0);
 
   const validateCoupon = async () => {

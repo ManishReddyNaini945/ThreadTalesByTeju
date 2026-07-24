@@ -71,7 +71,10 @@ export default function AdminOrders() {
   const sendWhatsApp = (order, customMsg) => {
     const phone = order.shipping_address?.phone?.replace(/\D/g, "").slice(-10);
     if (!phone) { toast.error("No phone number"); return; }
-    const msg = customMsg || `Hi ${order.shipping_address?.full_name}, your Thread Tales by Teju order *#${order.order_number}* status: *${order.status.toUpperCase()}*. Thank you! 🌸`;
+    const trackingLine = order.tracking_number
+      ? `\nTracking Number: *${order.tracking_number}*\nTrack here: https://www.dtdc.com/track-your-shipment/ (paste the tracking number above)`
+      : "";
+    const msg = customMsg || `Hi ${order.shipping_address?.full_name}, your Thread Tales by Teju order *#${order.order_number}* status: *${order.status.toUpperCase()}*.${trackingLine}\nThank you! 🌸`;
     window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, "_blank");
   };
 
@@ -209,7 +212,7 @@ export default function AdminOrders() {
                               <button onClick={e => { e.stopPropagation(); saveTracking(order.id); }}
                                 className="px-3 py-1.5 text-xs transition-colors"
                                 style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
-                                Save
+                                Send
                               </button>
                             </div>
                             <button onClick={e => { e.stopPropagation(); sendWhatsApp(order); }}

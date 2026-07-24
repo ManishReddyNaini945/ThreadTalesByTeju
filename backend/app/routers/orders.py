@@ -12,7 +12,8 @@ from ..models.cart import Cart, CartItem
 from ..models.product import Product
 from ..models.coupon import Coupon, DiscountType
 from ..schemas.order import OrderCreate, OrderOut, CouponValidate, CouponValidateResponse
-from ..services.email_service import send_order_confirmation
+from ..services.email_service import send_order_confirmation, send_admin_new_order_alert
+from ..services.shipping_service import calculate_shipping
 
 router = APIRouter(prefix="/orders", tags=["Orders"])
 
@@ -147,8 +148,8 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
                 coupon.used_count += 1
                 coupon_code = coupon.code
 
-    # Free shipping only when promo is active; otherwise always ₹50
-    shipping = 0.0 if promo_applied else 50.0
+    # Free shipping only when promo is active; otherwise based on shipping state
+    shipping = 0.0 if promo_applied else calculate_shipping(payload.shipping_address.state)
     tax = round(subtotal * 0.0, 2)  # No tax for now
     total = round(subtotal - discount + shipping + tax, 2)
 
@@ -192,7 +193,10 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
     # For online payments (Razorpay/Stripe), the confirmation email is sent once
     # payment succeeds. COD orders have no separate payment step, so send it now.
     if order.payment_method == PaymentMethod.cod:
-        threading.Thread(target=send_order_confirmation, args=(current_user.email, order), daemon=True).start()
+        def _notify():
+            send_order_confirmation(current_user.email, order)
+            send_admin_new_order_alert(order)
+        threading.Thread(target=_notify, daemon=True).start()
 
     return order
 

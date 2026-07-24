@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, ShoppingCart, Sparkles } from "lucide-react";
 import { useCart } from "../context/CartContext";
 import { usePromoSettings } from "../hooks/usePromoSettings";
+import { SHIPPING_LOCAL } from "../utils/shipping";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -93,8 +94,9 @@ export default function CartPage() {
   const promoDiscount = promoEligible ? Math.round(subtotal * (promo.discount_pct / 100)) : 0;
   const remaining = Math.max(0, PROMO_THRESHOLD - subtotal);
   const progress = Math.min(100, (subtotal / PROMO_THRESHOLD) * 100);
-  const SHIPPING_FEE = 50;
-  const effectiveShipping = promoEligible ? 0 : SHIPPING_FEE;
+  // Shipping is address-dependent (₹70 Telangana/Andhra Pradesh, ₹80 elsewhere) — show the lower
+  // estimate here to avoid discouraging checkout; exact amount is resolved on the checkout page.
+  const effectiveShipping = promoEligible ? 0 : SHIPPING_LOCAL;
   const total = subtotal - promoDiscount + effectiveShipping;
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
@@ -260,11 +262,16 @@ export default function CartPage() {
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span style={{ color: "var(--cream-dim)" }}>Shipping</span>
+                    <span style={{ color: "var(--cream-dim)" }}>Shipping (est.)</span>
                     <span style={{ color: effectiveShipping === 0 ? "#4ade80" : "var(--cream)" }}>
                       {effectiveShipping === 0 ? "FREE" : `₹${effectiveShipping}`}
                     </span>
                   </div>
+                  {!promoEligible && (
+                    <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
+                      Starting at ₹70 — exact shipping confirmed at checkout
+                    </p>
+                  )}
                   {!promoEligible && (
                     <p className="text-xs" style={{ color: "var(--gold)" }}>
                       Add ₹{remaining.toFixed(0)} more for 15% off + free shipping
