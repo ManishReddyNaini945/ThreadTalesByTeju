@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Plus, Trash2, Ticket, Power } from "lucide-react";
+import { Plus, Trash2, Ticket, Power, Pencil, X } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
 
@@ -28,11 +28,17 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 }
 
+function toDateInput(d) {
+  if (!d) return "";
+  return new Date(d).toISOString().slice(0, 10);
+}
+
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState(null);
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
@@ -46,28 +52,55 @@ export default function AdminCoupons() {
 
   useEffect(() => { load(); }, []);
 
-  const handleCreate = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.code.trim() || !form.discount_value) return;
     setSaving(true);
+    const payload = {
+      code: form.code.trim(),
+      description: form.description.trim() || undefined,
+      discount_type: form.discount_type,
+      discount_value: Number(form.discount_value),
+      min_order_amount: form.min_order_amount ? Number(form.min_order_amount) : 0,
+      max_discount_amount: form.max_discount_amount ? Number(form.max_discount_amount) : undefined,
+      usage_limit: form.usage_limit ? parseInt(form.usage_limit) : undefined,
+      starts_at: form.starts_at || undefined,
+      expires_at: form.expires_at || undefined,
+    };
     try {
-      await adminService.createCoupon({
-        code: form.code.trim(),
-        description: form.description.trim() || undefined,
-        discount_type: form.discount_type,
-        discount_value: Number(form.discount_value),
-        min_order_amount: form.min_order_amount ? Number(form.min_order_amount) : 0,
-        max_discount_amount: form.max_discount_amount ? Number(form.max_discount_amount) : undefined,
-        usage_limit: form.usage_limit ? parseInt(form.usage_limit) : undefined,
-        starts_at: form.starts_at || undefined,
-        expires_at: form.expires_at || undefined,
-      });
-      toast.success("Coupon created!");
-      setForm(emptyForm);
+      if (editingId) {
+        await adminService.updateCoupon(editingId, payload);
+        toast.success("Coupon updated!");
+      } else {
+        await adminService.createCoupon(payload);
+        toast.success("Coupon created!");
+      }
+      cancelEdit();
       load();
     } catch (err) {
-      toast.error(err?.response?.data?.detail || "Failed to create coupon");
+      toast.error(err?.response?.data?.detail || `Failed to ${editingId ? "update" : "create"} coupon`);
     } finally { setSaving(false); }
+  };
+
+  const startEdit = (c) => {
+    setEditingId(c.id);
+    setForm({
+      code: c.code || "",
+      description: c.description || "",
+      discount_type: c.discount_type || "percentage",
+      discount_value: c.discount_value ?? "",
+      min_order_amount: c.min_order_amount ?? "",
+      max_discount_amount: c.max_discount_amount ?? "",
+      usage_limit: c.usage_limit ?? "",
+      starts_at: toDateInput(c.starts_at),
+      expires_at: toDateInput(c.expires_at),
+    });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm(emptyForm);
   };
 
   const toggleActive = async (coupon) => {
@@ -83,6 +116,7 @@ export default function AdminCoupons() {
       await adminService.deleteCoupon(id);
       toast.success("Deleted");
       setCoupons(prev => prev.filter(c => c.id !== id));
+      if (editingId === id) cancelEdit();
     } catch { toast.error("Failed to delete"); }
   };
 
@@ -93,10 +127,10 @@ export default function AdminCoupons() {
         <p className="text-xs mt-0.5" style={{ color: creamDim }}>{coupons.length} coupons</p>
       </div>
 
-      {/* Create form */}
-      <form onSubmit={handleCreate} className="p-5 space-y-4" style={{ background: cardBg, border: `1px solid ${border}` }}>
+      {/* Create / Edit form */}
+      <form onSubmit={handleSubmit} className="p-5 space-y-4" style={{ background: cardBg, border: `1px solid ${border}` }}>
         <p className="text-xs tracking-widest uppercase flex items-center gap-2" style={{ color: gold }}>
-          <Plus size={12} /> Add New Coupon
+          {editingId ? <Pencil size={12} /> : <Plus size={12} />} {editingId ? `Edit Coupon — ${form.code}` : "Add New Coupon"}
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -164,11 +198,21 @@ export default function AdminCoupons() {
           </div>
         </div>
 
-        <button type="submit" disabled={saving || !form.code.trim() || !form.discount_value}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium tracking-widest uppercase transition-all disabled:opacity-50"
-          style={{ background: gold, color: "#0c0a09" }}>
-          <Plus size={14} /> {saving ? "Creating..." : "Create Coupon"}
-        </button>
+        <div className="flex items-center gap-3">
+          <button type="submit" disabled={saving || !form.code.trim() || !form.discount_value}
+            className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium tracking-widest uppercase transition-all disabled:opacity-50"
+            style={{ background: gold, color: "#0c0a09" }}>
+            {editingId ? <Pencil size={14} /> : <Plus size={14} />}
+            {saving ? (editingId ? "Saving..." : "Creating...") : (editingId ? "Save Changes" : "Create Coupon")}
+          </button>
+          {editingId && (
+            <button type="button" onClick={cancelEdit}
+              className="flex items-center gap-2 px-5 py-2.5 text-sm font-medium tracking-widest uppercase transition-all"
+              style={{ border: `1px solid ${border}`, color: creamDim }}>
+              <X size={14} /> Cancel
+            </button>
+          )}
+        </div>
       </form>
 
       {/* List */}
@@ -225,12 +269,20 @@ export default function AdminCoupons() {
                       </button>
                     </td>
                     <td className="px-5 py-3.5 text-right">
-                      <button onClick={() => handleDelete(c.id)}
-                        className="p-1.5 transition-colors" style={{ color: "#f87171" }}
-                        onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.1)"}
-                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                        <Trash2 size={14} />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => startEdit(c)}
+                          className="p-1.5 transition-colors" style={{ color: "#60a5fa" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(96,165,250,0.1)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <Pencil size={14} />
+                        </button>
+                        <button onClick={() => handleDelete(c.id)}
+                          className="p-1.5 transition-colors" style={{ color: "#f87171" }}
+                          onMouseEnter={e => e.currentTarget.style.background = "rgba(248,113,113,0.1)"}
+                          onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

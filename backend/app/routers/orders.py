@@ -23,7 +23,7 @@ def generate_order_number() -> str:
 
 
 def calculate_discount(coupon: Coupon, subtotal: float) -> float:
-    if coupon.min_order_amount and subtotal < coupon.min_order_amount:
+    if coupon.min_order_amount and subtotal <= coupon.min_order_amount:
         return 0.0
     if coupon.discount_type == DiscountType.percentage:
         discount = subtotal * (coupon.discount_value / 100)
@@ -53,8 +53,8 @@ def check_coupon_validity(coupon: Coupon, order_amount: float) -> str:
         return "Coupon has expired"
     if coupon.usage_limit and coupon.used_count >= coupon.usage_limit:
         return "Coupon usage limit reached"
-    if order_amount < (coupon.min_order_amount or 0):
-        return f"Minimum order amount ₹{coupon.min_order_amount} required"
+    if order_amount <= (coupon.min_order_amount or 0):
+        return f"Order amount must be more than ₹{coupon.min_order_amount} to use this coupon"
     return ""
 
 

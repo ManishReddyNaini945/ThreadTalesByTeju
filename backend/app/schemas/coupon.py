@@ -27,6 +27,7 @@ class CouponCreate(CouponBase):
 
 
 class CouponUpdate(BaseModel):
+    code: Optional[str] = None
     description: Optional[str] = None
     discount_type: Optional[DiscountType] = None
     discount_value: Optional[float] = None
@@ -36,6 +37,11 @@ class CouponUpdate(BaseModel):
     is_active: Optional[bool] = None
     starts_at: Optional[datetime] = None
     expires_at: Optional[datetime] = None
+
+    @field_validator("code")
+    @classmethod
+    def uppercase_code(cls, v):
+        return v.strip().upper() if v else v
 
 
 class CouponOut(CouponBase):

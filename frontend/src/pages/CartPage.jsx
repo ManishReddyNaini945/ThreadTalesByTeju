@@ -181,7 +181,7 @@ export default function CartPage() {
             <div className="lg:col-span-2 flex flex-col gap-3">
 
               {/* Promo Progress Banner */}
-              {cart.items.length > 0 && (
+              {cart.items.length > 0 && promo.enabled && (
                 <motion.div
                   initial={{ opacity: 0, y: -8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -272,7 +272,7 @@ export default function CartPage() {
                       Starting at ₹70 — exact shipping confirmed at checkout
                     </p>
                   )}
-                  {!promoEligible && (
+                  {!promoEligible && promo.enabled && (
                     <p className="text-xs" style={{ color: "var(--gold)" }}>
                       Add ₹{remaining.toFixed(0)} more for 15% off + free shipping
                     </p>

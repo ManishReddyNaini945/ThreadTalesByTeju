@@ -429,7 +429,12 @@ def update_coupon(coupon_id: int, payload: CouponUpdate, db: Session = Depends(g
     coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
     if not coupon:
         raise HTTPException(status_code=404, detail="Coupon not found")
-    for field, value in payload.model_dump(exclude_unset=True).items():
+    updates = payload.model_dump(exclude_unset=True)
+    new_code = updates.get("code")
+    if new_code and new_code != coupon.code:
+        if db.query(Coupon).filter(Coupon.code == new_code, Coupon.id != coupon_id).first():
+            raise HTTPException(status_code=400, detail="A coupon with this code already exists")
+    for field, value in updates.items():
         setattr(coupon, field, value)
     db.commit()
     db.refresh(coupon)
