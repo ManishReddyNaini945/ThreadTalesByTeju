@@ -364,6 +364,7 @@ def update_order_status(
 def update_order_tracking(
     order_id: int,
     tracking_number: str,
+    courier_service: Optional[str] = None,
     db: Session = Depends(get_db),
     admin: User = Depends(get_admin_user)
 ):
@@ -371,6 +372,8 @@ def update_order_tracking(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     order.tracking_number = tracking_number
+    if courier_service is not None:
+        order.courier_service = courier_service
 
     user_email = order.user.email if order.user else None
     order_number = order.order_number
@@ -385,6 +388,31 @@ def update_order_tracking(
         ).start()
 
     return {"message": "Tracking number updated"}
+
+
+@router.post("/orders/{order_id}/resend-tracking-email")
+def resend_tracking_email(
+    order_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user)
+):
+    order = db.query(Order).options(joinedload(Order.user)).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if not order.tracking_number:
+        raise HTTPException(status_code=400, detail="No tracking number saved for this order yet")
+
+    user_email = order.user.email if order.user else None
+    if not user_email:
+        raise HTTPException(status_code=400, detail="Customer has no email on file")
+
+    threading.Thread(
+        target=send_tracking_update,
+        args=(user_email, order.order_number, order.tracking_number),
+        daemon=True
+    ).start()
+
+    return {"message": "Tracking email sent"}
 
 
 @router.post("/test-email")

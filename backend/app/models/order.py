@@ -61,6 +61,7 @@ class Order(Base):
     coupon_code = Column(String(50), nullable=True)
 
     # Tracking
+    courier_service = Column(String(50), nullable=True)
     tracking_number = Column(String(255), nullable=True)
     tracking_url = Column(String(500), nullable=True)
     notes = Column(Text, nullable=True)

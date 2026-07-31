@@ -61,6 +61,7 @@ class OrderOut(BaseModel):
     payment_method: Optional[PaymentMethod]
     shipping_address: dict
     coupon_code: Optional[str]
+    courier_service: Optional[str]
     tracking_number: Optional[str]
     tracking_url: Optional[str]
     notes: Optional[str]

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Fragment } from "react";
 import { Plus, Trash2, Tags, ChevronRight, Pencil, Check, X, Image as ImageIcon, Upload } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
@@ -36,6 +36,9 @@ export default function AdminCategories() {
   const [editParentId, setEditParentId] = useState("");
   const [editImageUrl, setEditImageUrl] = useState("");
   const [editUploadingImage, setEditUploadingImage] = useState(false);
+  const [quickAddParentId, setQuickAddParentId] = useState(null);
+  const [quickAddName, setQuickAddName] = useState("");
+  const [quickAddSaving, setQuickAddSaving] = useState(false);
   const fileInputRef = useRef(null);
   const editFileInputRef = useRef(null);
 
@@ -111,6 +114,29 @@ export default function AdminCategories() {
     } catch (err) {
       toast.error(err?.response?.data?.detail || "Failed to update category");
     }
+  };
+
+  const startQuickAdd = (parentId) => {
+    setQuickAddParentId(parentId);
+    setQuickAddName("");
+  };
+
+  const cancelQuickAdd = () => {
+    setQuickAddParentId(null);
+    setQuickAddName("");
+  };
+
+  const handleQuickAdd = async (parentId) => {
+    if (!quickAddName.trim()) return;
+    setQuickAddSaving(true);
+    try {
+      await adminService.createCategory({ name: quickAddName.trim(), parent_id: parentId });
+      toast.success("Subcategory added!");
+      cancelQuickAdd();
+      load();
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Failed to add subcategory");
+    } finally { setQuickAddSaving(false); }
   };
 
   const handleDelete = async (id) => {
@@ -223,19 +249,22 @@ export default function AdminCategories() {
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Name</th>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Description</th>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Slug</th>
+                <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Subcategories</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
             <tbody>
               {grouped.map((cat) => {
                 const isEditing = editingId === cat.id;
+                const childCount = cat.isParent ? categories.filter(c => c.parent_id === cat.id).length : 0;
                 const rowInputStyle = {
                   ...inputStyle,
                   padding: "6px 10px",
                   fontSize: 12,
                 };
                 return (
-                  <tr key={cat.id} style={{ borderBottom: `1px solid ${border}`, background: isEditing ? "#1a1614" : "transparent" }}
+                  <Fragment key={cat.id}>
+                  <tr style={{ borderBottom: `1px solid ${border}`, background: isEditing ? "#1a1614" : "transparent" }}
                     onMouseEnter={e => { if (!isEditing) e.currentTarget.style.background = "#231f1b"; }}
                     onMouseLeave={e => { if (!isEditing) e.currentTarget.style.background = "transparent"; }}>
 
@@ -324,6 +353,23 @@ export default function AdminCategories() {
                       )}
                     </td>
 
+                    {/* Subcategories */}
+                    <td className="px-5 py-3.5 text-xs" style={{ color: creamDim }}>
+                      {cat.isParent ? (
+                        <div className="flex items-center gap-2">
+                          <span className="px-2 py-0.5" style={{ background: `${gold}15`, color: gold, border: `1px solid ${gold}40` }}>
+                            {childCount} subcategor{childCount === 1 ? "y" : "ies"}
+                          </span>
+                          <button type="button" onClick={() => startQuickAdd(cat.id)} title="Add subcategory"
+                            className="p-1 transition-colors" style={{ color: "#60a5fa" }}
+                            onMouseEnter={e => e.currentTarget.style.background = "rgba(96,165,250,0.1)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                            <Plus size={12} />
+                          </button>
+                        </div>
+                      ) : "—"}
+                    </td>
+
                     {/* Actions */}
                     <td className="px-5 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -361,6 +407,34 @@ export default function AdminCategories() {
                       </div>
                     </td>
                   </tr>
+                  {quickAddParentId === cat.id && (
+                    <tr style={{ borderBottom: `1px solid ${border}`, background: "#1a1614" }}>
+                      <td colSpan={6} className="px-5 py-3">
+                        <div className="flex items-center gap-2 pl-6">
+                          <ChevronRight size={12} style={{ color: gold, opacity: 0.6 }} />
+                          <input
+                            value={quickAddName}
+                            onChange={e => setQuickAddName(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && handleQuickAdd(cat.id)}
+                            placeholder={`New subcategory under ${cat.name}`}
+                            style={{ ...rowInputStyle, flex: 1 }}
+                            onFocus={e => e.target.style.borderColor = gold}
+                            onBlur={e => e.target.style.borderColor = border}
+                            autoFocus
+                          />
+                          <button onClick={() => handleQuickAdd(cat.id)} disabled={quickAddSaving || !quickAddName.trim()}
+                            className="p-1.5 transition-colors disabled:opacity-50" style={{ color: "#4ade80" }}>
+                            <Check size={14} />
+                          </button>
+                          <button onClick={cancelQuickAdd}
+                            className="p-1.5 transition-colors" style={{ color: creamDim }}>
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                  </Fragment>
                 );
               })}
             </tbody>

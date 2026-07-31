@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, MessageCircle, Truck, Filter } from "lucide-react";
+import { ChevronDown, ChevronUp, MessageCircle, Truck, Filter, Mail } from "lucide-react";
 
 const gold = "#c8a45c";
 const cream = "#f7f5f2";
@@ -39,6 +39,7 @@ export default function AdminOrders() {
   const [page, setPage] = useState(1);
   const [expandedOrder, setExpandedOrder] = useState(null);
   const [trackingInputs, setTrackingInputs] = useState({});
+  const [courierInputs, setCourierInputs] = useState({});
 
   const fetchOrders = useCallback(() => {
     setLoading(true);
@@ -58,14 +59,23 @@ export default function AdminOrders() {
     } catch { toast.error("Failed to update"); }
   };
 
-  const saveTracking = async (orderId) => {
+  const saveTracking = async (orderId, courier) => {
     const tracking = trackingInputs[orderId];
     if (!tracking) { toast.error("Enter a tracking number"); return; }
     try {
-      await adminService.updateOrderTracking(orderId, tracking);
-      toast.success("Tracking number saved & email sent");
+      await adminService.updateOrderTracking(orderId, tracking, courier);
+      toast.success("Saved & email sent");
       fetchOrders();
     } catch { toast.error("Failed to save tracking number"); }
+  };
+
+  const resendEmail = async (orderId) => {
+    try {
+      await adminService.resendTrackingEmail(orderId);
+      toast.success("Tracking email sent");
+    } catch (err) {
+      toast.error(err?.response?.data?.detail || "Failed to send email");
+    }
   };
 
   const sendWhatsApp = (order, customMsg) => {
@@ -122,7 +132,9 @@ export default function AdminOrders() {
                     </td>
                   </tr>
                 ))
-              ) : orders.map((order) => (
+              ) : orders.map((order) => {
+                const courier = courierInputs[order.id] ?? order.courier_service ?? "";
+                return (
                 <>
                   <tr key={order.id} className="cursor-pointer transition-colors"
                     style={{ borderBottom: `1px solid ${border}` }}
@@ -202,31 +214,76 @@ export default function AdminOrders() {
                             <p className="text-xs tracking-widest uppercase mb-3 flex items-center gap-1" style={{ color: creamDim }}>
                               <Truck size={11} /> Tracking
                             </p>
-                            <div className="flex gap-2 mb-3">
-                              <input defaultValue={order.tracking_number || ""}
-                                onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: e.target.value }))}
-                                placeholder="Enter tracking number"
-                                className="flex-1 focus:outline-none text-xs"
-                                style={inputStyle}
-                                onClick={e => e.stopPropagation()} />
-                              <button onClick={e => { e.stopPropagation(); saveTracking(order.id); }}
-                                className="px-3 py-1.5 text-xs transition-colors"
-                                style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
-                                Send
-                              </button>
-                            </div>
-                            <button onClick={e => { e.stopPropagation(); sendWhatsApp(order); }}
-                              className="flex items-center gap-1.5 text-xs transition-colors"
-                              style={{ color: "#4ade80" }}>
-                              <MessageCircle size={13} /> Send WhatsApp Update
-                            </button>
+                            {order.status === "confirmed" ? (
+                              <p className="text-xs" style={{ color: creamDim }}>
+                                Order just placed — courier assignment isn't shown until it moves past Confirmed.
+                              </p>
+                            ) : (
+                              <>
+                                <select value={courier} onClick={e => e.stopPropagation()}
+                                  onChange={e => setCourierInputs(p => ({ ...p, [order.id]: e.target.value }))}
+                                  className="w-full mb-2 focus:outline-none text-xs"
+                                  style={inputStyle}>
+                                  <option value="">— Select Courier —</option>
+                                  <option value="delhivery">Delhivery</option>
+                                  <option value="dtdc">DTDC</option>
+                                </select>
+
+                                {courier === "delhivery" && (
+                                  <div className="flex gap-2 mb-3">
+                                    <input defaultValue={order.tracking_number || ""}
+                                      onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: e.target.value }))}
+                                      placeholder="Enter AWB number"
+                                      className="flex-1 focus:outline-none text-xs"
+                                      style={inputStyle}
+                                      onClick={e => e.stopPropagation()} />
+                                    <button onClick={e => { e.stopPropagation(); saveTracking(order.id, courier); }}
+                                      className="px-3 py-1.5 text-xs transition-colors"
+                                      style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
+                                      Save
+                                    </button>
+                                  </div>
+                                )}
+
+                                {courier === "dtdc" && (
+                                  <>
+                                    <div className="flex gap-2 mb-3">
+                                      <input defaultValue={order.tracking_number || ""}
+                                        onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: e.target.value }))}
+                                        placeholder="Enter shipment number"
+                                        className="flex-1 focus:outline-none text-xs"
+                                        style={inputStyle}
+                                        onClick={e => e.stopPropagation()} />
+                                      <button onClick={e => { e.stopPropagation(); saveTracking(order.id, courier); }}
+                                        className="px-3 py-1.5 text-xs transition-colors"
+                                        style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
+                                        Save
+                                      </button>
+                                    </div>
+                                    <div className="flex items-center gap-4">
+                                      <button onClick={e => { e.stopPropagation(); resendEmail(order.id); }}
+                                        className="flex items-center gap-1.5 text-xs transition-colors"
+                                        style={{ color: "#60a5fa" }}>
+                                        <Mail size={13} /> Send Email
+                                      </button>
+                                      <button onClick={e => { e.stopPropagation(); sendWhatsApp(order); }}
+                                        className="flex items-center gap-1.5 text-xs transition-colors"
+                                        style={{ color: "#4ade80" }}>
+                                        <MessageCircle size={13} /> Send WhatsApp
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </>
+                            )}
                           </div>
                         </div>
                       </td>
                     </tr>
                   )}
                 </>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

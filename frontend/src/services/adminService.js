@@ -25,8 +25,9 @@ export const adminService = {
   getOrders: (params) => api.get("/admin/orders", { params }),
   updateOrderStatus: (id, status) =>
     api.put(`/admin/orders/${id}/status`, null, { params: { status } }),
-  updateOrderTracking: (id, tracking_number) =>
-    api.put(`/admin/orders/${id}/tracking`, null, { params: { tracking_number } }),
+  updateOrderTracking: (id, tracking_number, courier_service) =>
+    api.put(`/admin/orders/${id}/tracking`, null, { params: { tracking_number, courier_service } }),
+  resendTrackingEmail: (id) => api.post(`/admin/orders/${id}/resend-tracking-email`),
   // Coupons
   getCoupons: () => api.get("/admin/coupons"),
   createCoupon: (data) => api.post("/admin/coupons", data),
