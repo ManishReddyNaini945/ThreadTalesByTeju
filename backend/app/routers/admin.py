@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Query
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, desc, cast, Date
+from sqlalchemy.exc import IntegrityError
 from typing import List, Optional
 import re
 import cloudinary
@@ -183,8 +184,15 @@ def delete_product(product_id: int, db: Session = Depends(get_db), admin: User =
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    db.delete(product)
-    db.commit()
+    try:
+        db.delete(product)
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(
+            status_code=400,
+            detail="This product can't be deleted because it's part of past orders. Set it to Inactive instead to hide it from customers."
+        )
     return {"message": "Product deleted"}
 
 

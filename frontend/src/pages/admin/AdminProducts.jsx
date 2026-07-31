@@ -1157,7 +1157,16 @@ export default function AdminProducts() {
       await adminService.deleteProduct(id);
       toast.success("Product deleted");
       fetchProducts();
-    } catch { toast.error("Failed to delete"); }
+    } catch (err) { toast.error(err?.response?.data?.detail || "Failed to delete"); }
+  };
+
+  const toggleStatus = async (product) => {
+    const newStatus = product.status === "active" ? "inactive" : "active";
+    try {
+      await adminService.updateProduct(product.id, { status: newStatus });
+      toast.success(newStatus === "active" ? "Product activated" : "Product deactivated");
+      fetchProducts();
+    } catch (err) { toast.error(err?.response?.data?.detail || "Failed to update status"); }
   };
 
   return (
@@ -1268,14 +1277,16 @@ export default function AdminProducts() {
                     </span>
                   </td>
                   <td className="px-5 py-3">
-                    <span className="text-xs px-2 py-1 capitalize"
+                    <button onClick={() => toggleStatus(p)}
+                      title={p.status === "active" ? "Click to deactivate" : "Click to activate"}
+                      className="text-xs px-2 py-1 capitalize transition-opacity hover:opacity-80"
                       style={{
                         color: p.status === "active" ? "#4ade80" : creamDim,
                         background: p.status === "active" ? "#4ade8015" : `${border}50`,
                         border: `1px solid ${p.status === "active" ? "#4ade8040" : border}`,
                       }}>
                       {p.status}
-                    </span>
+                    </button>
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex gap-1">
