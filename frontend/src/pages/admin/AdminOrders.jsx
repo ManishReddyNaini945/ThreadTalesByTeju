@@ -21,6 +21,16 @@ const STATUS_CFG = {
 
 const orderStatuses = Object.keys(STATUS_CFG);
 
+const COURIER_TRACKING_LINKS = {
+  delhivery: "https://www.delhivery.com/tracking",
+  dtdc: "https://www.dtdc.com/track-your-shipment/",
+};
+
+const COURIER_LABELS = {
+  delhivery: "AWB number",
+  dtdc: "shipment number",
+};
+
 function StatusBadge({ status }) {
   const cfg = STATUS_CFG[status] || { color: cream, label: status };
   return (
@@ -64,7 +74,7 @@ export default function AdminOrders() {
     if (!tracking) { toast.error("Enter a tracking number"); return; }
     try {
       await adminService.updateOrderTracking(orderId, tracking, courier);
-      toast.success("Saved & email sent");
+      toast.success("Tracking saved");
       fetchOrders();
     } catch { toast.error("Failed to save tracking number"); }
   };
@@ -78,11 +88,12 @@ export default function AdminOrders() {
     }
   };
 
-  const sendWhatsApp = (order, customMsg) => {
+  const sendWhatsApp = (order, customMsg, courier) => {
     const phone = order.shipping_address?.phone?.replace(/\D/g, "").slice(-10);
     if (!phone) { toast.error("No phone number"); return; }
+    const trackingUrl = COURIER_TRACKING_LINKS[courier || order.courier_service];
     const trackingLine = order.tracking_number
-      ? `\nTracking Number: *${order.tracking_number}*\nTrack here: https://www.dtdc.com/track-your-shipment/ (paste the tracking number above)`
+      ? `\nTracking Number: *${order.tracking_number}*${trackingUrl ? `\nTrack here: ${trackingUrl} (paste the tracking number above)` : ""}`
       : "";
     const msg = customMsg || `Hi ${order.shipping_address?.full_name}, your Thread Tales by Teju order *#${order.order_number}* status: *${order.status.toUpperCase()}*.${trackingLine}\nThank you! 🌸`;
     window.open(`https://wa.me/91${phone}?text=${encodeURIComponent(msg)}`, "_blank");
@@ -229,50 +240,30 @@ export default function AdminOrders() {
                                   <option value="dtdc">DTDC</option>
                                 </select>
 
-                                {courier === "delhivery" && (
-                                  <div className="flex gap-2 mb-3">
+                                {(courier === "delhivery" || courier === "dtdc") && (
+                                  <div className="flex items-center gap-1.5">
                                     <input defaultValue={order.tracking_number || ""}
                                       onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: e.target.value }))}
-                                      placeholder="Enter AWB number"
+                                      placeholder={`Enter ${COURIER_LABELS[courier]}`}
                                       className="flex-1 focus:outline-none text-xs"
                                       style={inputStyle}
                                       onClick={e => e.stopPropagation()} />
                                     <button onClick={e => { e.stopPropagation(); saveTracking(order.id, courier); }}
-                                      className="px-3 py-1.5 text-xs transition-colors"
+                                      className="px-3 py-1.5 text-xs transition-colors flex-shrink-0"
                                       style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
                                       Save
                                     </button>
+                                    <button onClick={e => { e.stopPropagation(); resendEmail(order.id); }}
+                                      title="Send Email" className="p-1.5 transition-colors flex-shrink-0"
+                                      style={{ color: "#60a5fa" }}>
+                                      <Mail size={14} />
+                                    </button>
+                                    <button onClick={e => { e.stopPropagation(); sendWhatsApp(order, null, courier); }}
+                                      title="Send WhatsApp" className="p-1.5 transition-colors flex-shrink-0"
+                                      style={{ color: "#4ade80" }}>
+                                      <MessageCircle size={14} />
+                                    </button>
                                   </div>
-                                )}
-
-                                {courier === "dtdc" && (
-                                  <>
-                                    <div className="flex gap-2 mb-3">
-                                      <input defaultValue={order.tracking_number || ""}
-                                        onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: e.target.value }))}
-                                        placeholder="Enter shipment number"
-                                        className="flex-1 focus:outline-none text-xs"
-                                        style={inputStyle}
-                                        onClick={e => e.stopPropagation()} />
-                                      <button onClick={e => { e.stopPropagation(); saveTracking(order.id, courier); }}
-                                        className="px-3 py-1.5 text-xs transition-colors"
-                                        style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
-                                        Save
-                                      </button>
-                                    </div>
-                                    <div className="flex items-center gap-4">
-                                      <button onClick={e => { e.stopPropagation(); resendEmail(order.id); }}
-                                        className="flex items-center gap-1.5 text-xs transition-colors"
-                                        style={{ color: "#60a5fa" }}>
-                                        <Mail size={13} /> Send Email
-                                      </button>
-                                      <button onClick={e => { e.stopPropagation(); sendWhatsApp(order); }}
-                                        className="flex items-center gap-1.5 text-xs transition-colors"
-                                        style={{ color: "#4ade80" }}>
-                                        <MessageCircle size={13} /> Send WhatsApp
-                                      </button>
-                                    </div>
-                                  </>
                                 )}
                               </>
                             )}

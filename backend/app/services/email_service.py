@@ -199,9 +199,16 @@ def send_admin_payment_alert(order, event: str) -> None:
 # DTDC's tracking page is captcha-gated with no deep-link query param support,
 # so this points to the generic page — the number is shown separately to paste in.
 DTDC_TRACKING_PAGE = "https://www.dtdc.com/track-your-shipment/"
+DELHIVERY_TRACKING_PAGE = "https://www.delhivery.com/tracking"
+
+COURIER_TRACKING = {
+    "delhivery": (DELHIVERY_TRACKING_PAGE, "Track on Delhivery"),
+    "dtdc": (DTDC_TRACKING_PAGE, "Track on DTDC"),
+}
 
 
-def send_tracking_update(to: str, order_number: str, tracking_number: str) -> None:
+def send_tracking_update(to: str, order_number: str, tracking_number: str, courier_service: str = None) -> None:
+    tracking_url, track_label = COURIER_TRACKING.get(courier_service, (DTDC_TRACKING_PAGE, "Track Shipment"))
     content = f"""
       <p style="margin:0 0 4px;font-size:34px;text-align:center">📦</p>
       <h2 style="color:#fb923c;margin:0 0 4px;text-align:center">Your Tracking Number is Here!</h2>
@@ -213,8 +220,8 @@ def send_tracking_update(to: str, order_number: str, tracking_number: str) -> No
         <p style="margin:0;font-size:20px;color:#f7f5f2;font-family:Georgia,serif">{tracking_number}</p>
       </div>
       <div style="text-align:center">
-        <a href="{DTDC_TRACKING_PAGE}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
-          Track on DTDC
+        <a href="{tracking_url}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
+          {track_label}
         </a>
       </div>
       <p style="color:#a89f94;font-size:12px;text-align:center;margin-top:8px">Paste your tracking number above to see live status.</p>

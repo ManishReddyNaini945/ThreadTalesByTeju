@@ -1,93 +1,34 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, Layers } from "lucide-react";
+import { ChevronRight, Search } from "lucide-react";
 import { productService } from "../services/productService";
+import ProductCard from "../components/ProductCard";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
 const gold = "var(--gold)";
 const cream = "var(--cream)";
 const creamDim = "var(--cream-dim)";
-const cardBg = "var(--bg-card)";
 const border = "var(--border)";
 const bg = "var(--bg)";
-
-function SubcategoryCard({ category, index }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.06 }}
-    >
-      <Link
-        to={`/shop?category=${category.slug}`}
-        className="group flex flex-col overflow-hidden transition-all duration-300"
-        style={{ background: cardBg, border: `1px solid ${border}` }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = gold;
-          e.currentTarget.style.boxShadow = "0 0 28px rgba(200,164,92,0.12)";
-          e.currentTarget.style.transform = "translateY(-4px)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = border;
-          e.currentTarget.style.boxShadow = "none";
-          e.currentTarget.style.transform = "translateY(0)";
-        }}
-      >
-        {/* Image or placeholder */}
-        <div
-          className="relative overflow-hidden flex items-center justify-center"
-          style={{ aspectRatio: "4/3", background: bg }}
-        >
-          {category.image_url ? (
-            <img
-              src={category.image_url}
-              alt={category.name}
-              loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-2 opacity-30">
-              <Layers size={36} style={{ color: gold }} />
-            </div>
-          )}
-          {/* Hover overlay */}
-          <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{ background: "linear-gradient(to top, rgba(12,10,9,0.6) 0%, transparent 60%)" }}
-          />
-        </div>
-
-        {/* Label */}
-        <div className="flex items-center justify-between px-4 py-3.5">
-          <span
-            className="text-sm font-medium tracking-wide"
-            style={{ fontFamily: "Playfair Display, serif", color: cream }}
-          >
-            {category.name}
-          </span>
-          <ChevronRight
-            size={15}
-            className="transition-transform duration-200 group-hover:translate-x-1"
-            style={{ color: gold }}
-          />
-        </div>
-      </Link>
-    </motion.div>
-  );
-}
 
 export default function CategoryPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [parentCategory, setParentCategory] = useState(null);
   const [subcategories, setSubcategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [catLoading, setCatLoading] = useState(true);
+
+  const [activeSlug, setActiveSlug] = useState(slug); // which category_slug to fetch products for; starts as "All" (parent)
+  const [products, setProducts] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
+    setCatLoading(true);
     productService.getCategories()
       .then(({ data }) => {
         const match = data.find((c) => c.slug === slug);
@@ -103,14 +44,33 @@ export default function CategoryPage() {
         }
         setParentCategory(match);
         setSubcategories(match.children || []);
+        setActiveSlug(slug);
+        setPage(1);
         // If no subcategories, go straight to product listing
         if (!match.children || match.children.length === 0) {
           navigate(`/shop?category=${slug}`, { replace: true });
         }
       })
       .catch(() => setNotFound(true))
-      .finally(() => setLoading(false));
+      .finally(() => setCatLoading(false));
   }, [slug, navigate]);
+
+  useEffect(() => {
+    if (!parentCategory || subcategories.length === 0) return;
+    setLoading(true);
+    productService.getProducts({ category_slug: activeSlug, page, page_size: 20, sort_by: "newest" })
+      .then(({ data }) => {
+        setProducts(data.items || data.products || []);
+        setTotal(data.total || 0);
+      })
+      .catch(() => { setProducts([]); setTotal(0); })
+      .finally(() => setLoading(false));
+  }, [activeSlug, page, parentCategory, subcategories.length]);
+
+  const selectTab = (tabSlug) => {
+    setActiveSlug(tabSlug);
+    setPage(1);
+  };
 
   return (
     <div className="min-h-screen" style={{ background: bg }}>
@@ -127,8 +87,8 @@ export default function CategoryPage() {
         </div>
 
         {/* Hero heading */}
-        {!loading && !notFound && parentCategory && (
-          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-8 pb-10">
+        {!catLoading && !notFound && parentCategory && (
+          <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-8 pb-6">
             <motion.div
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -151,16 +111,15 @@ export default function CategoryPage() {
           </section>
         )}
 
-        {/* Loading skeleton */}
-        {loading && (
+        {/* Loading skeleton (category lookup) */}
+        {catLoading && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="animate-pulse" style={{ border: `1px solid ${border}` }}>
-                  <div className="w-full" style={{ aspectRatio: "4/3", background: cardBg }} />
-                  <div className="px-4 py-3.5">
-                    <div className="h-3 rounded w-3/4" style={{ background: cardBg }} />
-                  </div>
+                <div key={i}>
+                  <div className="skeleton mb-4" style={{ aspectRatio: "1/1" }} />
+                  <div className="skeleton h-3 w-2/3 mb-2" />
+                  <div className="skeleton h-4 w-full mb-2" />
                 </div>
               ))}
             </div>
@@ -168,7 +127,7 @@ export default function CategoryPage() {
         )}
 
         {/* Not found */}
-        {!loading && notFound && (
+        {!catLoading && notFound && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-20 text-center">
             <p className="text-sm tracking-widest uppercase mb-4" style={{ color: creamDim }}>
               Category not found
@@ -179,14 +138,73 @@ export default function CategoryPage() {
           </section>
         )}
 
-        {/* Subcategory cards */}
-        {!loading && !notFound && subcategories.length > 0 && (
+        {!catLoading && !notFound && parentCategory && subcategories.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-20">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-              {subcategories.map((cat, i) => (
-                <SubcategoryCard key={cat.id} category={cat} index={i} />
+            {/* Subcategory tabs — All first, then each subcategory */}
+            <div className="flex gap-2 overflow-x-auto pb-2 mb-8" style={{ borderBottom: `1px solid ${border}` }}>
+              <button onClick={() => selectTab(slug)}
+                className="flex-shrink-0 px-5 py-2.5 text-sm tracking-wide transition-all duration-200 border-b-2 -mb-px"
+                style={{
+                  color: activeSlug === slug ? gold : creamDim,
+                  borderBottomColor: activeSlug === slug ? gold : "transparent",
+                }}>
+                All
+              </button>
+              {subcategories.map((c) => (
+                <button key={c.id} onClick={() => selectTab(c.slug)}
+                  className="flex-shrink-0 px-5 py-2.5 text-sm tracking-wide transition-all duration-200 border-b-2 -mb-px whitespace-nowrap"
+                  style={{
+                    color: activeSlug === c.slug ? gold : creamDim,
+                    borderBottomColor: activeSlug === c.slug ? gold : "transparent",
+                  }}>
+                  {c.name}
+                </button>
               ))}
             </div>
+
+            {/* Products grid */}
+            {loading ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {Array(8).fill(0).map((_, i) => (
+                  <div key={i}>
+                    <div className="skeleton mb-4" style={{ aspectRatio: "1/1" }} />
+                    <div className="skeleton h-3 w-2/3 mb-2" />
+                    <div className="skeleton h-4 w-full mb-2" />
+                  </div>
+                ))}
+              </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-24">
+                <Search size={40} className="mx-auto mb-4" style={{ color: border }} />
+                <p className="text-lg mb-2" style={{ fontFamily: "Playfair Display, serif", color: cream }}>
+                  No products found
+                </p>
+                <p className="text-sm" style={{ color: creamDim }}>
+                  Nothing here yet — check back soon.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                {products.map((p) => <ProductCard key={p.id} product={p} />)}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {total > 20 && (
+              <div className="flex justify-center gap-2 mt-14">
+                {Array(Math.ceil(total / 20)).fill(0).map((_, i) => (
+                  <button key={i} onClick={() => setPage(i + 1)}
+                    className="w-10 h-10 text-sm font-medium transition-all duration-200"
+                    style={{
+                      background: page === i + 1 ? gold : "var(--bg-card)",
+                      color: page === i + 1 ? bg : creamDim,
+                      border: `1px solid ${border}`,
+                    }}>
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
         )}
       </main>

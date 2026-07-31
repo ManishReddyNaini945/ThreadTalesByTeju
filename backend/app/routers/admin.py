@@ -19,7 +19,7 @@ from ..schemas.product import ProductCreate, ProductUpdate, ProductOut, Category
 from ..schemas.coupon import CouponCreate, CouponUpdate, CouponOut
 from ..schemas.order import OrderOut
 from ..config import settings
-from ..services.email_service import send_status_update, send_stock_notification, send_tracking_update
+from ..services.email_service import send_stock_notification, send_tracking_update
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -342,20 +342,7 @@ def update_order_status(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     order.status = status
-
-    # Capture values before commit expires the ORM objects
-    user_email = order.user.email if order.user else None
-    order_number = order.order_number
-    tracking_number = order.tracking_number
-
     db.commit()
-
-    if user_email:
-        threading.Thread(
-            target=send_status_update,
-            args=(user_email, order_number, status.value, tracking_number),
-            daemon=True
-        ).start()
 
     return {"message": "Order status updated"}
 
@@ -374,18 +361,7 @@ def update_order_tracking(
     order.tracking_number = tracking_number
     if courier_service is not None:
         order.courier_service = courier_service
-
-    user_email = order.user.email if order.user else None
-    order_number = order.order_number
-
     db.commit()
-
-    if user_email and tracking_number:
-        threading.Thread(
-            target=send_tracking_update,
-            args=(user_email, order_number, tracking_number),
-            daemon=True
-        ).start()
 
     return {"message": "Tracking number updated"}
 
@@ -408,7 +384,7 @@ def resend_tracking_email(
 
     threading.Thread(
         target=send_tracking_update,
-        args=(user_email, order.order_number, order.tracking_number),
+        args=(user_email, order.order_number, order.tracking_number, order.courier_service),
         daemon=True
     ).start()
 

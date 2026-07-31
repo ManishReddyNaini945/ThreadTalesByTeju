@@ -92,7 +92,7 @@ export default function CollectionSection() {
                 transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
               >
                 <Link
-                  to={`/shop?category=${cat.slug}`}
+                  to={cat.children?.length > 0 ? `/category/${cat.slug}` : `/shop?category=${cat.slug}`}
                   className="group block overflow-hidden"
                   style={{
                     border: "1px solid var(--border)",
