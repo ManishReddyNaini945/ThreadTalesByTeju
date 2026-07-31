@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, Search, X, Image, Check, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, X, Image, Check, Upload, Power } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
 
@@ -1279,13 +1279,13 @@ export default function AdminProducts() {
                   <td className="px-5 py-3">
                     <button onClick={() => toggleStatus(p)}
                       title={p.status === "active" ? "Click to deactivate" : "Click to activate"}
-                      className="text-xs px-2 py-1 capitalize transition-opacity hover:opacity-80"
+                      className="flex items-center gap-1.5 text-xs px-2.5 py-1 capitalize transition-colors cursor-pointer"
                       style={{
-                        color: p.status === "active" ? "#4ade80" : creamDim,
-                        background: p.status === "active" ? "#4ade8015" : `${border}50`,
-                        border: `1px solid ${p.status === "active" ? "#4ade8040" : border}`,
+                        color: p.status === "active" ? "#4ade80" : "#f87171",
+                        background: p.status === "active" ? "#4ade8015" : "#f8717115",
+                        border: `1px solid ${p.status === "active" ? "#4ade8040" : "#f8717140"}`,
                       }}>
-                      {p.status}
+                      <Power size={11} /> {p.status}
                     </button>
                   </td>
                   <td className="px-5 py-3">
