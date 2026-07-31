@@ -31,6 +31,8 @@ const COURIER_LABELS = {
   dtdc: "shipment number",
 };
 
+const COURIER_ENABLED_STATUSES = ["shipped", "out_for_delivery", "delivered", "cancelled"];
+
 function StatusBadge({ status }) {
   const cfg = STATUS_CFG[status] || { color: cream, label: status };
   return (
@@ -65,6 +67,7 @@ export default function AdminOrders() {
     try {
       await adminService.updateOrderStatus(orderId, newStatus);
       toast.success("Status updated");
+      if (COURIER_ENABLED_STATUSES.includes(newStatus)) setExpandedOrder(orderId);
       fetchOrders();
     } catch { toast.error("Failed to update"); }
   };
@@ -225,9 +228,9 @@ export default function AdminOrders() {
                             <p className="text-xs tracking-widest uppercase mb-3 flex items-center gap-1" style={{ color: creamDim }}>
                               <Truck size={11} /> Tracking
                             </p>
-                            {order.status === "confirmed" ? (
+                            {!COURIER_ENABLED_STATUSES.includes(order.status) ? (
                               <p className="text-xs" style={{ color: creamDim }}>
-                                Order just placed — courier assignment isn't shown until it moves past Confirmed.
+                                Courier assignment appears once the order is Shipped, Out for Delivery, Delivered, or Cancelled.
                               </p>
                             ) : (
                               <>
@@ -241,29 +244,33 @@ export default function AdminOrders() {
                                 </select>
 
                                 {(courier === "delhivery" || courier === "dtdc") && (
-                                  <div className="flex items-center gap-1.5">
-                                    <input defaultValue={order.tracking_number || ""}
-                                      onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: e.target.value }))}
-                                      placeholder={`Enter ${COURIER_LABELS[courier]}`}
-                                      className="flex-1 focus:outline-none text-xs"
-                                      style={inputStyle}
-                                      onClick={e => e.stopPropagation()} />
-                                    <button onClick={e => { e.stopPropagation(); saveTracking(order.id, courier); }}
-                                      className="px-3 py-1.5 text-xs transition-colors flex-shrink-0"
-                                      style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
-                                      Save
-                                    </button>
-                                    <button onClick={e => { e.stopPropagation(); resendEmail(order.id); }}
-                                      title="Send Email" className="p-1.5 transition-colors flex-shrink-0"
-                                      style={{ color: "#60a5fa" }}>
-                                      <Mail size={14} />
-                                    </button>
-                                    <button onClick={e => { e.stopPropagation(); sendWhatsApp(order, null, courier); }}
-                                      title="Send WhatsApp" className="p-1.5 transition-colors flex-shrink-0"
-                                      style={{ color: "#4ade80" }}>
-                                      <MessageCircle size={14} />
-                                    </button>
-                                  </div>
+                                  <>
+                                    <div className="flex items-center gap-1.5 mb-2.5">
+                                      <input defaultValue={order.tracking_number || ""}
+                                        onChange={e => setTrackingInputs(p => ({ ...p, [order.id]: e.target.value }))}
+                                        placeholder={`Enter ${COURIER_LABELS[courier]}`}
+                                        className="flex-1 focus:outline-none text-xs"
+                                        style={inputStyle}
+                                        onClick={e => e.stopPropagation()} />
+                                      <button onClick={e => { e.stopPropagation(); saveTracking(order.id, courier); }}
+                                        className="px-3 py-1.5 text-xs transition-colors flex-shrink-0"
+                                        style={{ background: `${gold}20`, color: gold, border: `1px solid ${gold}40` }}>
+                                        Save
+                                      </button>
+                                    </div>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <button onClick={e => { e.stopPropagation(); resendEmail(order.id); }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium tracking-wide transition-colors"
+                                        style={{ background: "#60a5fa1a", color: "#60a5fa", border: "1px solid #60a5fa40" }}>
+                                        <Mail size={13} /> Send Email
+                                      </button>
+                                      <button onClick={e => { e.stopPropagation(); sendWhatsApp(order, null, courier); }}
+                                        className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium tracking-wide transition-colors"
+                                        style={{ background: "#4ade801a", color: "#4ade80", border: "1px solid #4ade8040" }}>
+                                        <MessageCircle size={13} /> Send WhatsApp
+                                      </button>
+                                    </div>
+                                  </>
                                 )}
                               </>
                             )}

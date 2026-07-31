@@ -206,9 +206,14 @@ COURIER_TRACKING = {
     "dtdc": (DTDC_TRACKING_PAGE, "Track on DTDC"),
 }
 
-
 def send_tracking_update(to: str, order_number: str, tracking_number: str, courier_service: str = None) -> None:
     tracking_url, track_label = COURIER_TRACKING.get(courier_service, (DTDC_TRACKING_PAGE, "Track Shipment"))
+    if courier_service == "delhivery":
+        display_value = f"AWB: {tracking_number}"
+    elif courier_service == "dtdc":
+        display_value = f"Shipment Number: {tracking_number}"
+    else:
+        display_value = tracking_number
     content = f"""
       <p style="margin:0 0 4px;font-size:34px;text-align:center">📦</p>
       <h2 style="color:#fb923c;margin:0 0 4px;text-align:center">Your Tracking Number is Here!</h2>
@@ -217,7 +222,7 @@ def send_tracking_update(to: str, order_number: str, tracking_number: str, couri
         <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Order Number</p>
         <p style="margin:0 0 12px;font-size:20px;color:#c8a45c;font-family:Georgia,serif">#{order_number}</p>
         <p style="margin:0 0 4px;color:#a89f94;font-size:12px;letter-spacing:2px;text-transform:uppercase">Tracking Number</p>
-        <p style="margin:0;font-size:20px;color:#f7f5f2;font-family:Georgia,serif">{tracking_number}</p>
+        <p style="margin:0;font-size:20px;color:#f7f5f2;font-family:Georgia,serif">{display_value}</p>
       </div>
       <div style="text-align:center">
         <a href="{tracking_url}" style="display:inline-block;padding:12px 28px;background:#c8a45c;color:#0c0a09;text-decoration:none;font-size:13px;letter-spacing:2px;text-transform:uppercase;margin-top:8px">
