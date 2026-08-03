@@ -6,10 +6,12 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import { usePromoSettings } from "../hooks/usePromoSettings";
+import { productService } from "../services/productService";
 
 const NAV_LINKS = [
   { label: "Home", path: "/" },
   { label: "Shop", path: "/shop" },
+  { label: "🎀 Rakhi", path: "/rakhi" },
   {
     label: "Collections",
     children: [
@@ -60,6 +62,7 @@ export default function Navbar() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [offerDismissed, setOfferDismissed] = useState(false);
+  const [rakhiActive, setRakhiActive] = useState(false);
   const promo = usePromoSettings();
   const navigate = useNavigate();
   const location = useLocation();
@@ -75,6 +78,14 @@ export default function Navbar() {
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
   }, []);
+
+  useEffect(() => {
+    productService.getCategories()
+      .then(({ data }) => setRakhiActive((Array.isArray(data) ? data : []).some(c => c.slug === "rakhi")))
+      .catch(() => setRakhiActive(false));
+  }, []);
+
+  const navLinks = NAV_LINKS.filter(l => l.path !== "/rakhi" || rakhiActive);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -258,7 +269,7 @@ export default function Navbar() {
 
             {/* Desktop nav */}
             <nav className="hidden lg:flex items-center gap-8">
-              {NAV_LINKS.map((link) =>
+              {navLinks.map((link) =>
                 link.children ? (
                   <div
                     key={link.label}
@@ -545,7 +556,7 @@ export default function Navbar() {
             >
               {/* Nav links */}
               <div className="px-6 pt-1 pb-2">
-                {NAV_LINKS.map((link) =>
+                {navLinks.map((link) =>
                   link.children ? (
                     <div key={link.label}>
                       <button

@@ -390,6 +390,11 @@ export default function ProductDetailPage() {
                   </>
                 )}
               </div>
+              {product.compare_price && discount > 0 && (
+                <p className="text-sm font-medium" style={{ color: "#4ade80" }}>
+                  You Save ₹{(product.compare_price - displayPrice).toLocaleString()}
+                </p>
+              )}
               {pricePerKg && (
                 <p className="text-sm" style={{ color: "var(--cream-dim)" }}>
                   ₹{pricePerKg.toLocaleString()} per kg

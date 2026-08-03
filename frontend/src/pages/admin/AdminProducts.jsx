@@ -866,8 +866,17 @@ function ProductModal({ product, categories, onSave, onClose }) {
           {/* Price + Compare */}
           <div className="grid grid-cols-2 gap-4">
             <div>
+              <label style={labelStyle}>Original Price (₹) <span style={{ textTransform: "none", letterSpacing: 0 }}>— MRP before discount</span></label>
+              <input
+                type="text"
+                inputMode="numeric"
+                value={form.compare_price}
+                onChange={e => { if (/^\d*$/.test(e.target.value)) set("compare_price", e.target.value); }}
+                style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
+            </div>
+            <div>
               <label style={labelStyle}>
-                Price (₹) *{["ml","metre","bangle"].includes(form.pricing_unit) ? " — base / fallback price" : form.pricing_unit !== "piece" ? ` — per ${form.pricing_unit}` : ""}
+                Discount Price (₹) *{["ml","metre","bangle"].includes(form.pricing_unit) ? " — base / fallback price" : form.pricing_unit !== "piece" ? ` — per ${form.pricing_unit}` : " — price customer pays"}
               </label>
               <input
                 type="text"
@@ -876,16 +885,15 @@ function ProductModal({ product, categories, onSave, onClose }) {
                 onChange={e => { if (/^\d*$/.test(e.target.value)) set("price", e.target.value); }}
                 style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
             </div>
-            <div>
-              <label style={labelStyle}>Compare Price (₹)</label>
-              <input
-                type="text"
-                inputMode="numeric"
-                value={form.compare_price}
-                onChange={e => { if (/^\d*$/.test(e.target.value)) set("compare_price", e.target.value); }}
-                style={inputStyle} onFocus={focusGold} onBlur={blurBorder} />
-            </div>
           </div>
+          {form.compare_price && form.price && Number(form.compare_price) > Number(form.price) && (
+            <p className="text-xs -mt-2 flex items-center gap-2" style={{ color: "#4ade80" }}>
+              <span className="px-1.5 py-0.5 font-bold" style={{ background: "#4ade8020", border: "1px solid #4ade8040" }}>
+                {Math.round(((Number(form.compare_price) - Number(form.price)) / Number(form.compare_price)) * 100)}% OFF
+              </span>
+              You Save ₹{(Number(form.compare_price) - Number(form.price)).toLocaleString()}
+            </p>
+          )}
 
           {/* Stock Quantity */}
           {(() => {

@@ -38,11 +38,16 @@ def list_products(
     )
 
     if category_slug:
-        cat = db.query(Category).options(joinedload(Category.children)).filter(Category.slug == category_slug).first()
+        cat = db.query(Category).options(joinedload(Category.children)).filter(
+            Category.slug == category_slug, Category.is_active == True
+        ).first()
         if cat:
-            child_ids = [c.id for c in cat.children]
+            child_ids = [c.id for c in cat.children if c.is_active]
             all_ids = [cat.id] + child_ids
             query = query.filter(Product.category_id.in_(all_ids))
+        else:
+            # Category doesn't exist or is disabled — show nothing rather than falling back to "all products"
+            query = query.filter(False)
 
     if min_price is not None:
         query = query.filter(Product.price >= min_price)
