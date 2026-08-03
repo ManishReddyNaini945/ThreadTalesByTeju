@@ -15,6 +15,8 @@ DEFAULTS = {
     "promo_threshold":     "999",
     "promo_discount_pct":  "15",
     "promo_label":         "15% OFF + FREE SHIPPING",
+    "rakhi_banner_enabled":   "false",
+    "rakhi_banner_image_url": "",
 }
 
 
@@ -62,3 +64,28 @@ def update_promo_settings(
     _set(db, "promo_discount_pct", str(payload.discount_pct),      "Discount percentage")
     _set(db, "promo_label",        payload.label,                  "Banner display text")
     return {"message": "Promo settings updated successfully"}
+
+
+# ── Rakhi homepage banner ───────────────────────────────────────────────────────
+@router.get("/rakhi-banner")
+def get_rakhi_banner_settings(db: Session = Depends(get_db)):
+    return {
+        "enabled":   _get(db, "rakhi_banner_enabled") == "true",
+        "image_url": _get(db, "rakhi_banner_image_url"),
+    }
+
+
+class RakhiBannerUpdate(BaseModel):
+    enabled: bool
+    image_url: Optional[str] = None
+
+
+@router.put("/rakhi-banner")
+def update_rakhi_banner_settings(
+    payload: RakhiBannerUpdate,
+    db: Session = Depends(get_db),
+    admin: User = Depends(get_admin_user),
+):
+    _set(db, "rakhi_banner_enabled",   str(payload.enabled).lower(), "Rakhi homepage banner toggle")
+    _set(db, "rakhi_banner_image_url", payload.image_url or "",      "Rakhi homepage banner image URL")
+    return {"message": "Rakhi banner settings updated successfully"}

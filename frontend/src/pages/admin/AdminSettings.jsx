@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
-import { Save, ToggleLeft, ToggleRight, Percent, Tag, Zap, RefreshCw } from "lucide-react";
+import { Save, ToggleLeft, ToggleRight, Percent, Tag, Zap, RefreshCw, Upload, Image as ImageIcon, X } from "lucide-react";
 import api from "../../services/api";
 
 const gold = "#c8a45c";
@@ -21,6 +21,11 @@ export default function AdminSettings() {
     label: "15% OFF + FREE SHIPPING",
   });
 
+  const [rakhiForm, setRakhiForm] = useState({ enabled: false, image_url: "" });
+  const [rakhiSaving, setRakhiSaving] = useState(false);
+  const [rakhiUploading, setRakhiUploading] = useState(false);
+  const rakhiFileInputRef = useRef(null);
+
   useEffect(() => {
     api.get("/settings/promo")
       .then(({ data }) => setForm({
@@ -31,6 +36,10 @@ export default function AdminSettings() {
       }))
       .catch(() => toast.error("Failed to load settings"))
       .finally(() => setLoading(false));
+
+    api.get("/settings/rakhi-banner")
+      .then(({ data }) => setRakhiForm({ enabled: data.enabled, image_url: data.image_url || "" }))
+      .catch(() => {});
   }, []);
 
   const handleSave = async () => {
@@ -42,6 +51,35 @@ export default function AdminSettings() {
       toast.error("Failed to save settings");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleRakhiImageUpload = async (file) => {
+    if (!file) return;
+    const formData = new FormData();
+    formData.append("file", file);
+    setRakhiUploading(true);
+    try {
+      const { data } = await api.post("/admin/settings/upload-banner-image", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setRakhiForm(f => ({ ...f, image_url: data.url }));
+    } catch {
+      toast.error("Image upload failed");
+    } finally {
+      setRakhiUploading(false);
+    }
+  };
+
+  const handleSaveRakhiBanner = async () => {
+    setRakhiSaving(true);
+    try {
+      await api.put("/settings/rakhi-banner", rakhiForm);
+      toast.success("Rakhi banner saved successfully!");
+    } catch {
+      toast.error("Failed to save Rakhi banner");
+    } finally {
+      setRakhiSaving(false);
     }
   };
 
@@ -261,6 +299,93 @@ export default function AdminSettings() {
       >
         <Save size={15} />
         {saving ? "Saving..." : "Save Settings"}
+      </button>
+
+      {/* Rakhi Homepage Banner */}
+      <div>
+        <h1 className="text-2xl font-normal mb-1"
+          style={{ fontFamily: "Playfair Display, serif", color: cream }}>
+          Rakhi Homepage Banner
+        </h1>
+        <p className="text-sm" style={{ color: creamDim }}>
+          Upload a festive banner shown on the homepage, above "Our Collections". Links to the /rakhi page.
+        </p>
+      </div>
+
+      <div className="p-6 space-y-6" style={{ background: card, border: `1px solid ${border}` }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm font-medium mb-0.5" style={{ color: cream }}>Show Banner</p>
+            <p className="text-xs" style={{ color: creamDim }}>
+              Turn the homepage Rakhi banner on or off instantly
+            </p>
+          </div>
+          <button
+            onClick={() => setRakhiForm(f => ({ ...f, enabled: !f.enabled }))}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all"
+            style={{
+              background: rakhiForm.enabled ? "rgba(74,222,128,0.12)" : "rgba(248,113,113,0.1)",
+              border: `1px solid ${rakhiForm.enabled ? "rgba(74,222,128,0.4)" : "rgba(248,113,113,0.4)"}`,
+              color: rakhiForm.enabled ? green : red,
+            }}
+          >
+            {rakhiForm.enabled
+              ? <><ToggleRight size={16} /> Active</>
+              : <><ToggleLeft size={16} /> Inactive</>
+            }
+          </button>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${border}` }} />
+
+        <div>
+          <label className="block text-xs tracking-widest uppercase mb-2" style={{ color: creamDim }}>
+            Banner Image
+          </label>
+          <input ref={rakhiFileInputRef} type="file" accept="image/*" className="hidden"
+            onChange={e => handleRakhiImageUpload(e.target.files?.[0])} />
+          {rakhiForm.image_url ? (
+            <div className="relative inline-block">
+              <img src={rakhiForm.image_url} alt="Rakhi banner" className="max-w-full"
+                style={{ maxHeight: 160, border: `1px solid ${border}` }} />
+              <button type="button" onClick={() => setRakhiForm(f => ({ ...f, image_url: "" }))}
+                className="absolute -top-2 -right-2 w-6 h-6 flex items-center justify-center rounded-full"
+                style={{ background: red, color: "#0c0a09" }}>
+                <X size={13} />
+              </button>
+            </div>
+          ) : (
+            <div className="w-full flex items-center justify-center py-10" style={{ border: `1px dashed ${border}` }}>
+              <ImageIcon size={28} style={{ color: creamDim }} />
+            </div>
+          )}
+          <button type="button" onClick={() => rakhiFileInputRef.current?.click()} disabled={rakhiUploading}
+            className="mt-3 flex items-center gap-2 px-4 py-2 text-xs tracking-widest uppercase disabled:opacity-50"
+            style={{ border: `1px solid ${border}`, color: creamDim }}>
+            <Upload size={12} /> {rakhiUploading ? "Uploading..." : rakhiForm.image_url ? "Replace Image" : "Upload Image"}
+          </button>
+          <p className="text-xs mt-2" style={{ color: creamDim }}>
+            Recommended: a wide festive image (e.g. 1600×500px) with "Celebrate Raksha Bandhan · Flat 25% OFF" already designed into it.
+          </p>
+        </div>
+
+        {rakhiForm.enabled && !rakhiForm.image_url && (
+          <div className="p-3 text-center" style={{ background: "rgba(248,113,113,0.06)", border: "1px solid rgba(248,113,113,0.2)" }}>
+            <p className="text-xs" style={{ color: red }}>
+              Banner is set to Active but no image is uploaded — it won't show on the homepage until you add one.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={handleSaveRakhiBanner}
+        disabled={rakhiSaving}
+        className="w-full flex items-center justify-center gap-2 py-3.5 text-sm font-medium tracking-widest uppercase transition-all disabled:opacity-60"
+        style={{ background: gold, color: "#0c0a09" }}
+      >
+        <Save size={15} />
+        {rakhiSaving ? "Saving..." : "Save Rakhi Banner"}
       </button>
     </div>
   );

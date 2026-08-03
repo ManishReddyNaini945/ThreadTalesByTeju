@@ -263,6 +263,16 @@ async def upload_category_image(file: UploadFile = File(...), admin: User = Depe
     return {"url": result["secure_url"], "public_id": result["public_id"]}
 
 
+@router.post("/settings/upload-banner-image")
+async def upload_banner_image(file: UploadFile = File(...), admin: User = Depends(get_admin_user)):
+    result = cloudinary.uploader.upload(
+        await file.read(),
+        folder="threadtales/banners",
+        transformation=[{"quality": "auto", "fetch_format": "auto"}]
+    )
+    return {"url": result["secure_url"], "public_id": result["public_id"]}
+
+
 # ── Categories ─────────────────────────────────────────────────────────────────
 @router.get("/categories", response_model=List[CategoryOut])
 def admin_list_categories(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):

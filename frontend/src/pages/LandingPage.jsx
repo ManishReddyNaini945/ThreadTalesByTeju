@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import HeroSection from "../components/HeroSection";
+import RakhiBannerStrip from "../components/RakhiBannerStrip";
 import CollectionSection from "../components/CollectionSection";
 import BestSellers from "../components/BestSellers";
 import NewArrivals from "../components/NewArrivals";
@@ -17,6 +18,7 @@ export default function LandingPage() {
     >
       <Navbar />
       <HeroSection />
+      <RakhiBannerStrip />
       <CollectionSection />
       <BestSellers />
       <NewArrivals />
