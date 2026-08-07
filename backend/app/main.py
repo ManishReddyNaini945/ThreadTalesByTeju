@@ -8,7 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from .config import settings
 from .database import Base, engine
 from .limiter import limiter
-from .routers import auth, products, cart, wishlist, orders, payments, reviews, admin, addresses, stock_notify, newsletter
+from .routers import auth, products, cart, wishlist, orders, payments, reviews, admin, addresses, stock_notify, newsletter, product_comments
 from .routers import settings as settings_router
 from .services.abandoned_cart import send_abandoned_cart_emails
 from .services.payment_reminders import send_pending_payment_reminders
@@ -73,6 +73,7 @@ app.include_router(wishlist.router, prefix="/api/v1")
 app.include_router(orders.router, prefix="/api/v1")
 app.include_router(payments.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
+app.include_router(product_comments.router, prefix="/api/v1")
 app.include_router(admin.router, prefix="/api/v1")
 app.include_router(addresses.router, prefix="/api/v1")
 app.include_router(stock_notify.router, prefix="/api/v1")

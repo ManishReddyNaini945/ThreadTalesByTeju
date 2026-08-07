@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Package, ShoppingBag, Tags, LogOut, Menu, X, ChevronRight, Settings, Ticket } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingBag, Tags, LogOut, Menu, X, ChevronRight, Settings, Ticket, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -9,6 +9,7 @@ const navItems = [
   { to: "/admin/orders", label: "Orders", icon: ShoppingBag },
   { to: "/admin/categories", label: "Categories", icon: Tags },
   { to: "/admin/coupons", label: "Coupons", icon: Ticket },
+  { to: "/admin/comments", label: "Questions", icon: MessageCircle },
   { to: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

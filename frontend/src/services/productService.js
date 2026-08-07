@@ -8,4 +8,7 @@ export const productService = {
   createReview: (data) => api.post("/reviews", data),
   deleteReview: (id) => api.delete(`/reviews/${id}`),
   getRelated: (slug) => api.get(`/products/${slug}/related`),
+  getComments: (productId) => api.get(`/comments/product/${productId}`),
+  createComment: (data) => api.post("/comments/", data),
+  deleteComment: (id) => api.delete(`/comments/${id}`),
 };

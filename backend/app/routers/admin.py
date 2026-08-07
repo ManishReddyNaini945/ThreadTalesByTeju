@@ -16,9 +16,11 @@ from ..models.category import Category
 from ..models.order import Order, OrderItem, OrderStatus, PaymentStatus
 from ..models.stock_notification import StockNotification
 from ..models.coupon import Coupon
+from ..models.product_comment import ProductComment
 from ..schemas.product import ProductCreate, ProductUpdate, ProductOut, CategoryCreate, CategoryOut
 from ..schemas.coupon import CouponCreate, CouponUpdate, CouponOut
 from ..schemas.order import OrderOut
+from ..schemas.product_comment import CommentAdminOut, CommentReply
 from ..config import settings
 from ..services.email_service import send_stock_notification, send_tracking_update
 
@@ -471,3 +473,44 @@ def delete_coupon(coupon_id: int, db: Session = Depends(get_db), admin: User = D
     db.delete(coupon)
     db.commit()
     return {"message": "Coupon deleted"}
+
+
+# ── Product Comments / Questions ─────────────────────────────────────────────────
+def _comment_admin_out(c: ProductComment) -> CommentAdminOut:
+    out = CommentAdminOut.model_validate(c)
+    out.user_name = c.user.full_name if c.user else "Customer"
+    out.user_email = c.user.email if c.user else None
+    out.product_name = c.product.name if c.product else None
+    return out
+
+
+@router.get("/comments", response_model=List[CommentAdminOut])
+def admin_list_comments(db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    comments = db.query(ProductComment).options(
+        joinedload(ProductComment.user), joinedload(ProductComment.product)
+    ).order_by(ProductComment.created_at.desc()).all()
+    return [_comment_admin_out(c) for c in comments]
+
+
+@router.put("/comments/{comment_id}/reply", response_model=CommentAdminOut)
+def reply_to_comment(comment_id: int, payload: CommentReply, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    comment = db.query(ProductComment).options(
+        joinedload(ProductComment.user), joinedload(ProductComment.product)
+    ).filter(ProductComment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    comment.admin_reply = payload.admin_reply
+    comment.admin_reply_at = datetime.utcnow()
+    db.commit()
+    db.refresh(comment)
+    return _comment_admin_out(comment)
+
+
+@router.delete("/comments/{comment_id}")
+def admin_delete_comment(comment_id: int, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    comment = db.query(ProductComment).filter(ProductComment.id == comment_id).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+    db.delete(comment)
+    db.commit()
+    return {"message": "Comment deleted"}

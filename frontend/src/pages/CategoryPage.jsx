@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ChevronRight, Search } from "lucide-react";
+import { ChevronRight, Search, ChevronDown } from "lucide-react";
 import { productService } from "../services/productService";
 import ProductCard from "../components/ProductCard";
 import Navbar from "../components/Navbar";
@@ -25,6 +25,7 @@ export default function CategoryPage() {
   const [products, setProducts] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [sortBy, setSortBy] = useState("newest");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,14 +59,14 @@ export default function CategoryPage() {
   useEffect(() => {
     if (!parentCategory || subcategories.length === 0) return;
     setLoading(true);
-    productService.getProducts({ category_slug: activeSlug, page, page_size: 20, sort_by: "newest" })
+    productService.getProducts({ category_slug: activeSlug, page, page_size: 20, sort_by: sortBy })
       .then(({ data }) => {
         setProducts(data.items || data.products || []);
         setTotal(data.total || 0);
       })
       .catch(() => { setProducts([]); setTotal(0); })
       .finally(() => setLoading(false));
-  }, [activeSlug, page, parentCategory, subcategories.length]);
+  }, [activeSlug, page, sortBy, parentCategory, subcategories.length]);
 
   const selectTab = (tabSlug) => {
     setActiveSlug(tabSlug);
@@ -140,26 +141,39 @@ export default function CategoryPage() {
 
         {!catLoading && !notFound && parentCategory && subcategories.length > 0 && (
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pb-20">
-            {/* Subcategory tabs — All first, then each subcategory */}
-            <div className="flex gap-2 overflow-x-auto pb-2 mb-8" style={{ borderBottom: `1px solid ${border}` }}>
-              <button onClick={() => selectTab(slug)}
-                className="flex-shrink-0 px-5 py-2.5 text-sm tracking-wide transition-all duration-200 border-b-2 -mb-px"
-                style={{
-                  color: activeSlug === slug ? gold : creamDim,
-                  borderBottomColor: activeSlug === slug ? gold : "transparent",
-                }}>
-                All
-              </button>
-              {subcategories.map((c) => (
-                <button key={c.id} onClick={() => selectTab(c.slug)}
-                  className="flex-shrink-0 px-5 py-2.5 text-sm tracking-wide transition-all duration-200 border-b-2 -mb-px whitespace-nowrap"
+            {/* Subcategory tabs — All first, then each subcategory — plus sort */}
+            <div className="flex items-center justify-between gap-4 mb-8" style={{ borderBottom: `1px solid ${border}` }}>
+              <div className="flex gap-2 overflow-x-auto">
+                <button onClick={() => selectTab(slug)}
+                  className="flex-shrink-0 px-5 py-2.5 text-sm tracking-wide transition-all duration-200 border-b-2 -mb-px"
                   style={{
-                    color: activeSlug === c.slug ? gold : creamDim,
-                    borderBottomColor: activeSlug === c.slug ? gold : "transparent",
+                    color: activeSlug === slug ? gold : creamDim,
+                    borderBottomColor: activeSlug === slug ? gold : "transparent",
                   }}>
-                  {c.name}
+                  All
                 </button>
-              ))}
+                {subcategories.map((c) => (
+                  <button key={c.id} onClick={() => selectTab(c.slug)}
+                    className="flex-shrink-0 px-5 py-2.5 text-sm tracking-wide transition-all duration-200 border-b-2 -mb-px whitespace-nowrap"
+                    style={{
+                      color: activeSlug === c.slug ? gold : creamDim,
+                      borderBottomColor: activeSlug === c.slug ? gold : "transparent",
+                    }}>
+                    {c.name}
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative flex-shrink-0 mb-2">
+                <select value={sortBy} onChange={(e) => { setSortBy(e.target.value); setPage(1); }}
+                  className="appearance-none pl-3 pr-7 py-2.5 text-sm outline-none cursor-pointer"
+                  style={{ background: "var(--bg-card)", border: `1px solid ${border}`, color: cream }}>
+                  <option value="newest">Newest</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                </select>
+                <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: creamDim }} />
+              </div>
             </div>
 
             {/* Products grid */}

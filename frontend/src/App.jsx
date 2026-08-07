@@ -40,6 +40,7 @@ const AdminProducts = lazy(() => import("./pages/admin/AdminProducts"));
 const AdminOrders = lazy(() => import("./pages/admin/AdminOrders"));
 const AdminCategories = lazy(() => import("./pages/admin/AdminCategories"));
 const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
+const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-brand-cream flex items-center justify-center">
@@ -88,6 +89,7 @@ function App() {
                   <Route path="orders" element={<AdminOrders />} />
                   <Route path="categories" element={<AdminCategories />} />
                   <Route path="coupons" element={<AdminCoupons />} />
+                  <Route path="comments" element={<AdminComments />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
 

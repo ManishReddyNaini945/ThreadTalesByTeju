@@ -86,6 +86,9 @@ export default function ProductDetailPage() {
   const [addingToCart, setAddingToCart] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewData, setReviewData] = useState({ rating: 5, title: "", body: "" });
+  const [comments, setComments] = useState([]);
+  const [commentText, setCommentText] = useState("");
+  const [submittingComment, setSubmittingComment] = useState(false);
   const [customColor, setCustomColor] = useState("");
   const [customNote, setCustomNote] = useState("");
   const [notifyEmail, setNotifyEmail] = useState("");
@@ -108,6 +111,7 @@ export default function ProductDetailPage() {
         ]);
         setProduct(pRes.data);
         setReviews(rRes.data || []);
+        productService.getComments(pRes.data.id).then(({ data }) => setComments(data || [])).catch(() => {});
         productService.getRelated(slug).then(({ data }) => setRelatedProducts(data)).catch(() => {});
         if (pRes.data.colors?.length) setSelectedColor(pRes.data.colors[0]);
         if (pRes.data.sizes?.length) setSelectedSize(pRes.data.sizes[0]);
@@ -161,6 +165,22 @@ export default function ProductDetailPage() {
       toast.success("Review submitted!");
     } catch (err) {
       toast.error(err.response?.data?.detail || "Failed to submit review");
+    }
+  };
+
+  const handleSubmitComment = async (e) => {
+    e.preventDefault();
+    if (!commentText.trim()) return;
+    setSubmittingComment(true);
+    try {
+      const res = await productService.createComment({ product_id: product.id, message: commentText.trim() });
+      setComments((prev) => [res.data, ...prev]);
+      setCommentText("");
+      toast.success("Your question has been posted!");
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Failed to post your question");
+    } finally {
+      setSubmittingComment(false);
     }
   };
 
@@ -844,6 +864,73 @@ export default function ProductDetailPage() {
           ) : (
             <p className="text-center py-12" style={{ color: "var(--cream-dim)" }}>
               No reviews yet. Be the first to review this product!
+            </p>
+          )}
+        </div>
+
+        {/* Questions & Comments section */}
+        <div className="mt-12 sm:mt-20">
+          <h2 className="text-xl sm:text-2xl font-normal mb-2" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
+            Questions & Comments
+          </h2>
+          <p className="text-sm mb-6" style={{ color: "var(--cream-dim)" }}>
+            Ask about color options, customization, sizing, or anything else — we usually reply within a day.
+          </p>
+
+          {user ? (
+            <form onSubmit={handleSubmitComment} className="p-5 mb-6 space-y-3"
+              style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+              <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)}
+                rows={3} placeholder="e.g. Can this be made in a different color?"
+                className="w-full px-4 py-3 text-sm focus:outline-none resize-none"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)", color: "var(--cream)" }}
+                onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                onBlur={e => e.target.style.borderColor = "var(--border)"} />
+              <button type="submit" disabled={submittingComment || !commentText.trim()}
+                className="btn-gold px-6 py-3 text-sm disabled:opacity-50">
+                {submittingComment ? "Posting..." : "Post Question"}
+              </button>
+            </form>
+          ) : (
+            <p className="text-sm mb-6" style={{ color: "var(--cream-dim)" }}>
+              <Link to="/auth" style={{ color: "var(--gold)" }} className="underline">Sign in</Link> to ask a question about this product.
+            </p>
+          )}
+
+          {comments.length > 0 ? (
+            <div className="space-y-4">
+              {comments.map((c) => (
+                <div key={c.id} className="p-4" style={{ background: "var(--bg-card)", border: "1px solid var(--border)" }}>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0"
+                      style={{ background: "var(--gold-dim)", color: "var(--bg)" }}>
+                      {c.user_name?.[0]?.toUpperCase() || "C"}
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm" style={{ color: "var(--cream)" }}>{c.user_name || "Customer"}</p>
+                      {c.created_at && (
+                        <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
+                          {new Date(c.created_at).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-sm leading-relaxed" style={{ color: "var(--cream-dim)" }}>{c.message}</p>
+
+                  {c.admin_reply && (
+                    <div className="mt-3 ml-4 pl-4 py-2" style={{ borderLeft: "2px solid var(--gold)" }}>
+                      <p className="text-xs tracking-widest uppercase mb-1 flex items-center gap-1.5" style={{ color: "var(--gold)" }}>
+                        <MessageCircle size={11} /> Thread Tales by Teju
+                      </p>
+                      <p className="text-sm leading-relaxed" style={{ color: "var(--cream)" }}>{c.admin_reply}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-center py-8" style={{ color: "var(--cream-dim)" }}>
+              No questions yet. Be the first to ask!
             </p>
           )}
         </div>

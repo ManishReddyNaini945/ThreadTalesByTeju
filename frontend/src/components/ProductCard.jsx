@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Heart, ShoppingBag, Star } from "lucide-react";
 import { useCart } from "../context/CartContext";
@@ -7,6 +7,7 @@ import { useWishlist } from "../context/WishlistContext";
 import ProductShareButton from "./ProductShareButton";
 
 export default function ProductCard({ product }) {
+  const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
   const [adding, setAdding] = useState(false);
@@ -16,8 +17,10 @@ export default function ProductCard({ product }) {
   const img = product.images?.[0] || firstColorImg || "";
   const wishlisted = isWishlisted?.(product.id);
 
+  const goToProduct = () => navigate(`/product/${product.slug}`);
+
   const handleCart = async (e) => {
-    e.preventDefault();
+    e.stopPropagation();
     setAdding(true);
     try { await addToCart(product.id, 1); } catch {}
     finally { setTimeout(() => setAdding(false), 800); }
@@ -26,7 +29,11 @@ export default function ProductCard({ product }) {
   return (
     <motion.div layout initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="group"
+      className="group cursor-pointer"
+      role="link"
+      tabIndex={0}
+      onClick={goToProduct}
+      onKeyDown={(e) => { if (e.key === "Enter") goToProduct(); }}
       style={{
         border: "1px solid var(--border)",
         background: "var(--bg-card)",
@@ -45,12 +52,10 @@ export default function ProductCard({ product }) {
     >
       {/* Image — clean, full visibility */}
       <div className="relative overflow-hidden" style={{ aspectRatio: "1/1", background: "var(--bg)" }}>
-        <Link to={`/product/${product.slug}`} className="absolute inset-0 block">
-          {img && (
-            <img src={img} alt={product.name} loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-          )}
-        </Link>
+        {img && (
+          <img src={img} alt={product.name} loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+        )}
 
         {/* Hover gradient — desktop only */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
@@ -79,13 +84,13 @@ export default function ProductCard({ product }) {
           </div>
 
         {/* Share + wishlist icons — top right */}
-        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2">
+        <div className="absolute top-3 right-3 z-10 flex flex-col gap-2" onClick={(e) => e.stopPropagation()}>
           <ProductShareButton
             product={product}
             className="w-9 h-9"
             style={{ background: "rgba(12,10,9,0.85)", border: "1px solid var(--border)", color: "var(--cream-dim)" }}
           />
-          <button onClick={(e) => { e.preventDefault(); toggleWishlist?.(product.id); }}
+          <button onClick={() => toggleWishlist?.(product.id)}
             className="w-9 h-9 flex items-center justify-center transition-all duration-300"
             style={{ background: "rgba(12,10,9,0.85)", border: "1px solid var(--border)" }}>
             <Heart size={13} fill={wishlisted ? "var(--pink)" : "none"}
@@ -96,7 +101,7 @@ export default function ProductCard({ product }) {
 
       {/* Info panel + Add to Cart below image */}
       <div className="p-3" style={{ borderTop: "1px solid var(--border)" }}>
-        <Link to={`/product/${product.slug}`} className="block">
+        <div>
           <p className="text-[10px] tracking-[0.2em] uppercase mb-1" style={{ color: "var(--gold)" }}>
             {product.category?.name}
           </p>
@@ -165,7 +170,7 @@ export default function ProductCard({ product }) {
               </>
             );
           })()}
-        </Link>
+        </div>
 
         {/* Add to Cart — below price, always tappable */}
         <button onClick={handleCart}

@@ -33,4 +33,8 @@ export const adminService = {
   createCoupon: (data) => api.post("/admin/coupons", data),
   updateCoupon: (id, data) => api.put(`/admin/coupons/${id}`, data),
   deleteCoupon: (id) => api.delete(`/admin/coupons/${id}`),
+  // Product Comments / Questions
+  getComments: () => api.get("/admin/comments"),
+  replyToComment: (id, admin_reply) => api.put(`/admin/comments/${id}/reply`, { admin_reply }),
+  deleteComment: (id) => api.delete(`/admin/comments/${id}`),
 };
