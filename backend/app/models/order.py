@@ -88,6 +88,7 @@ class OrderItem(Base):
     total_price = Column(Float, nullable=False)
     selected_color = Column(String(100), nullable=True)
     selected_size = Column(String(100), nullable=True)
+    custom_note = Column(Text, nullable=True)
 
     order = relationship("Order", back_populates="items")
     product = relationship("Product", back_populates="order_items")

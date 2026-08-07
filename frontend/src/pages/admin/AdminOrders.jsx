@@ -205,6 +205,16 @@ export default function AdminOrders() {
                                   <div>
                                     <p className="text-xs font-medium" style={{ color: cream }}>{item.product_name}</p>
                                     <p className="text-xs" style={{ color: creamDim }}>×{item.quantity} · ₹{item.total_price.toLocaleString()}</p>
+                                    {(item.selected_color || item.selected_size) && (
+                                      <p className="text-xs" style={{ color: creamDim }}>
+                                        {[item.selected_color, item.selected_size].filter(Boolean).join(" · ")}
+                                      </p>
+                                    )}
+                                    {item.custom_note && (
+                                      <p className="text-xs mt-0.5 px-2 py-1" style={{ color: gold, background: `${gold}15`, border: `1px solid ${gold}40` }}>
+                                        📝 {item.custom_note}
+                                      </p>
+                                    )}
                                   </div>
                                 </div>
                               ))}

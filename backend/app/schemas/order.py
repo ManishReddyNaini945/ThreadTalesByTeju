@@ -14,6 +14,7 @@ class OrderItemOut(BaseModel):
     total_price: float
     selected_color: Optional[str]
     selected_size: Optional[str]
+    custom_note: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -561,35 +561,6 @@ export default function ProductDetailPage() {
               );
             })()}
 
-            {/* Custom note — shown when a pack/size is selected */}
-            {selectedSize && (
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium" style={{ color: "var(--cream)" }}>
-                  Your Preferences
-                  <span className="ml-1 text-xs font-normal" style={{ color: "var(--cream-dim)" }}>(optional)</span>
-                </label>
-                <textarea
-                  rows={3}
-                  value={customNote}
-                  onChange={e => setCustomNote(e.target.value)}
-                  placeholder={`e.g. Colors: Red, Blue, Green${product.colors?.length ? "" : " · Any specific design preference"}`}
-                  className="w-full px-3 py-2 text-sm resize-none focus:outline-none"
-                  style={{
-                    background: "var(--bg-card)",
-                    border: `1px solid ${customNote.trim() ? "var(--gold)" : "var(--border)"}`,
-                    color: "var(--cream)",
-                  }}
-                  onFocus={e => e.target.style.borderColor = "var(--gold)"}
-                  onBlur={e => { if (!customNote.trim()) e.target.style.borderColor = "var(--border)"; }}
-                />
-                {customNote.trim() && (
-                  <p className="text-xs" style={{ color: "var(--gold)" }}>
-                    ✓ Your note will be included with the order
-                  </p>
-                )}
-              </div>
-            )}
-
             {/* Quantity / Weight */}
             {(product.pricing_unit === "gram" || product.pricing_unit === "kg") ? (
               <div className="space-y-2">
@@ -657,6 +628,33 @@ export default function ProductDetailPage() {
                 )}
               </div>
             )}
+
+            {/* Custom note — always available so buyers can flag color/customization preferences before ordering */}
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium" style={{ color: "var(--cream)" }}>
+                Your Preferences
+                <span className="ml-1 text-xs font-normal" style={{ color: "var(--cream-dim)" }}>(optional)</span>
+              </label>
+              <textarea
+                rows={3}
+                value={customNote}
+                onChange={e => setCustomNote(e.target.value)}
+                placeholder={`e.g. Colors: Red, Blue, Green${product.colors?.length ? "" : " · Any specific design preference"}`}
+                className="w-full px-3 py-2 text-sm resize-none focus:outline-none"
+                style={{
+                  background: "var(--bg-card)",
+                  border: `1px solid ${customNote.trim() ? "var(--gold)" : "var(--border)"}`,
+                  color: "var(--cream)",
+                }}
+                onFocus={e => e.target.style.borderColor = "var(--gold)"}
+                onBlur={e => { if (!customNote.trim()) e.target.style.borderColor = "var(--border)"; }}
+              />
+              {customNote.trim() && (
+                <p className="text-xs" style={{ color: "var(--gold)" }}>
+                  ✓ Your note will be included with the order
+                </p>
+              )}
+            </div>
 
             {/* CTA buttons */}
             {product.stock_quantity === 0 ? (

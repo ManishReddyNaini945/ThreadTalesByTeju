@@ -180,6 +180,7 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
             total_price=round(item.price_at_add * item.quantity, 2),
             selected_color=item.selected_color,
             selected_size=item.selected_size,
+            custom_note=item.custom_note,
         )
         db.add(order_item)
         # Deduct stock
