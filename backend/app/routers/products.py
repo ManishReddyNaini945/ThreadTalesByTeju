@@ -18,6 +18,24 @@ def slugify(text: str) -> str:
     return text
 
 
+def hidden_category_ids(db: Session) -> List[int]:
+    """IDs of categories hidden from shoppers: disabled ones plus children of disabled parents."""
+    disabled = [cid for (cid,) in db.query(Category.id).filter(Category.is_active == False).all()]
+    if not disabled:
+        return []
+    children = [cid for (cid,) in db.query(Category.id).filter(Category.parent_id.in_(disabled)).all()]
+    return list(set(disabled + children))
+
+
+def visible_products(db: Session):
+    """Active products whose category is visible to shoppers."""
+    query = db.query(Product).filter(Product.status == ProductStatus.active)
+    hidden = hidden_category_ids(db)
+    if hidden:
+        query = query.filter(~Product.category_id.in_(hidden))
+    return query
+
+
 @router.get("/", response_model=dict)
 def list_products(
     category_slug: Optional[str] = Query(None),
@@ -33,9 +51,7 @@ def list_products(
     page_size: int = Query(20, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
-    query = db.query(Product).options(joinedload(Product.category)).filter(
-        Product.status == ProductStatus.active
-    )
+    query = visible_products(db).options(joinedload(Product.category))
 
     if category_slug:
         cat = db.query(Category).options(joinedload(Category.children)).filter(
@@ -86,24 +102,24 @@ def list_products(
 
 @router.get("/featured", response_model=List[ProductOut])
 def featured_products(limit: int = 8, db: Session = Depends(get_db)):
-    products = db.query(Product).filter(
-        Product.is_featured == True, Product.status == ProductStatus.active
+    products = visible_products(db).filter(
+        Product.is_featured == True
     ).limit(limit).all()
     return products
 
 
 @router.get("/bestsellers", response_model=List[ProductOut])
 def bestsellers(limit: int = 8, db: Session = Depends(get_db)):
-    products = db.query(Product).filter(
-        Product.is_bestseller == True, Product.status == ProductStatus.active
+    products = visible_products(db).filter(
+        Product.is_bestseller == True
     ).limit(limit).all()
     return products
 
 
 @router.get("/new-arrivals", response_model=List[ProductOut])
 def new_arrivals(limit: int = 8, db: Session = Depends(get_db)):
-    products = db.query(Product).filter(
-        Product.is_new_arrival == True, Product.status == ProductStatus.active
+    products = visible_products(db).filter(
+        Product.is_new_arrival == True
     ).order_by(desc(Product.created_at)).limit(limit).all()
     return products
 
@@ -119,18 +135,31 @@ def list_categories(db: Session = Depends(get_db)):
     )
     result = []
     for cat in categories:
-        all_ids = [cat.id] + [child.id for child in cat.children]
+        active_children = [child for child in cat.children if child.is_active]
+        all_ids = [cat.id] + [child.id for child in active_children]
         count = db.query(func.count(Product.id)).filter(
             Product.category_id.in_(all_ids), Product.status == ProductStatus.active
         ).scalar()
-        result.append(CategoryWithCount.model_validate(cat, from_attributes=True).model_copy(update={"product_count": count}))
+        result.append(CategoryWithCount.model_validate(cat, from_attributes=True).model_copy(update={
+            "product_count": count,
+            "children": [CategoryOut.model_validate(c, from_attributes=True) for c in active_children],
+        }))
     return result
+
+
+@router.get("/categories/hidden", response_model=List[str])
+def list_hidden_category_slugs(db: Session = Depends(get_db)):
+    """Slugs of categories the admin has hidden, so the storefront can drop hard-coded links to them."""
+    hidden = hidden_category_ids(db)
+    if not hidden:
+        return []
+    return [slug for (slug,) in db.query(Category.slug).filter(Category.id.in_(hidden)).all()]
 
 
 @router.get("/{slug}", response_model=ProductOut)
 def get_product(slug: str, db: Session = Depends(get_db)):
     product = db.query(Product).options(joinedload(Product.category)).filter(Product.slug == slug).first()
-    if not product:
+    if not product or product.category_id in hidden_category_ids(db):
         raise HTTPException(status_code=404, detail="Product not found")
     return product
 
@@ -140,9 +169,8 @@ def get_related_products(slug: str, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.slug == slug).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    related = db.query(Product).options(joinedload(Product.category)).filter(
+    related = visible_products(db).options(joinedload(Product.category)).filter(
         Product.category_id == product.category_id,
         Product.id != product.id,
-        Product.status == ProductStatus.active,
     ).limit(4).all()
     return related

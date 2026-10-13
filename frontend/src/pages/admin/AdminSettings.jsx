@@ -19,6 +19,7 @@ export default function AdminSettings() {
     threshold: 999,
     discount_pct: 15,
     label: "15% OFF + FREE SHIPPING",
+    free_shipping: true,
   });
 
   const [rakhiForm, setRakhiForm] = useState({ enabled: false, image_url: "" });
@@ -33,6 +34,7 @@ export default function AdminSettings() {
         threshold:    data.threshold,
         discount_pct: data.discount_pct,
         label:        data.label,
+        free_shipping: data.free_shipping ?? true,
       }))
       .catch(() => toast.error("Failed to load settings"))
       .finally(() => setLoading(false));
@@ -136,6 +138,32 @@ export default function AdminSettings() {
 
         <div style={{ borderTop: `1px solid ${border}` }} />
 
+        {/* Free shipping toggle */}
+        <div className="flex items-center justify-between" style={{ opacity: form.enabled ? 1 : 0.4 }}>
+          <div>
+            <p className="text-sm font-medium mb-0.5" style={{ color: cream }}>Free Shipping</p>
+            <p className="text-xs" style={{ color: creamDim }}>
+              Also waive shipping charges on orders that qualify for the promo
+            </p>
+          </div>
+          <button
+            onClick={() => setForm(f => ({ ...f, free_shipping: !f.free_shipping }))}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium transition-all"
+            style={{
+              background: form.free_shipping ? "rgba(74,222,128,0.12)" : "rgba(248,113,113,0.1)",
+              border: `1px solid ${form.free_shipping ? "rgba(74,222,128,0.4)" : "rgba(248,113,113,0.4)"}`,
+              color: form.free_shipping ? green : red,
+            }}
+          >
+            {form.free_shipping
+              ? <><ToggleRight size={16} /> Active</>
+              : <><ToggleLeft size={16} /> Inactive</>
+            }
+          </button>
+        </div>
+
+        <div style={{ borderTop: `1px solid ${border}` }} />
+
         {/* Threshold */}
         <div>
           <label className="block text-xs tracking-widest uppercase mb-2" style={{ color: creamDim }}>
@@ -230,7 +258,7 @@ export default function AdminSettings() {
           <p className="text-xs text-center" style={{ color: creamDim }}>
             <span className="font-bold" style={{ color: gold }}>{form.label || "—"}</span>
             <span style={{ color: "rgba(200,164,92,0.4)" }}> · </span>
-            <span>orders above </span>
+            <span>On orders above </span>
             <span className="font-semibold" style={{ color: cream }}>₹{form.threshold.toLocaleString()}</span>
             <span style={{ color: "rgba(200,164,92,0.4)" }}> · </span>
             <span style={{ color: gold, textDecoration: "underline" }}>Shop Now →</span>
@@ -276,7 +304,7 @@ export default function AdminSettings() {
               <span style={{ color: cream, fontWeight: 600 }}>₹{form.threshold.toLocaleString()}</span>
               {" "}saves{" "}
               <span style={{ color: green, fontWeight: 700 }}>₹{previewDiscount.toLocaleString()}</span>
-              {" "}+ gets free shipping
+              {form.free_shipping ? " + gets free shipping" : ""}
             </p>
           </div>
         )}

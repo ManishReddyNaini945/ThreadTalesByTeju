@@ -6,6 +6,7 @@ import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import { usePromoSettings } from "../hooks/usePromoSettings";
+import { useHiddenCategories, categorySlugFromPath } from "../hooks/useHiddenCategories";
 import { productService } from "../services/productService";
 
 const NAV_LINKS = [
@@ -64,6 +65,7 @@ export default function Navbar() {
   const [offerDismissed, setOfferDismissed] = useState(false);
   const [rakhiActive, setRakhiActive] = useState(false);
   const promo = usePromoSettings();
+  const hiddenCategories = useHiddenCategories();
   const navigate = useNavigate();
   const location = useLocation();
   const { cart } = useCart();
@@ -85,7 +87,12 @@ export default function Navbar() {
       .catch(() => setRakhiActive(false));
   }, []);
 
-  const navLinks = NAV_LINKS.filter(l => l.path !== "/rakhi" || rakhiActive);
+  const isVisible = (path) => !hiddenCategories.has(categorySlugFromPath(path));
+  const navLinks = NAV_LINKS
+    .filter(l => l.path !== "/rakhi" || rakhiActive)
+    .filter(l => !l.path || isVisible(l.path))
+    .map(l => (l.children ? { ...l, children: l.children.filter(c => isVisible(c.path)) } : l))
+    .filter(l => !l.children || l.children.length > 0);
 
   useEffect(() => {
     setMenuOpen(false);
@@ -201,8 +208,8 @@ export default function Navbar() {
                   <span className="font-bold" style={{ color: "var(--gold)", letterSpacing: "0.06em" }}>
                     {promo.label}
                   </span>
-                  <span className="mx-1.5 opacity-25" style={{ color: "var(--cream)" }}>·</span>
-                  <span>orders above </span>
+                  <span className="mx-1.3 opacity-25" style={{ color: "var(--cream)" }}>·</span>
+                  <span>On orders above </span>
                   <span className="font-semibold" style={{ color: "var(--cream)" }}>₹{promo.threshold.toLocaleString()}</span>
                   <span className="hidden sm:inline" style={{ color: "var(--cream-dim)" }}> — auto-applied at checkout</span>
                   <span className="mx-1.5 opacity-25" style={{ color: "var(--cream)" }}>·</span>

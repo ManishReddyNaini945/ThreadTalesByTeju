@@ -72,6 +72,10 @@ def _get_promo_config(db: Session):
     return enabled, threshold, discount_pct
 
 
+def _promo_free_shipping(db: Session) -> bool:
+    return get_setting(db, "promo_free_shipping") == "true"
+
+
 PROMO_THRESHOLD = 999.0
 PROMO_DISCOUNT_PCT = 15.0
 
@@ -110,6 +114,7 @@ def get_promo_status(order_amount: float, db: Session = Depends(get_db), current
         "threshold":     promo_threshold,
         "discount_pct":  promo_discount_pct,
         "discount_amount": promo_discount,
+        "free_shipping": _promo_free_shipping(db),
         "remaining":     max(0.0, round(promo_threshold - order_amount, 2)),
     }
 
@@ -148,8 +153,9 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
                 coupon.used_count += 1
                 coupon_code = coupon.code
 
-    # Free shipping only when promo is active; otherwise based on shipping state
-    shipping = 0.0 if promo_applied else calculate_shipping(payload.shipping_address.state)
+    # Free shipping only when promo is active and includes it; otherwise based on shipping state
+    free_shipping = promo_applied and _promo_free_shipping(db)
+    shipping = 0.0 if free_shipping else calculate_shipping(payload.shipping_address.state)
     tax = round(subtotal * 0.0, 2)  # No tax for now
     total = round(subtotal - discount + shipping + tax, 2)
 

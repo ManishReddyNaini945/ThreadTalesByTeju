@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, Fragment } from "react";
-import { Plus, Trash2, Tags, ChevronRight, Pencil, Check, X, Image as ImageIcon, Upload } from "lucide-react";
+import { Plus, Trash2, Tags, ChevronRight, Pencil, Check, X, Image as ImageIcon, Upload, Eye, EyeOff } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
 
@@ -139,6 +139,18 @@ export default function AdminCategories() {
     } finally { setQuickAddSaving(false); }
   };
 
+  const handleToggleVisibility = async (cat) => {
+    const next = !cat.is_active;
+    setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, is_active: next } : c));
+    try {
+      await adminService.setCategoryVisibility(cat.id, next);
+      toast.success(`${cat.name} is now ${next ? "visible to" : "hidden from"} customers`);
+    } catch {
+      setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, is_active: !next } : c));
+      toast.error("Failed to update visibility");
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("Delete this category?")) return;
     try {
@@ -160,7 +172,7 @@ export default function AdminCategories() {
     .forEach(c => grouped.push({ ...c, isParent: false }));
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-5xl space-y-6">
       <div>
         <h1 className="text-2xl font-normal" style={{ fontFamily: "Playfair Display, serif", color: cream }}>Categories</h1>
         <p className="text-xs mt-0.5" style={{ color: creamDim }}>{categories.length} categories</p>
@@ -233,7 +245,7 @@ export default function AdminCategories() {
       </form>
 
       {/* List */}
-      <div style={{ background: cardBg, border: `1px solid ${border}` }}>
+      <div className="overflow-x-auto" style={{ background: cardBg, border: `1px solid ${border}` }}>
         {loading ? (
           <div className="flex items-center justify-center py-16 text-sm" style={{ color: creamDim }}>Loading...</div>
         ) : grouped.length === 0 ? (
@@ -250,6 +262,7 @@ export default function AdminCategories() {
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Description</th>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Slug</th>
                 <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Subcategories</th>
+                <th className="text-left px-5 py-3 text-xs tracking-widest uppercase" style={{ color: creamDim }}>Visible</th>
                 <th className="px-5 py-3" />
               </tr>
             </thead>
@@ -257,6 +270,7 @@ export default function AdminCategories() {
               {grouped.map((cat) => {
                 const isEditing = editingId === cat.id;
                 const childCount = cat.isParent ? categories.filter(c => c.parent_id === cat.id).length : 0;
+                const parentHidden = !cat.isParent && categories.some(p => p.id === cat.parent_id && !p.is_active);
                 const rowInputStyle = {
                   ...inputStyle,
                   padding: "6px 10px",
@@ -264,7 +278,7 @@ export default function AdminCategories() {
                 };
                 return (
                   <Fragment key={cat.id}>
-                  <tr style={{ borderBottom: `1px solid ${border}`, background: isEditing ? "#1a1614" : "transparent" }}
+                  <tr style={{ borderBottom: `1px solid ${border}`, background: isEditing ? "#1a1614" : "transparent", opacity: cat.is_active && !parentHidden ? 1 : 0.55 }}
                     onMouseEnter={e => { if (!isEditing) e.currentTarget.style.background = "#231f1b"; }}
                     onMouseLeave={e => { if (!isEditing) e.currentTarget.style.background = "transparent"; }}>
 
@@ -295,7 +309,7 @@ export default function AdminCategories() {
                     </td>
 
                     {/* Name */}
-                    <td className="px-5 py-3.5 font-medium" style={{ color: cream }}>
+                    <td className="px-5 py-3.5 font-medium whitespace-nowrap" style={{ color: cream }}>
                       {isEditing ? (
                         <input
                           value={editName}
@@ -335,7 +349,7 @@ export default function AdminCategories() {
                     </td>
 
                     {/* Slug / Parent */}
-                    <td className="px-5 py-3.5 text-xs font-mono" style={{ color: creamDim }}>
+                    <td className="px-5 py-3.5 text-xs font-mono whitespace-nowrap" style={{ color: creamDim }}>
                       {isEditing ? (
                         <select
                           value={editParentId}
@@ -357,7 +371,7 @@ export default function AdminCategories() {
                     <td className="px-5 py-3.5 text-xs" style={{ color: creamDim }}>
                       {cat.isParent ? (
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5" style={{ background: `${gold}15`, color: gold, border: `1px solid ${gold}40` }}>
+                          <span className="px-2 py-0.5 whitespace-nowrap" style={{ background: `${gold}15`, color: gold, border: `1px solid ${gold}40` }}>
                             {childCount} subcategor{childCount === 1 ? "y" : "ies"}
                           </span>
                           <button type="button" onClick={() => startQuickAdd(cat.id)} title="Add subcategory"
@@ -368,6 +382,18 @@ export default function AdminCategories() {
                           </button>
                         </div>
                       ) : "—"}
+                    </td>
+
+                    {/* Visibility */}
+                    <td className="px-5 py-3.5 text-xs">
+                      <label className="flex items-center gap-2 cursor-pointer select-none"
+                        title={parentHidden ? "Hidden because its parent category is hidden" : cat.is_active ? "Visible to customers — click to hide" : "Hidden from customers — click to show"}>
+                        <input type="checkbox" checked={!!cat.is_active} onChange={() => handleToggleVisibility(cat)}
+                          style={{ accentColor: gold, width: 14, height: 14, cursor: "pointer" }} />
+                        {cat.is_active && !parentHidden
+                          ? <Eye size={13} style={{ color: "#4ade80" }} />
+                          : <EyeOff size={13} style={{ color: "#f87171" }} />}
+                      </label>
                     </td>
 
                     {/* Actions */}
@@ -409,7 +435,7 @@ export default function AdminCategories() {
                   </tr>
                   {quickAddParentId === cat.id && (
                     <tr style={{ borderBottom: `1px solid ${border}`, background: "#1a1614" }}>
-                      <td colSpan={6} className="px-5 py-3">
+                      <td colSpan={7} className="px-5 py-3">
                         <div className="flex items-center gap-2 pl-6">
                           <ChevronRight size={12} style={{ color: gold, opacity: 0.6 }} />
                           <input

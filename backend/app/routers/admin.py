@@ -324,6 +324,17 @@ def update_category(cat_id: int, payload: CategoryCreate, db: Session = Depends(
     return cat
 
 
+@router.patch("/categories/{cat_id}/visibility", response_model=CategoryOut)
+def set_category_visibility(cat_id: int, is_active: bool = Query(...), db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    cat = db.query(Category).filter(Category.id == cat_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    cat.is_active = is_active
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
 @router.delete("/categories/{cat_id}")
 def delete_category(cat_id: int, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
     cat = db.query(Category).filter(Category.id == cat_id).first()

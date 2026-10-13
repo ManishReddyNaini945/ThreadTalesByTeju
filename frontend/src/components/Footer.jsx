@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Instagram, Mail, Phone, MapPin, Heart } from "lucide-react";
 import { toast } from "sonner";
 import api from "../services/api";
+import { useHiddenCategories, categorySlugFromPath } from "../hooks/useHiddenCategories";
 
 const LINKS = {
   Shop: [
@@ -24,6 +25,7 @@ export default function Footer() {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const hiddenCategories = useHiddenCategories();
 
   const handleSubscribe = async (e) => {
     e.preventDefault();
@@ -81,7 +83,7 @@ export default function Footer() {
           <div>
             <p className="section-tag mb-6">Shop</p>
             <ul className="flex flex-col gap-3">
-              {LINKS.Shop.map((l) => (
+              {LINKS.Shop.filter((l) => !hiddenCategories.has(categorySlugFromPath(l.to))).map((l) => (
                 <li key={l.label}>
                   <Link to={l.to} className="text-sm transition-colors duration-200"
                     style={{ color: "var(--cream-dim)" }}>

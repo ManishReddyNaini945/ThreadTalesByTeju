@@ -15,6 +15,7 @@ DEFAULTS = {
     "promo_threshold":     "999",
     "promo_discount_pct":  "15",
     "promo_label":         "15% OFF + FREE SHIPPING",
+    "promo_free_shipping": "true",
     "rakhi_banner_enabled":   "false",
     "rakhi_banner_image_url": "",
 }
@@ -42,6 +43,7 @@ def get_promo_settings(db: Session = Depends(get_db)):
         "threshold":     float(_get(db, "promo_threshold")),
         "discount_pct":  float(_get(db, "promo_discount_pct")),
         "label":         _get(db, "promo_label"),
+        "free_shipping": _get(db, "promo_free_shipping") == "true",
     }
 
 
@@ -51,6 +53,7 @@ class PromoUpdate(BaseModel):
     threshold: float
     discount_pct: float
     label: str
+    free_shipping: bool = True
 
 
 @router.put("/promo")
@@ -63,6 +66,7 @@ def update_promo_settings(
     _set(db, "promo_threshold",    str(payload.threshold),         "Min order amount for promo")
     _set(db, "promo_discount_pct", str(payload.discount_pct),      "Discount percentage")
     _set(db, "promo_label",        payload.label,                  "Banner display text")
+    _set(db, "promo_free_shipping", str(payload.free_shipping).lower(), "Promo includes free shipping")
     return {"message": "Promo settings updated successfully"}
 
 

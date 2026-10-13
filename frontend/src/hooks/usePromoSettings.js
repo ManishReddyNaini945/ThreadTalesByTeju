@@ -6,6 +6,7 @@ const DEFAULT = {
   threshold: 999,
   discount_pct: 15,
   label: "15% OFF + FREE SHIPPING",
+  free_shipping: true,
 };
 
 export function usePromoSettings() {

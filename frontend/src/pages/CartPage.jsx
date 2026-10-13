@@ -96,7 +96,8 @@ export default function CartPage() {
   const progress = Math.min(100, (subtotal / PROMO_THRESHOLD) * 100);
   // Shipping is address-dependent (₹70 Telangana/Andhra Pradesh, ₹80 elsewhere) — show the lower
   // estimate here to avoid discouraging checkout; exact amount is resolved on the checkout page.
-  const effectiveShipping = promoEligible ? 0 : SHIPPING_LOCAL;
+  const effectiveShipping = promoEligible && promo.free_shipping ? 0 : SHIPPING_LOCAL;
+  const offerText = `${promo.discount_pct}% off${promo.free_shipping ? " + Free Shipping" : ""}`;
   const total = subtotal - promoDiscount + effectiveShipping;
 
   useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, []);
@@ -196,7 +197,7 @@ export default function CartPage() {
                       <Sparkles size={18} style={{ color: "var(--gold)", flexShrink: 0 }} />
                       <div>
                         <p className="text-sm font-medium" style={{ color: "var(--gold)" }}>
-                          🎉 15% off + Free Shipping unlocked!
+                          🎉 {offerText} unlocked!
                         </p>
                         <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>
                           You're saving ₹{promoDiscount.toLocaleString()} on this order
@@ -210,7 +211,7 @@ export default function CartPage() {
                           <Sparkles size={14} style={{ color: "var(--gold)" }} />
                           <p className="text-xs font-medium" style={{ color: "var(--cream)" }}>
                             Add <span style={{ color: "var(--gold)" }}>₹{remaining.toLocaleString()}</span> more to unlock
-                            <span style={{ color: "var(--gold)" }}> 15% off + Free Shipping</span>
+                            <span style={{ color: "var(--gold)" }}> {offerText}</span>
                           </p>
                         </div>
                         <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
@@ -257,7 +258,7 @@ export default function CartPage() {
                   </div>
                   {promoEligible && (
                     <div className="flex justify-between" style={{ color: "#4ade80" }}>
-                      <span>15% Promo Discount</span>
+                      <span>{promo.discount_pct}% Promo Discount</span>
                       <span>−₹{promoDiscount.toLocaleString()}</span>
                     </div>
                   )}
@@ -267,14 +268,14 @@ export default function CartPage() {
                       {effectiveShipping === 0 ? "FREE" : `₹${effectiveShipping}`}
                     </span>
                   </div>
-                  {!promoEligible && (
+                  {effectiveShipping !== 0 && (
                     <p className="text-xs" style={{ color: "var(--cream-dim)" }}>
                       Starting at ₹70 — exact shipping confirmed at checkout
                     </p>
                   )}
                   {!promoEligible && promo.enabled && (
                     <p className="text-xs" style={{ color: "var(--gold)" }}>
-                      Add ₹{remaining.toFixed(0)} more for 15% off + free shipping
+                      Add ₹{remaining.toFixed(0)} more for {offerText.toLowerCase()}
                     </p>
                   )}
                 </div>

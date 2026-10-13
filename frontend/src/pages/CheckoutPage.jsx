@@ -66,9 +66,9 @@ export default function CheckoutPage() {
     }).catch(() => {});
   }, []);
 
-  // Promo gives free shipping; otherwise ₹70 for Telangana/Andhra Pradesh, ₹80 elsewhere
+  // Promo gives free shipping when enabled for it; otherwise ₹70 for Telangana/Andhra Pradesh, ₹80 elsewhere
   const effectiveDiscount = promoEligible ? promoDiscount : couponDiscount;
-  const effectiveShipping = promoEligible ? 0 : (calculateShipping(stateValue) ?? SHIPPING_OTHER);
+  const effectiveShipping = promoEligible && promo.free_shipping ? 0 : (calculateShipping(stateValue) ?? SHIPPING_OTHER);
   const total = cart.subtotal - effectiveDiscount + effectiveShipping + (giftWrap ? GIFT_WRAP_FEE : 0);
 
   const validateCoupon = async () => {
@@ -267,7 +267,7 @@ export default function CheckoutPage() {
                     <Sparkles size={16} style={{ color: "var(--gold)", flexShrink: 0 }} />
                     <div>
                       <p className="text-xs font-medium" style={{ color: "var(--gold)" }}>
-                        15% off + Free Shipping applied!
+                        {promo.discount_pct}% off{promo.free_shipping ? " + Free Shipping" : ""} applied!
                       </p>
                       <p className="text-xs mt-0.5" style={{ color: "var(--cream-dim)" }}>
                         You're saving ₹{promoDiscount.toLocaleString()}
@@ -326,7 +326,7 @@ export default function CheckoutPage() {
                   </div>
                   {promoEligible ? (
                     <div className="flex justify-between" style={{ color: "#4ade80" }}>
-                      <span>15% Promo Discount</span>
+                      <span>{promo.discount_pct}% Promo Discount</span>
                       <span>−₹{promoDiscount.toLocaleString()}</span>
                     </div>
                   ) : couponDiscount > 0 ? (
