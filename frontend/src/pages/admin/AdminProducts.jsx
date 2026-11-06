@@ -31,6 +31,7 @@ const emptyProduct = {
 const ML_OPTIONS = ["50ml", "100ml", "150ml", "200ml", "250ml", "500ml", "1000ml"];
 const METRE_OPTIONS = ["1 Metre", "5 Metre", "10 Metre"];
 const BANGLE_OPTIONS = ["2-2", "2-4", "2-6", "2-8"];
+const DOZEN_OPTIONS = ["Half Dozen", "1 Dozen", "2 Dozen", "3 Dozen"];
 const PIECE_OPTIONS = ["5", "10", "25", "50", "100"];
 
 function Toggle({ value, onChange, label }) {
@@ -175,7 +176,7 @@ function ProductModal({ product, categories, onSave, onClose }) {
               setForm(f => ({
                 ...f,
                 category_id: newCatId,
-                pricing_unit: isBangles ? "piece" : (["box","bangle"].includes(f.pricing_unit) ? "piece" : f.pricing_unit),
+                pricing_unit: isBangles ? "piece" : (["box","bangle","dozen"].includes(f.pricing_unit) ? "piece" : f.pricing_unit),
               }));
             }}
               style={{ ...inputStyle, cursor: "pointer" }} onFocus={focusGold} onBlur={blurBorder}>
@@ -226,7 +227,7 @@ function ProductModal({ product, categories, onSave, onClose }) {
                         Fixed Price
                       </button>
                       <button type="button"
-                        onClick={() => set("pricing_unit", "bangle")}
+                        onClick={() => { if (form.pricing_unit !== "bangle") { set("sizes", []); set("size_prices", {}); } set("pricing_unit", "bangle"); }}
                         className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
                         style={{
                           border: `1px solid ${form.pricing_unit === "bangle" ? gold : border}`,
@@ -234,6 +235,16 @@ function ProductModal({ product, categories, onSave, onClose }) {
                           background: form.pricing_unit === "bangle" ? `${gold}18` : "transparent",
                         }}>
                         Per Size
+                      </button>
+                      <button type="button"
+                        onClick={() => { if (form.pricing_unit !== "dozen") { set("sizes", []); set("size_prices", {}); } set("pricing_unit", "dozen"); }}
+                        className="flex-1 py-2 text-xs tracking-wider uppercase transition-all"
+                        style={{
+                          border: `1px solid ${form.pricing_unit === "dozen" ? gold : border}`,
+                          color: form.pricing_unit === "dozen" ? gold : creamDim,
+                          background: form.pricing_unit === "dozen" ? `${gold}18` : "transparent",
+                        }}>
+                        Per Dozen
                       </button>
                     </>
                   ) : isGluesCategory ? (
@@ -732,11 +743,13 @@ function ProductModal({ product, categories, onSave, onClose }) {
           {(() => {
             const selectedCatForBangle = categories.find(c => String(c.id) === String(form.category_id));
             if (!selectedCatForBangle?.name?.toLowerCase().includes("bangle")) return null;
-            if (form.pricing_unit !== "bangle") return null;
+            if (form.pricing_unit !== "bangle" && form.pricing_unit !== "dozen") return null;
 
+            const byDozen = form.pricing_unit === "dozen";
+            const presetOptions = byDozen ? DOZEN_OPTIONS : BANGLE_OPTIONS;
             const allBangleOptions = [
-              ...BANGLE_OPTIONS,
-              ...((form.sizes || []).filter(s => !BANGLE_OPTIONS.includes(s))),
+              ...presetOptions,
+              ...((form.sizes || []).filter(s => !presetOptions.includes(s))),
             ];
 
             const toggleBangle = (size) => {
@@ -754,15 +767,15 @@ function ProductModal({ product, categories, onSave, onClose }) {
 
             return (
               <div className="space-y-3">
-                <label style={labelStyle}>Bangle Sizes & Prices</label>
+                <label style={labelStyle}>{byDozen ? "Dozen Packs & Prices" : "Bangle Sizes & Prices"}</label>
                 <p className="text-xs" style={{ color: creamDim }}>
-                  Click a size to select it, then enter its price below.
+                  Click a {byDozen ? "pack" : "size"} to select it, then enter its price below.
                 </p>
 
                 <div className="grid grid-cols-4 gap-2">
                   {allBangleOptions.map(size => {
                     const isSelected = (form.sizes || []).includes(size);
-                    const isCustom = !BANGLE_OPTIONS.includes(size);
+                    const isCustom = !presetOptions.includes(size);
                     return (
                       <div key={size} className="flex flex-col gap-1">
                         <button
@@ -812,7 +825,7 @@ function ProductModal({ product, categories, onSave, onClose }) {
                         setCustomMlInput("");
                       }
                     }}
-                    placeholder="Custom size (e.g. 2-10)"
+                    placeholder={byDozen ? "Custom pack (e.g. 4 Dozen)" : "Custom size (e.g. 2-10)"}
                     style={{ ...inputStyle, flex: 1 }}
                     onFocus={focusGold} onBlur={blurBorder}
                   />
@@ -837,7 +850,7 @@ function ProductModal({ product, categories, onSave, onClose }) {
                     <p className="text-xs" style={{ color: creamDim }}>Set price for each selected size:</p>
                     {(form.sizes || []).map(size => (
                       <div key={size} className="flex items-center gap-3">
-                        <span className="text-xs font-medium w-16 uppercase tracking-wider flex-shrink-0" style={{ color: gold }}>{size}</span>
+                        <span className="text-xs font-medium w-24 uppercase tracking-wider flex-shrink-0" style={{ color: gold }}>{size}</span>
                         <span className="text-xs" style={{ color: creamDim }}>₹</span>
                         <input
                           type="text"
@@ -1243,7 +1256,7 @@ export default function AdminProducts() {
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i} style={{ borderBottom: `1px solid ${border}` }}>
                     <td colSpan={6} className="px-5 py-4">
-                      <div className="h-3 rounded animate-pulse" style={{ background: border }} />
+                      <div className="skeleton h-3" />
                     </td>
                   </tr>
                 ))

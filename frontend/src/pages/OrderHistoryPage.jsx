@@ -223,9 +223,11 @@ function OrderDetailView({ orderId }) {
         </Link>
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-              style={{ borderColor: "var(--gold)", borderTopColor: "transparent" }} />
+          <div className="space-y-5">
+            <div className="skeleton h-28" />
+            <div className="skeleton h-20" />
+            <div className="skeleton h-48" />
+            <div className="skeleton h-32" />
           </div>
         ) : !order ? (
           <p style={{ color: "var(--cream-dim)" }}>Order not found.</p>
@@ -390,9 +392,8 @@ export default function OrderHistoryPage() {
         </div>
 
         {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-t-transparent rounded-full animate-spin"
-              style={{ borderColor: "var(--gold)", borderTopColor: "transparent" }} />
+          <div className="space-y-4">
+            {[...Array(4)].map((_, i) => <div key={i} className="skeleton h-24" />)}
           </div>
         ) : orders.length === 0 ? (
           <div className="text-center py-24">

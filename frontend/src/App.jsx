@@ -43,8 +43,21 @@ const AdminCoupons = lazy(() => import("./pages/admin/AdminCoupons"));
 const AdminComments = lazy(() => import("./pages/admin/AdminComments"));
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-brand-cream flex items-center justify-center">
-    <div className="w-8 h-8 border-2 border-brand-gold border-t-transparent rounded-full animate-spin" />
+  <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+    <div className="h-14 sm:h-20 lg:h-24" style={{ borderBottom: "1px solid var(--border)" }} />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-10 sm:pt-16">
+      <div className="skeleton h-3 w-28 mb-4" />
+      <div className="skeleton h-9 w-64 mb-10" />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        {[...Array(8)].map((_, i) => (
+          <div key={i}>
+            <div className="skeleton" style={{ aspectRatio: "3/4" }} />
+            <div className="skeleton h-3 w-3/4 mt-4" />
+            <div className="skeleton h-3 w-1/3 mt-2" />
+          </div>
+        ))}
+      </div>
+    </div>
   </div>
 );
 

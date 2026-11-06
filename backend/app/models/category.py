@@ -13,6 +13,7 @@ class Category(Base):
     description = Column(Text, nullable=True)
     image_url = Column(String(500), nullable=True)
     is_active = Column(Boolean, default=True)
+    is_featured = Column(Boolean, default=False, server_default="false", nullable=False)  # highlighted on the homepage
     sort_order = Column(Integer, default=0)
     parent_id = Column(Integer, ForeignKey("categories.id", ondelete="SET NULL"), nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())

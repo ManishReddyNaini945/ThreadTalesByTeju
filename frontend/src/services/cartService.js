@@ -6,4 +6,7 @@ export const cartService = {
   updateItem: (itemId, quantity) => api.put(`/cart/items/${itemId}`, { quantity }),
   removeItem: (itemId) => api.delete(`/cart/items/${itemId}`),
   clearCart: () => api.delete("/cart"),
+  uploadReferenceImage: (formData) => api.post("/cart/reference-image", formData, {
+    headers: { "Content-Type": "multipart/form-data" }
+  }),
 };

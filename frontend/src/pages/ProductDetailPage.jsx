@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Heart, ShoppingBag, Star, ChevronLeft, MessageCircle, Minus, Plus, Check, X, ZoomIn } from "lucide-react";
+import { Heart, ShoppingBag, Star, ChevronLeft, MessageCircle, Minus, Plus, Check, X, ZoomIn, ImagePlus, Loader2 } from "lucide-react";
 import { productService } from "../services/productService";
+import { cartService } from "../services/cartService";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
@@ -91,6 +92,9 @@ export default function ProductDetailPage() {
   const [submittingComment, setSubmittingComment] = useState(false);
   const [customColor, setCustomColor] = useState("");
   const [customNote, setCustomNote] = useState("");
+  const [referenceImage, setReferenceImage] = useState(null);
+  const [uploadingReference, setUploadingReference] = useState(false);
+  const referenceInputRef = useRef(null);
   const [notifyEmail, setNotifyEmail] = useState("");
   const [notifyDone, setNotifyDone] = useState(false);
   const [notifyLoading, setNotifyLoading] = useState(false);
@@ -99,6 +103,8 @@ export default function ProductDetailPage() {
 
   const { addToCart } = useCart();
   const { toggleWishlist, isWishlisted } = useWishlist();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
 
   useEffect(() => {
@@ -140,8 +146,27 @@ export default function ProductDetailPage() {
       return;
     }
     setAddingToCart(true);
-    await addToCart(product.id, quantity, effectiveColor, selectedSize, customNote.trim() || null);
+    await addToCart(product.id, quantity, effectiveColor, selectedSize, customNote.trim() || null, referenceImage);
     setAddingToCart(false);
+  };
+
+  const handleReferenceUpload = async (file) => {
+    if (!file) return;
+    if (!user) { toast.error("Please login to upload a photo"); return; }
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be 5 MB or smaller"); return; }
+    const formData = new FormData();
+    formData.append("file", file);
+    setUploadingReference(true);
+    try {
+      const { data } = await cartService.uploadReferenceImage(formData);
+      setReferenceImage(data.url);
+    } catch (err) {
+      toast.error(err.response?.data?.detail || "Upload failed, please try again");
+    } finally {
+      setUploadingReference(false);
+      if (referenceInputRef.current) referenceInputRef.current.value = "";
+    }
   };
 
   const handleNotify = async (e) => {
@@ -192,7 +217,7 @@ export default function ProductDetailPage() {
     return (
       <div className="min-h-screen" style={{ background: "var(--bg)" }}>
         <Navbar />
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 sm:pt-28 pb-28 lg:pb-20">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 sm:pt-28 lg:pt-40 pb-28 lg:pb-20">
           <div className="grid lg:grid-cols-2 gap-6 lg:gap-20">
             {/* Images skeleton */}
             <div className="space-y-4">
@@ -288,28 +313,23 @@ export default function ProductDetailPage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }} />
       <Navbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 sm:pt-28 pb-28 lg:pb-20">
-        {/* Back button — mobile only */}
-        <button onClick={() => window.history.back()}
-          className="flex items-center gap-1 mb-4 lg:hidden text-xs tracking-widest uppercase transition-colors"
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 pt-16 sm:pt-28 lg:pt-40 pb-28 lg:pb-20">
+        {/* Back — returns to the page the shopper came from (shop filters, category,
+            wishlist…). Opened directly from a shared link, there is no in-site history,
+            so fall back to this product's collection instead of leaving the site. */}
+        <button onClick={() => {
+            if (location.key !== "default") navigate(-1);
+            else navigate(product.category?.slug ? `/shop?category=${product.category.slug}` : "/shop");
+          }}
+          className="flex items-center gap-1 mb-4 sm:mb-8 text-xs tracking-widest uppercase transition-colors"
           style={{ color: "var(--cream-dim)" }}
+          onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
+          onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}
           onTouchStart={e => e.currentTarget.style.color = "var(--gold)"}
           onTouchEnd={e => e.currentTarget.style.color = "var(--cream-dim)"}>
           <ChevronLeft size={14} /> Back
         </button>
 
-        {/* Breadcrumb */}
-        <nav className="hidden sm:flex items-center gap-2 text-xs tracking-widest uppercase mb-6 sm:mb-10 overflow-hidden">
-          <Link to="/" className="flex-shrink-0 transition-colors" style={{ color: "var(--cream-dim)" }}
-            onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
-            onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}>Home</Link>
-          <span className="flex-shrink-0" style={{ color: "var(--border)" }}>/</span>
-          <Link to="/shop" className="flex-shrink-0 transition-colors" style={{ color: "var(--cream-dim)" }}
-            onMouseEnter={e => e.currentTarget.style.color = "var(--gold)"}
-            onMouseLeave={e => e.currentTarget.style.color = "var(--cream-dim)"}>Shop</Link>
-          <span className="flex-shrink-0" style={{ color: "var(--border)" }}>/</span>
-          <span className="truncate min-w-0" style={{ color: "var(--gold)" }}>{product.name}</span>
-        </nav>
 
         <div className="grid lg:grid-cols-2 gap-6 lg:gap-20">
           {/* Images */}
@@ -521,7 +541,7 @@ export default function ProductDetailPage() {
             {/* Sizes */}
             {product.sizes?.length > 0 && (() => {
               const isPiecePack = product.pricing_unit === "piece" && product.sizes.length === 1;
-              const sizeLabel = product.pricing_unit === "bangle" ? "Size" : product.pricing_unit === "piece" ? "Pack Size" : "Size";
+              const sizeLabel = product.pricing_unit === "dozen" ? "Pack" : product.pricing_unit === "bangle" ? "Size" : product.pricing_unit === "piece" ? "Pack Size" : "Size";
               const formatPackSize = (s) => /^\d+$/.test(s) ? `${s} Pieces` : s;
               if (isPiecePack) {
                 return (
@@ -653,6 +673,36 @@ export default function ProductDetailPage() {
                 <p className="text-xs" style={{ color: "var(--gold)" }}>
                   ✓ Your note will be included with the order
                 </p>
+              )}
+
+              {/* Reference photo — e.g. the saree the bangles should match */}
+              <input ref={referenceInputRef} type="file" accept="image/*" className="hidden"
+                onChange={e => handleReferenceUpload(e.target.files?.[0])} />
+              {referenceImage ? (
+                <div className="flex items-center gap-3 pt-1">
+                  <div className="relative flex-shrink-0">
+                    <img src={referenceImage} alt="Your reference" className="w-16 h-16 object-cover"
+                      style={{ border: "1px solid var(--gold)" }} />
+                    <button type="button" onClick={() => setReferenceImage(null)} aria-label="Remove photo"
+                      className="absolute -top-2 -right-2 w-5 h-5 flex items-center justify-center rounded-full"
+                      style={{ background: "#f87171", color: "var(--bg)" }}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                  <p className="text-xs" style={{ color: "var(--gold)" }}>
+                    ✓ Photo added — we'll match your bangles to it
+                  </p>
+                </div>
+              ) : (
+                <button type="button" onClick={() => referenceInputRef.current?.click()} disabled={uploadingReference}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-3 text-xs tracking-wider uppercase transition-colors disabled:opacity-60"
+                  style={{ border: "1px dashed var(--border)", color: "var(--cream-dim)", background: "transparent" }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--gold)"; e.currentTarget.style.color = "var(--gold)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--cream-dim)"; }}>
+                  {uploadingReference
+                    ? <><Loader2 size={14} className="animate-spin" /> Uploading…</>
+                    : <><ImagePlus size={14} /> Upload a photo (e.g. your saree)</>}
+                </button>
               )}
             </div>
 

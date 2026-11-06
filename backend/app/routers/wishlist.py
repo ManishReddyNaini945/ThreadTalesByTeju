@@ -11,7 +11,8 @@ from ..schemas.product import ProductOut
 router = APIRouter(prefix="/wishlist", tags=["Wishlist"])
 
 
-@router.get("/", response_model=List[ProductOut])
+@router.get("", response_model=List[ProductOut])
+@router.get("/", response_model=List[ProductOut], include_in_schema=False)
 def get_wishlist(db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     items = db.query(WishlistItem).options(
         joinedload(WishlistItem.product)

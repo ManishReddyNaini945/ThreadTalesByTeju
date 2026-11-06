@@ -335,6 +335,20 @@ def set_category_visibility(cat_id: int, is_active: bool = Query(...), db: Sessi
     return cat
 
 
+@router.patch("/categories/{cat_id}/featured", response_model=CategoryOut)
+def set_category_featured(cat_id: int, is_featured: bool = Query(...), db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
+    cat = db.query(Category).filter(Category.id == cat_id).first()
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    if is_featured:
+        # Only one category is highlighted on the homepage at a time
+        db.query(Category).filter(Category.id != cat_id, Category.is_featured == True).update({Category.is_featured: False})
+    cat.is_featured = is_featured
+    db.commit()
+    db.refresh(cat)
+    return cat
+
+
 @router.delete("/categories/{cat_id}")
 def delete_category(cat_id: int, db: Session = Depends(get_db), admin: User = Depends(get_admin_user)):
     cat = db.query(Category).filter(Category.id == cat_id).first()

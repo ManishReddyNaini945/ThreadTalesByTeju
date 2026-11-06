@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, Fragment } from "react";
-import { Plus, Trash2, Tags, ChevronRight, Pencil, Check, X, Image as ImageIcon, Upload, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Tags, ChevronRight, Pencil, Check, X, Image as ImageIcon, Upload, Eye, EyeOff, Star } from "lucide-react";
 import { adminService } from "../../services/adminService";
 import { toast } from "sonner";
 
@@ -151,6 +151,18 @@ export default function AdminCategories() {
     }
   };
 
+  const handleToggleFeatured = async (cat) => {
+    const next = !cat.is_featured;
+    try {
+      await adminService.setCategoryFeatured(cat.id, next);
+      // Only one category can be featured, so starring one un-stars the rest
+      setCategories(prev => prev.map(c => c.id === cat.id ? { ...c, is_featured: next } : next ? { ...c, is_featured: false } : c));
+      toast.success(next ? `${cat.name} is now highlighted on the homepage` : `${cat.name} is no longer highlighted`);
+    } catch {
+      toast.error("Failed to update featured category");
+    }
+  };
+
   const handleDelete = async (id) => {
     if (!confirm("Delete this category?")) return;
     try {
@@ -211,7 +223,7 @@ export default function AdminCategories() {
         </div>
         <div>
           <label className="block text-xs tracking-widest uppercase mb-1.5" style={{ color: creamDim }}>
-            Image <span style={{ textTransform: "none", letterSpacing: 0 }}>(shown in the homepage Collections section)</span>
+            Image <span style={{ textTransform: "none", letterSpacing: 0 }}>(shown on the homepage — portrait 4:5 works best, e.g. 1200 × 1500 px; keep the product in the centre)</span>
           </label>
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden"
             onChange={e => uploadCategoryImage(e.target.files?.[0], setImageUrl, setUploadingImage)} />
@@ -247,7 +259,17 @@ export default function AdminCategories() {
       {/* List */}
       <div className="overflow-x-auto" style={{ background: cardBg, border: `1px solid ${border}` }}>
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-sm" style={{ color: creamDim }}>Loading...</div>
+          <div className="divide-y" style={{ borderColor: border }}>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="skeleton w-9 h-9 flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-3 w-1/3" />
+                  <div className="skeleton h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : grouped.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <Tags size={36} style={{ color: border }} />
@@ -416,6 +438,15 @@ export default function AdminCategories() {
                           </>
                         ) : (
                           <>
+                            {cat.isParent && (
+                              <button onClick={() => handleToggleFeatured(cat)}
+                                title={cat.is_featured ? "Featured on homepage — click to remove" : "Feature on homepage"}
+                                className="p-1.5 transition-colors" style={{ color: cat.is_featured ? gold : creamDim }}
+                                onMouseEnter={e => e.currentTarget.style.background = "rgba(200,164,92,0.1)"}
+                                onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                <Star size={14} fill={cat.is_featured ? gold : "none"} />
+                              </button>
+                            )}
                             <button onClick={() => startEdit(cat)}
                               className="p-1.5 transition-colors" style={{ color: "#60a5fa" }}
                               onMouseEnter={e => e.currentTarget.style.background = "rgba(96,165,250,0.1)"}

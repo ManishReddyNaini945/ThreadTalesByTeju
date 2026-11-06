@@ -9,9 +9,10 @@ export function WishlistProvider({ children }) {
   const { user } = useAuth();
   const [wishlistIds, setWishlistIds] = useState(new Set());
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const fetchWishlist = useCallback(async () => {
-    if (!user) { setWishlistIds(new Set()); setWishlistItems([]); return; }
+    if (!user) { setWishlistIds(new Set()); setWishlistItems([]); setLoading(false); return; }
     try {
       const [idsRes, itemsRes] = await Promise.all([
         wishlistService.getWishlistIds(),
@@ -20,6 +21,7 @@ export function WishlistProvider({ children }) {
       setWishlistIds(new Set(idsRes.data));
       setWishlistItems(itemsRes.data);
     } catch { /* silently fail */ }
+    finally { setLoading(false); }
   }, [user]);
 
   useEffect(() => { fetchWishlist(); }, [fetchWishlist]);
@@ -47,7 +49,7 @@ export function WishlistProvider({ children }) {
   const isWishlisted = (productId) => wishlistIds.has(productId);
 
   return (
-    <WishlistContext.Provider value={{ wishlistItems, wishlistIds, toggleWishlist, isWishlisted, fetchWishlist }}>
+    <WishlistContext.Provider value={{ wishlistItems, wishlistIds, toggleWishlist, isWishlisted, fetchWishlist, loading }}>
       {children}
     </WishlistContext.Provider>
   );

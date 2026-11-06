@@ -187,6 +187,7 @@ def create_order(payload: OrderCreate, db: Session = Depends(get_db), current_us
             selected_color=item.selected_color,
             selected_size=item.selected_size,
             custom_note=item.custom_note,
+            reference_image_url=item.reference_image_url,
         )
         db.add(order_item)
         # Deduct stock

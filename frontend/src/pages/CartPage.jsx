@@ -48,6 +48,15 @@ function CartItemRow({ item }) {
           </div>
         )}
 
+        {item.reference_image_url && (
+          <a href={item.reference_image_url} target="_blank" rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 mt-2 text-[11px]" style={{ color: "var(--gold)" }}>
+            <img src={item.reference_image_url} alt="Your photo" className="w-8 h-8 object-cover"
+              style={{ border: "1px solid var(--border)" }} />
+            Your photo attached
+          </a>
+        )}
+
         <div className="flex items-center justify-between mt-3">
           {/* Quantity */}
           <div className="flex items-center" style={{ border: "1px solid var(--border)" }}>

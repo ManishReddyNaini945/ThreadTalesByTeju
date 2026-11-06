@@ -20,6 +20,7 @@ class CategoryOut(CategoryBase):
     id: int
     slug: str
     is_active: bool = True
+    is_featured: bool = False
     created_at: Optional[datetime] = None
     children: List["CategoryOut"] = []
 

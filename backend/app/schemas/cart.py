@@ -10,6 +10,7 @@ class CartItemCreate(BaseModel):
     selected_color: Optional[str] = None
     selected_size: Optional[str] = None
     custom_note: Optional[str] = None
+    reference_image_url: Optional[str] = None
 
 
 class CartItemUpdate(BaseModel):
@@ -23,6 +24,7 @@ class CartItemOut(BaseModel):
     selected_color: Optional[str] = None
     selected_size: Optional[str] = None
     custom_note: Optional[str] = None
+    reference_image_url: Optional[str] = None
     price_at_add: float
     product: ProductOut
 

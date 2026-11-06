@@ -9,9 +9,9 @@ import api from "../services/api";
 
 function ProductCard({ product, index }) {
   const { addToCart } = useCart();
-  const { addToWishlist, wishlistItems } = useWishlist();
+  const { toggleWishlist, isWishlisted: isInWishlist } = useWishlist();
   const [adding, setAdding] = useState(false);
-  const isWishlisted = wishlistItems?.some((w) => w.product_id === product.id);
+  const isWishlisted = isInWishlist(product.id);
   const firstColorImg = product.color_images
     ? Object.values(product.color_images).find(arr => arr?.length)?.[0]
     : null;
@@ -69,7 +69,7 @@ function ProductCard({ product, index }) {
               style={{ background: "rgba(12,10,9,0.8)", border: "1px solid var(--border)", color: "var(--cream-dim)" }}
             />
             <button
-              onClick={(e) => { e.preventDefault(); addToWishlist(product.id); }}
+              onClick={(e) => { e.preventDefault(); toggleWishlist(product.id); }}
               className="w-9 h-9 flex items-center justify-center transition-all duration-300"
               style={{ background: "rgba(12,10,9,0.8)", border: "1px solid var(--border)" }}
             >

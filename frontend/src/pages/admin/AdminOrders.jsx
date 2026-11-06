@@ -142,7 +142,7 @@ export default function AdminOrders() {
                 Array(5).fill(0).map((_, i) => (
                   <tr key={i} style={{ borderBottom: `1px solid ${border}` }}>
                     <td colSpan={8} className="px-4 py-4">
-                      <div className="h-3 rounded animate-pulse" style={{ background: border }} />
+                      <div className="skeleton h-3" />
                     </td>
                   </tr>
                 ))
@@ -214,6 +214,14 @@ export default function AdminOrders() {
                                       <p className="text-xs mt-0.5 px-2 py-1" style={{ color: gold, background: `${gold}15`, border: `1px solid ${gold}40` }}>
                                         📝 {item.custom_note}
                                       </p>
+                                    )}
+                                    {item.reference_image_url && (
+                                      <a href={item.reference_image_url} target="_blank" rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-2 mt-1 text-xs" style={{ color: gold }}>
+                                        <img src={item.reference_image_url} alt="Customer photo" className="w-12 h-12 object-cover"
+                                          style={{ border: `1px solid ${gold}60` }} />
+                                        📷 Customer photo — open full size
+                                      </a>
                                     )}
                                   </div>
                                 </div>

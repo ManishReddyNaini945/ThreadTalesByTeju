@@ -23,7 +23,7 @@ export default function CollectionSection() {
 
   useEffect(() => {
     productService.getCategories()
-      .then(({ data }) => setCategories(Array.isArray(data) ? data.filter(c => c.product_count > 0) : []))
+      .then(({ data }) => setCategories(Array.isArray(data) ? data.filter(c => c.product_count > 0 || c.is_featured) : []))
       .catch(() => setCategories([]))
       .finally(() => setLoading(false));
   }, []);
@@ -137,6 +137,13 @@ export default function CollectionSection() {
                       </span>
                     </div>
 
+                    {cat.is_featured && (
+                      <div className="absolute bottom-4 left-4 px-2.5 py-1 text-[10px] font-semibold tracking-[0.2em] uppercase"
+                        style={{ background: "var(--gold)", color: "var(--bg)" }}>
+                        New
+                      </div>
+                    )}
+
                     {/* Arrow badge top right */}
                     <div className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
                       style={{ background: "var(--gold)" }}>
@@ -155,7 +162,9 @@ export default function CollectionSection() {
                         {cat.name}
                       </h3>
                       <p className="text-xs tracking-[0.2em] uppercase mt-1" style={{ color: "var(--cream-dim)" }}>
-                        {cat.product_count} {cat.product_count === 1 ? "piece" : "pieces"}
+                        {cat.product_count > 0
+                          ? `${cat.product_count} ${cat.product_count === 1 ? "variant" : "variants"}`
+                          : "Coming soon"}
                       </p>
                     </div>
 

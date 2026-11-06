@@ -76,7 +76,17 @@ export default function AdminComments() {
 
       <div style={{ background: cardBg, border: `1px solid ${border}` }}>
         {loading ? (
-          <div className="flex items-center justify-center py-16 text-sm" style={{ color: creamDim }}>Loading...</div>
+          <div className="divide-y" style={{ borderColor: border }}>
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="flex items-center gap-4 px-5 py-4">
+                <div className="skeleton w-9 h-9 flex-shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <div className="skeleton h-3 w-1/3" />
+                  <div className="skeleton h-3 w-1/2" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : comments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <MessageCircle size={36} style={{ color: border }} />

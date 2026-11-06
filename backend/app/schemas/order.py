@@ -15,6 +15,7 @@ class OrderItemOut(BaseModel):
     selected_color: Optional[str]
     selected_size: Optional[str]
     custom_note: Optional[str] = None
+    reference_image_url: Optional[str] = None
 
     class Config:
         from_attributes = True

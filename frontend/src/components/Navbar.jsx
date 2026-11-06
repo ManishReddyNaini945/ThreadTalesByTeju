@@ -64,6 +64,7 @@ export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [offerDismissed, setOfferDismissed] = useState(false);
   const [rakhiActive, setRakhiActive] = useState(false);
+  const [featuredCategory, setFeaturedCategory] = useState(null);
   const promo = usePromoSettings();
   const hiddenCategories = useHiddenCategories();
   const navigate = useNavigate();
@@ -83,7 +84,11 @@ export default function Navbar() {
 
   useEffect(() => {
     productService.getCategories()
-      .then(({ data }) => setRakhiActive((Array.isArray(data) ? data : []).some(c => c.slug === "rakhi")))
+      .then(({ data }) => {
+        const cats = Array.isArray(data) ? data : [];
+        setRakhiActive(cats.some(c => c.slug === "rakhi"));
+        setFeaturedCategory(cats.find(c => c.is_featured) || null);
+      })
       .catch(() => setRakhiActive(false));
   }, []);
 
@@ -92,6 +97,13 @@ export default function Navbar() {
     .filter(l => l.path !== "/rakhi" || rakhiActive)
     .filter(l => !l.path || isVisible(l.path))
     .map(l => (l.children ? { ...l, children: l.children.filter(c => isVisible(c.path)) } : l))
+    // The featured category (Admin -> Categories star) leads the Collections menu
+    .map(l => (l.label === "Collections" && featuredCategory
+      ? { ...l, children: [
+          { label: `✨ ${featuredCategory.name}`, path: `/shop?category=${featuredCategory.slug}` },
+          ...l.children.filter(c => categorySlugFromPath(c.path) !== featuredCategory.slug),
+        ] }
+      : l))
     .filter(l => !l.children || l.children.length > 0);
 
   useEffect(() => {

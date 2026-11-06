@@ -27,6 +27,7 @@ class CartItem(Base):
     selected_color = Column(String(100), nullable=True)
     selected_size = Column(String(100), nullable=True)
     custom_note = Column(Text, nullable=True)
+    reference_image_url = Column(String(500), nullable=True)  # customer photo, e.g. saree to match
     price_at_add = Column(Float, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 

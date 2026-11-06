@@ -16,13 +16,22 @@ export default function ProductCard({ product }) {
     : null;
   const img = product.images?.[0] || firstColorImg || "";
   const wishlisted = isWishlisted?.(product.id);
+  // Price the card actually shows: the lowest option price for size/pack-priced products
+  const optionPrices = ["ml", "metre", "bangle", "dozen"].includes(product.pricing_unit)
+    ? Object.values(product.size_prices || {}).filter(v => v > 0)
+    : [];
+  const shownPrice = optionPrices.length > 0 ? Math.min(...optionPrices) : product.price;
 
   const goToProduct = () => navigate(`/product/${product.slug}`);
 
   const handleCart = async (e) => {
     e.stopPropagation();
+    // Products that need a choice (several sizes/packs, or colours) are picked on the product page
+    const sizes = product.sizes || [];
+    const isWeightBased = product.pricing_unit === "gram" || product.pricing_unit === "kg";
+    if (product.colors?.length > 0 || (!isWeightBased && sizes.length > 1)) { goToProduct(); return; }
     setAdding(true);
-    try { await addToCart(product.id, 1); } catch {}
+    try { await addToCart(product.id, 1, null, !isWeightBased && sizes.length === 1 ? sizes[0] : null); } catch {}
     finally { setTimeout(() => setAdding(false), 800); }
   };
 
@@ -75,10 +84,10 @@ export default function ProductCard({ product }) {
               <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-medium"
                 style={{ background: "#fff", color: "#0c0a09" }}>New</span>
             )}
-            {product.compare_price && product.compare_price > product.price && (
+            {product.compare_price && product.compare_price > shownPrice && (
               <span className="px-2.5 py-1 text-[10px] tracking-widest uppercase font-bold"
                 style={{ background: "#16a34a", color: "#fff" }}>
-                {Math.round(((product.compare_price - product.price) / product.compare_price) * 100)}% off
+                {Math.round(((product.compare_price - shownPrice) / product.compare_price) * 100)}% off
               </span>
             )}
           </div>
@@ -111,7 +120,7 @@ export default function ProductCard({ product }) {
           </h3>
           {(() => {
             const isWeightBased = product.pricing_unit === "gram" || product.pricing_unit === "kg";
-            const isSizeBased = product.pricing_unit === "ml" || product.pricing_unit === "metre" || product.pricing_unit === "bangle";
+            const isSizeBased = product.pricing_unit === "ml" || product.pricing_unit === "metre" || product.pricing_unit === "bangle" || product.pricing_unit === "dozen";
             const pkg = product.sizes?.[0];
             const pkgGrams = isWeightBased && pkg
               ? pkg.endsWith("kg") ? parseFloat(pkg) * 1000 : parseFloat(pkg)
@@ -124,13 +133,15 @@ export default function ProductCard({ product }) {
               ? Object.values(product.size_prices || {}).filter(v => v > 0)
               : [];
             const startingPrice = sizePriceValues.length > 0 ? Math.min(...sizePriceValues) : null;
+            // "from" only makes sense when the options actually differ in price
+            const hasPriceRange = new Set(sizePriceValues).size > 1;
             return (
               <>
                 <div className="flex items-center gap-2 mb-1 flex-wrap">
                   <span className="font-semibold text-sm" style={{ color: "var(--gold)" }}>
                     {isSizeBased
                       ? startingPrice
-                        ? <>from ₹{startingPrice}</>
+                        ? <>{hasPriceRange && "from "}₹{startingPrice}</>
                         : <>₹{product.price}</>
                       : <>
                           ₹{product.price}
@@ -140,15 +151,15 @@ export default function ProductCard({ product }) {
                         </>
                     }
                   </span>
-                  {product.compare_price && product.compare_price > product.price && (
+                  {product.compare_price && product.compare_price > shownPrice && (
                     <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>
                       MRP ₹{product.compare_price}
                     </span>
                   )}
                 </div>
-                {product.compare_price && product.compare_price > product.price && (
+                {product.compare_price && product.compare_price > shownPrice && (
                   <p className="text-[11px] font-medium mb-2" style={{ color: "#4ade80" }}>
-                    Save ₹{(product.compare_price - product.price).toLocaleString()}
+                    Save ₹{(product.compare_price - shownPrice).toLocaleString()}
                   </p>
                 )}
                 {isSizeBased && sizeList && (

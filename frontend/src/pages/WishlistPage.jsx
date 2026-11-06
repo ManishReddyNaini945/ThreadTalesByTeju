@@ -38,18 +38,19 @@ function WishlistCard({ product }) {
             <span className="text-xs line-through" style={{ color: "var(--cream-dim)" }}>₹{product.compare_price.toLocaleString()}</span>
           )}
         </div>
-        <div className="flex gap-2 mt-3">
+        <div className="flex items-stretch gap-2 mt-3">
           <button onClick={() => addToCart(product.id)}
-            className="btn-gold flex-1 py-2.5 flex items-center justify-center gap-1.5 text-xs">
+            className="btn-gold flex-1 min-w-0 h-10 px-3 py-0 flex items-center justify-center gap-1.5 text-xs tracking-wider whitespace-nowrap">
             <ShoppingBag size={14} /> Add to Cart
           </button>
           <ProductShareButton
             product={product}
-            className="w-10 h-10"
+            className="w-10 h-10 flex-shrink-0"
             style={{ border: "1px solid var(--border)", background: "transparent", color: "var(--cream-dim)" }}
           />
           <button onClick={() => toggleWishlist(product.id)}
-            className="p-2.5 transition-colors"
+            aria-label="Remove from wishlist" title="Remove from wishlist"
+            className="w-10 h-10 flex-shrink-0 flex items-center justify-center transition-colors"
             style={{ border: "1px solid #f87171", color: "#f87171" }}
             onMouseEnter={e => { e.currentTarget.style.background = "rgba(248,113,113,0.1)"; }}
             onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}>
@@ -62,7 +63,7 @@ function WishlistCard({ product }) {
 }
 
 export default function WishlistPage() {
-  const { wishlistItems } = useWishlist();
+  const { wishlistItems, loading } = useWishlist();
 
   return (
     <div className="min-h-screen" style={{ background: "var(--bg)" }}>
@@ -74,11 +75,21 @@ export default function WishlistPage() {
             My Wishlist
           </h1>
           {wishlistItems.length > 0 && (
-            <span className="text-base" style={{ color: "var(--cream-dim)" }}>({wishlistItems.length} items)</span>
+            <span className="text-base" style={{ color: "var(--cream-dim)" }}>({wishlistItems.length} {wishlistItems.length === 1 ? "item" : "items"})</span>
           )}
         </div>
 
-        {wishlistItems.length === 0 ? (
+        {loading && wishlistItems.length === 0 ? (
+          <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {[...Array(4)].map((_, i) => (
+              <div key={i}>
+                <div className="skeleton" style={{ aspectRatio: "3/4" }} />
+                <div className="skeleton h-3 w-3/4 mt-4" />
+                <div className="skeleton h-3 w-1/3 mt-2" />
+              </div>
+            ))}
+          </div>
+        ) : wishlistItems.length === 0 ? (
           <div className="text-center py-24">
             <Heart size={64} className="mx-auto mb-6" style={{ color: "var(--border)" }} />
             <h2 className="text-xl font-normal mb-3" style={{ fontFamily: "Playfair Display, serif", color: "var(--cream)" }}>
