@@ -94,6 +94,46 @@
   animation: shimmer 1.5s infinite;
 }
 
+/* Glitter border — a big gold gradient spins behind the frame; the 2px
+   padding is the only part left visible, so the shine travels around it. */
+.glitter-frame {
+  position: relative;
+  padding: 2px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.glitter-frame::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 50%;
+  left: 50%;
+  width: 2400px;
+  height: 2400px;
+  background: conic-gradient(
+    var(--gold-dim), var(--gold) 15%, #fff4cf 22%, #ffffff 25%, #fff4cf 28%, var(--gold) 35%, var(--gold-dim) 50%,
+    var(--gold) 65%, #fff4cf 72%, #ffffff 75%, #fff4cf 78%, var(--gold) 85%, var(--gold-dim));
+  transform: translate(-50%, -50%) rotate(0deg);
+  animation: glitter-rotate 4s linear infinite;
+}
+@keyframes glitter-rotate {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+.glitter-sparkle {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+  color: #fff4cf;
+  filter: drop-shadow(0 0 4px rgba(200,164,92,0.9));
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0);
+  animation: glitter-twinkle 2.6s ease-in-out infinite;
+}
+@keyframes glitter-twinkle {
+  0%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(0deg); }
+  50%      { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(45deg); }
+}
+
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-12px); }

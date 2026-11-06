@@ -746,7 +746,7 @@ export default function ProductDetailPage() {
                     Wishlist
                   </motion.button>
                   <motion.button whileTap={{ scale: 0.97 }}
-                    onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
+                    onClick={() => window.open(`https://wa.me/919000502417?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
                     className="flex-1 py-3 flex items-center justify-center gap-2 text-sm transition-colors"
                     style={{ border: "1px solid #4ade80", color: "#4ade80" }}>
                     <MessageCircle size={16} />
@@ -774,7 +774,7 @@ export default function ProductDetailPage() {
                   <Heart size={20} className={isWishlisted(product.id) ? "fill-[#f87171]" : ""} />
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.97 }}
-                  onClick={() => window.open(`https://wa.me/919866052260?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
+                  onClick={() => window.open(`https://wa.me/919000502417?text=${encodeURIComponent(whatsappMsg)}`, "_blank")}
                   className="p-4 flex items-center justify-center transition-colors"
                   style={{ border: "1px solid #4ade80", color: "#4ade80" }}>
                   <MessageCircle size={20} />

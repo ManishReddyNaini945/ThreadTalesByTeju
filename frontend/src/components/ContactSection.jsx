@@ -3,10 +3,10 @@ import { motion } from "framer-motion";
 import { Mail, Phone, Instagram, MessageCircle } from "lucide-react";
 
 const CONTACTS = [
-  { icon: MessageCircle, label: "WhatsApp", value: "+91 98660 52260", href: "https://wa.me/919866052260", color: "#25D366" },
+  { icon: MessageCircle, label: "WhatsApp", value: "+91 90005 02417", href: "https://wa.me/919000502417", color: "#25D366" },
   { icon: Instagram, label: "Instagram", value: "@thread_tales_by_teju", href: "https://instagram.com/thread_tales_by_teju", color: "#E1306C" },
   { icon: Mail, label: "Email", value: "threadtalesbyteju946@gmail.com", href: "mailto:threadtalesbyteju946@gmail.com", color: "var(--gold)" },
-  { icon: Phone, label: "Phone", value: "+91 98660 52260", href: "tel:+919866052260", color: "var(--gold)" },
+  { icon: Phone, label: "Phone", value: "+91 90005 02417", href: "tel:+919000502417", color: "var(--gold)" },
 ];
 
 export default function ContactSection() {
@@ -24,7 +24,7 @@ export default function ContactSection() {
       form.message ? `*Message:* ${form.message}` : "",
     ].filter(Boolean).join("\n");
 
-    window.open(`https://wa.me/919866052260?text=${encodeURIComponent(text)}`, "_blank");
+    window.open(`https://wa.me/919000502417?text=${encodeURIComponent(text)}`, "_blank");
     setForm({ name: "", email: "", phone: "", message: "" });
   };
 

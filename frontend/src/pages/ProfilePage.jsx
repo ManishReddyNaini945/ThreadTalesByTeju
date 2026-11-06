@@ -338,7 +338,7 @@ export default function ProfilePage() {
                       </label>
                       <input value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                        placeholder="+91 98660 52260"
+                        placeholder="+91 98765 43210"
                         style={inputStyle} onFocus={focusStyle} onBlur={blurStyle} />
                     </div>
 

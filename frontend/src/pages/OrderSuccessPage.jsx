@@ -131,7 +131,7 @@ export default function OrderSuccessPage() {
               <Package size={18} /> Track My Orders
             </Link>
             <a
-              href={`https://wa.me/919866052260?text=${encodeURIComponent("Hi! I just placed an order and want to confirm.")}`}
+              href={`https://wa.me/919000502417?text=${encodeURIComponent("Hi! I just placed an order and want to confirm.")}`}
               target="_blank" rel="noreferrer"
               className="px-6 py-3.5 flex items-center justify-center gap-2 font-medium text-sm tracking-widest uppercase transition-all"
               style={{ border: "1px solid #4ade80", color: "#4ade80" }}

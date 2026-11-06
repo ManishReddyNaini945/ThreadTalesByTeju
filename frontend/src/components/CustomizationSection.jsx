@@ -9,7 +9,7 @@ const customizationSteps = [
   { step: 4, title: "Delivered with Love", description: "Beautifully packaged and delivered to your doorstep, ready to make your occasion unforgettable.", icon: Gift },
 ];
 
-const whatsappURL = "https://wa.me/919866052260";
+const whatsappURL = "https://wa.me/919000502417";
 
 export const CustomizationSection = () => {
   const [titleRef, titleVisible] = useScrollAnimation();

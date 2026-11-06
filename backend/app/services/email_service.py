@@ -95,7 +95,7 @@ def send_order_confirmation(to: str, order) -> None:
         We'll email you the moment it ships!
       </p>
       <p style="margin-top:16px;color:#a89f94;font-size:13px;text-align:center">
-        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+        Questions? WhatsApp us at <a href="https://wa.me/919000502417" style="color:#c8a45c">+91 90005 02417</a>.
       </p>"""
     _send(to, f"🎉 Order Confirmed – #{order.order_number} | Thread Tales by Teju", _base(content))
 
@@ -112,7 +112,7 @@ def send_payment_failed(to: str, order_number: str, amount: float) -> None:
       </div>
       <p style="color:#a89f94;text-align:center">Please try again or use a different payment method to complete your order.</p>
       <p style="margin-top:24px;color:#a89f94;font-size:13px;text-align:center">
-        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+        Questions? WhatsApp us at <a href="https://wa.me/919000502417" style="color:#c8a45c">+91 90005 02417</a>.
       </p>"""
     _send(to, f"⚠️ Payment Unsuccessful – #{order_number} | Thread Tales by Teju", _base(content))
 
@@ -135,7 +135,7 @@ def send_payment_reminder(to: str, order) -> None:
         </a>
       </div>
       <p style="margin-top:24px;color:#a89f94;font-size:13px;text-align:center">
-        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+        Questions? WhatsApp us at <a href="https://wa.me/919000502417" style="color:#c8a45c">+91 90005 02417</a>.
       </p>"""
     _send(to, f"⏳ Complete Your Payment – #{order.order_number} | Thread Tales by Teju", _base(content))
 
@@ -232,7 +232,7 @@ def send_tracking_update(to: str, order_number: str, tracking_number: str, couri
       <p style="color:#a89f94;font-size:12px;text-align:center;margin-top:8px">Paste your tracking number above to see live status.</p>
       {_quote("&ldquo;Good things come to those who track their packages.&rdquo; 😉")}
       <p style="color:#a89f94;font-size:13px;margin-top:24px;text-align:center">
-        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+        Questions? WhatsApp us at <a href="https://wa.me/919000502417" style="color:#c8a45c">+91 90005 02417</a>.
       </p>"""
     _send(to, f"📦 Tracking Number Added – #{order_number} | Thread Tales by Teju", _base(content))
 
@@ -280,7 +280,7 @@ def send_abandoned_cart_email(to: str, items: list, cart_url: str) -> None:
         </a>
       </div>
       <p style="margin-top:24px;color:#a89f94;font-size:13px;text-align:center">
-        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+        Questions? WhatsApp us at <a href="https://wa.me/919000502417" style="color:#c8a45c">+91 90005 02417</a>.
       </p>"""
     _send(to, "🛍️ You left something in your cart | Thread Tales by Teju", _base(content))
 
@@ -355,6 +355,6 @@ def send_status_update(to: str, order_number: str, status: str, tracking_number:
       {tracking_html}
       {quote_html}
       <p style="color:#a89f94;font-size:13px;margin-top:24px;text-align:center">
-        Questions? WhatsApp us at <a href="https://wa.me/919866052260" style="color:#c8a45c">+91 98660 52260</a>.
+        Questions? WhatsApp us at <a href="https://wa.me/919000502417" style="color:#c8a45c">+91 90005 02417</a>.
       </p>"""
     _send(to, f"{emoji} {title} – #{order_number} | Thread Tales by Teju", _base(content))

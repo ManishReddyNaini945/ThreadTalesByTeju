@@ -68,7 +68,7 @@ export default function RefundPolicyPage() {
             <a href="mailto:threadtalesbyteju946@gmail.com" style={{ color: "var(--gold)" }}>
               threadtalesbyteju946@gmail.com
             </a>{" "}
-            or calling +91 98660 52260. A full refund will be initiated once the cancellation is
+            or calling +91 90005 02417. A full refund will be initiated once the cancellation is
             confirmed.
           </p>
           <p>
@@ -162,8 +162,8 @@ export default function RefundPolicyPage() {
                 threadtalesbyteju946@gmail.com
               </a>
             </li>
-            <li>Phone: +91 98660 52260</li>
-            <li>WhatsApp: +91 98660 52260</li>
+            <li>Phone: +91 90005 02417</li>
+            <li>WhatsApp: +91 90005 02417</li>
             <li>Address: Hyderabad, Telangana, India</li>
           </ul>
           <p>We aim to respond to all queries within 1–2 business days.</p>

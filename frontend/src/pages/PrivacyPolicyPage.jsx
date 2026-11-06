@@ -180,7 +180,7 @@ export default function PrivacyPolicyPage() {
                 threadtalesbyteju946@gmail.com
               </a>
             </li>
-            <li>Phone: +91 98660 52260</li>
+            <li>Phone: +91 90005 02417</li>
             <li>Address: Hyderabad, Telangana, India</li>
           </ul>
         </Section>
